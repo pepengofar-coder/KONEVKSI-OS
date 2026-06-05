@@ -26,7 +26,7 @@ export default function Sidebar() {
   }).filter((group) => group.items.length > 0);
 
   return (
-    <aside className="hidden md:flex flex-col h-screen py-6 bg-slate-950/40 backdrop-blur-2xl w-72 border-r border-white/[0.06] shrink-0 relative z-20">
+    <aside className="hidden md:flex flex-col h-screen py-6 bg-white/[0.02] md:bg-white/[0.03] backdrop-blur-3xl w-72 border-r border-white/10 shrink-0 relative z-20">
       {/* Brand */}
       <div className="px-6 mb-8 flex items-center gap-3">
         <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-purple-500/20 shrink-0">
@@ -54,8 +54,8 @@ export default function Sidebar() {
                   className={({ isActive }) =>
                     `flex items-center gap-3 py-2.5 px-3 rounded-xl text-sm font-medium transition-all duration-300 relative group overflow-hidden ${
                       isActive
-                        ? 'bg-gradient-to-r from-purple-500/15 to-cyan-500/15 text-cyan-400 font-semibold shadow-[0_0_20px_rgba(6,182,212,0.06)]'
-                        : 'text-slate-400 hover:bg-white/[0.04] hover:text-slate-100'
+                        ? 'bg-gradient-to-r from-purple-500/15 via-purple-500/10 to-cyan-500/15 border border-white/[0.08] text-cyan-300 font-semibold shadow-[0_4px_20px_-2px_rgba(168,85,247,0.15)]'
+                        : 'text-slate-400 border border-transparent hover:bg-white/[0.04] hover:text-slate-100'
                     }`
                   }
                 >

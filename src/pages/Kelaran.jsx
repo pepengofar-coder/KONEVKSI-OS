@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useAppState, useAppDispatch, useHelpers } from '../context/AppContext';
 import KelaranForm from '../components/forms/KelaranForm';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
-import FAB from '../components/ui/FAB';
 import EmptyState from '../components/ui/EmptyState';
 
 export default function Kelaran() {
@@ -63,11 +62,20 @@ export default function Kelaran() {
 
   return (
     <div className="space-y-6 animate-fade-in-up text-white">
-      <div>
-        <h1 className="text-2xl md:text-3xl font-black font-display bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent tracking-tight">Kelaran</h1>
-        <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-1">
-          Barang jadi yang sudah disetor taylor
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-black font-display bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent tracking-tight">Kelaran</h1>
+          <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-1">
+            Barang jadi yang sudah disetor taylor
+          </p>
+        </div>
+        <button
+          onClick={() => { setKToEdit(null); setShowForm(true); }}
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-cyan-600 text-white font-bold text-sm shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 hover:scale-[1.02] active:scale-98 transition-all"
+        >
+          <span className="material-symbols-outlined text-[20px] filled">check_circle</span>
+          Catat Kelaran
+        </button>
       </div>
 
       {/* Summary */}
@@ -119,7 +127,7 @@ export default function Kelaran() {
                   return (
                     <div
                       key={k.id}
-                      className="bg-gradient-to-br from-white/[0.04] to-white/[0.01] border border-white/[0.08] hover:border-white/[0.15] p-4 rounded-2xl flex items-center justify-between hover:bg-white/[0.06] hover:shadow-md hover:shadow-purple-500/5 transition-all duration-300 group"
+                      className="bg-gradient-to-br from-white/[0.04] to-white/[0.01] border border-white/[0.08] hover:border-white/[0.15] p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between hover:bg-white/[0.06] hover:shadow-md hover:shadow-purple-500/5 transition-all duration-300 group gap-3"
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center shrink-0">
@@ -131,28 +139,28 @@ export default function Kelaran() {
                         </div>
                       </div>
                       
-                      <div className="flex items-center gap-4">
-                        <div className="text-right">
+                      <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto border-t border-white/[0.05] pt-3 sm:pt-0 sm:border-none">
+                        <div className="text-left sm:text-right">
                           <p className="font-black text-cyan-400">{k.jumlah} pcs</p>
                           <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">{formatRupiah((model?.hargaJahit || 0) * k.jumlah)}</p>
                         </div>
                         
                         {/* Actions */}
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                           <button
                             onClick={() => handleEditClick(k)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:bg-white/[0.06] hover:text-cyan-400 transition-all"
+                            className="p-2 sm:p-1.5 rounded-lg text-slate-400 hover:bg-white/[0.06] hover:text-cyan-400 transition-all flex items-center justify-center"
                             title="Ubah"
                           >
-                            <span className="material-symbols-outlined text-[16px]">edit</span>
+                            <span className="material-symbols-outlined text-[18px] sm:text-[16px]">edit</span>
                           </button>
                           {currentUser?.role === 'Owner' && (
                             <button
                               onClick={() => handleDeleteClick(k)}
-                              className="p-1.5 rounded-lg text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-all"
+                              className="p-2 sm:p-1.5 rounded-lg text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-all flex items-center justify-center"
                               title="Hapus"
                             >
-                              <span className="material-symbols-outlined text-[16px]">delete</span>
+                              <span className="material-symbols-outlined text-[18px] sm:text-[16px]">delete</span>
                             </button>
                           )}
                         </div>
@@ -201,7 +209,6 @@ export default function Kelaran() {
         </div>
       )}
 
-      <FAB onClick={() => { setKToEdit(null); setShowForm(true); }} icon="check_circle" label="Catat Kelaran" />
       <KelaranForm isOpen={showForm} onClose={() => { setShowForm(false); setKToEdit(null); }} kelaranToEdit={kToEdit} />
       
       {/* Confirm Delete */}

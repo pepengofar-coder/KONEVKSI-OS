@@ -24,7 +24,7 @@ export default function TopBar({ onOpenDrawer }) {
   const pageTitle = PAGE_TITLES[location.pathname] || 'Konveksi OS';
 
   return (
-    <header className="bg-slate-950/70 backdrop-blur-xl border-b border-white/[0.06] sticky top-0 z-40 flex justify-between items-center w-full px-4 md:px-6 h-14 md:h-16">
+    <header className="bg-white/[0.02] backdrop-blur-md border-b border-white/10 sticky top-0 z-40 flex justify-between items-center w-full px-4 md:px-6 h-14 md:h-16">
       <div className="flex items-center gap-3">
         {/* Hamburger menu — mobile only */}
         <button

@@ -199,7 +199,7 @@ export default function Dashboard() {
   return (
     <div className="space-y-6 animate-fade-in-up text-white">
       {/* ══════════ HERO SECTION ══════════ */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-900/30 via-slate-900 to-cyan-900/20 border border-white/[0.06] backdrop-blur-xl">
+      <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-[#2b0d6d] via-[#100b33] to-[#04334a] border border-white/10 shadow-2xl">
         {/* Animated decorative elements */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           {/* Floating circles */}
@@ -216,7 +216,7 @@ export default function Dashboard() {
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 lg:gap-8">
             {/* Left side - Greeting & Info */}
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-1">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">
                 Selamat Datang Kembali
               </p>
               <h1 className="font-display text-2xl md:text-3xl lg:text-4xl font-black bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent tracking-tight leading-tight">
@@ -226,24 +226,24 @@ export default function Dashboard() {
                 <Badge variant={roleBadgeVariant} icon={roleBadgeIcon}>
                   {userRole}
                 </Badge>
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                   {dayNames[today.getDay()]} &middot; {today.getDate()} {monthNames[today.getMonth()]} {today.getFullYear()}
                 </span>
               </div>
 
-              {/* Hero Quick Actions */}
+              {/* Hero Quick Actions (Redesigned responsive grid) */}
               {filteredHeroActions.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-5">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 mt-6">
                   {filteredHeroActions.map(action => (
                     <Link
                       key={action.to}
                       to={action.to}
-                      className="group inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] hover:border-white/[0.15] transition-all duration-300 active:scale-95"
+                      className="group flex items-center justify-center gap-2.5 py-3 px-4 rounded-xl bg-white/[0.06] border border-white/15 hover:bg-white/[0.12] hover:border-white/25 transition-all duration-300 shadow-[0_4px_12px_rgba(0,0,0,0.1)] active:scale-95"
                     >
                       <span className={`material-symbols-outlined text-[16px] ${quickActionColorMap[action.color]} transition-colors`}>
                         {action.icon}
                       </span>
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 group-hover:text-slate-200 transition-colors">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-300 group-hover:text-slate-100 transition-colors">
                         {action.label}
                       </span>
                     </Link>
@@ -259,7 +259,7 @@ export default function Dashboard() {
                 return (
                   <div
                     key={metric.label}
-                    className={`relative overflow-hidden rounded-xl ${colors.bg} border ${colors.border} backdrop-blur-sm p-4 transition-all duration-300 hover:shadow-lg ${colors.glow}`}
+                    className={`relative overflow-hidden rounded-2xl bg-white/[0.04] border border-white/10 backdrop-blur-md p-4 transition-all duration-300 hover:bg-white/[0.08] hover:border-white/20 hover:shadow-lg ${colors.glow}`}
                   >
                     <div className="flex items-center gap-2 mb-2">
                       <span className={`material-symbols-outlined text-[18px] ${colors.text}`}>

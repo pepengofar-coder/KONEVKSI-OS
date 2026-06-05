@@ -51,9 +51,11 @@ export default function AppLayout() {
   const toasts = state.toasts || [];
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-950 relative">
-      {/* Glowing background orbs for premium SaaS visual identity */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_15%,rgba(168,85,247,0.08),transparent_35%),radial-gradient(circle_at_85%_75%,rgba(6,182,212,0.08),transparent_35%)] pointer-events-none" />
+    <div className="min-h-screen w-full flex items-center justify-center p-0 md:p-6 lg:p-8 premium-bg relative overflow-hidden">
+      {/* Background blobs for premium SaaS glow */}
+      <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] max-w-[600px] bg-purple-600/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] max-w-[600px] bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-[30%] right-[10%] w-[40vw] h-[40vw] max-w-[500px] bg-pink-500/5 rounded-full blur-[150px] pointer-events-none" />
       
       {/* Toast Notification Container — z-[60] sits above modals (z-50) */}
       <div className="fixed top-4 right-4 z-[60] flex flex-col gap-2 max-w-sm w-full pointer-events-none">
@@ -80,17 +82,20 @@ export default function AppLayout() {
         ))}
       </div>
 
-      <Sidebar />
-      <main className="flex-1 flex flex-col overflow-hidden relative z-10 bg-transparent">
-        <TopBar onOpenDrawer={() => setDrawerOpen(true)} />
-        <div className="flex-1 overflow-y-auto pattern-bg pb-24 md:pb-6">
-          <div className="max-w-5xl mx-auto px-4 md:px-8 py-6 md:py-8 animate-fade-in">
-            <Outlet />
+      {/* Main glassmorphic container */}
+      <div className="w-full md:max-w-[1440px] h-screen md:h-[90vh] md:rounded-[2.5rem] border-none md:border border-white/10 backdrop-blur-2xl bg-white/[0.04] shadow-2xl flex overflow-hidden relative z-10">
+        <Sidebar />
+        <main className="flex-1 flex flex-col overflow-hidden relative z-10 bg-transparent">
+          <TopBar onOpenDrawer={() => setDrawerOpen(true)} />
+          <div className="flex-1 overflow-y-auto pattern-bg pb-24 md:pb-6">
+            <div className="max-w-5xl mx-auto px-4 md:px-8 py-6 md:py-8 animate-fade-in">
+              <Outlet />
+            </div>
           </div>
-        </div>
-      </main>
-      <BottomNav onOpenDrawer={() => setDrawerOpen(true)} />
-      <MobileDrawer isOpen={drawerOpen} onClose={() => setDrawerOpen(false)} />
+        </main>
+        <BottomNav onOpenDrawer={() => setDrawerOpen(true)} />
+        <MobileDrawer isOpen={drawerOpen} onClose={() => setDrawerOpen(false)} />
+      </div>
     </div>
   );
 }

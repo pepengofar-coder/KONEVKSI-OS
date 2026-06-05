@@ -78,7 +78,7 @@ export default function MobileDrawer({ isOpen, onClose }) {
       {/* Drawer */}
       <aside
         ref={drawerRef}
-        className="absolute left-0 top-0 bottom-0 w-72 bg-slate-950/95 backdrop-blur-2xl border-r border-white/[0.06] flex flex-col animate-slide-in-left shadow-2xl"
+        className="absolute left-0 top-0 bottom-0 w-72 bg-slate-950/40 border-r border-white/10 backdrop-blur-3xl flex flex-col animate-slide-in-left shadow-2xl"
       >
         {/* Brand */}
         <div className="px-5 py-5 flex items-center gap-3 border-b border-white/[0.06]">
@@ -115,8 +115,8 @@ export default function MobileDrawer({ isOpen, onClose }) {
                     className={({ isActive }) =>
                       `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
                         isActive
-                          ? 'bg-gradient-to-r from-purple-500/10 to-cyan-500/10 text-cyan-400 border border-white/[0.06]'
-                          : 'text-slate-400 hover:bg-white/[0.04] hover:text-slate-200'
+                          ? 'bg-gradient-to-r from-purple-500/15 via-purple-500/10 to-cyan-500/15 border border-white/[0.08] text-cyan-300 font-semibold shadow-[0_4px_20px_-2px_rgba(168,85,247,0.15)]'
+                          : 'text-slate-400 border border-transparent hover:bg-white/[0.04] hover:text-slate-200'
                       }`
                     }
                   >

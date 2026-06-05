@@ -35,7 +35,7 @@ export default function StatCard({ icon, label, value, subtitle, trend, variant 
   const c = config[variant] || config.default;
 
   return (
-    <div className={`glass-card relative p-5 md:p-6 overflow-hidden group transition-all duration-500 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-purple-950/20 border ${c.border} ${className}`}>
+    <div className={`glass-card relative p-5 md:p-6 overflow-hidden group border border-white/10 ${className}`}>
       {/* Glow effect */}
       <div className={`absolute top-0 right-0 w-28 h-28 bg-gradient-to-br ${c.glow} rounded-full blur-2xl opacity-60 group-hover:opacity-100 group-hover:scale-125 transition-all duration-700`} />
       

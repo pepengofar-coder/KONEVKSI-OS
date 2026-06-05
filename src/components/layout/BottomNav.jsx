@@ -18,7 +18,7 @@ export default function BottomNav({ onOpenDrawer }) {
   const filteredTabs = tabs.filter((tab) => allowedRoutes.includes(tab.to));
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center px-2 pb-5 pt-2 bg-slate-950/80 border-t border-white/[0.08] backdrop-blur-2xl z-45 rounded-t-[1.5rem] shadow-[0_-8px_32px_rgba(0,0,0,0.5)]">
+    <nav className="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center px-2 pb-5 pt-2 bg-slate-950/40 border-t border-white/10 backdrop-blur-3xl z-45 rounded-t-[1.5rem] shadow-[0_-8px_32px_rgba(0,0,0,0.5)]">
       {filteredTabs.map((tab) => (
         <NavLink
           key={tab.to}
