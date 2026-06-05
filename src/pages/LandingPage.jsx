@@ -262,16 +262,28 @@ export default function LandingPage() {
             </p>
           </div>
 
-          {/* Feature cards */}
+          {/* Feature cards - top row */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            {features.map((f, idx) => (
+            {features.slice(0, 3).map((f, idx) => (
               <div
                 key={idx}
-                className={`group relative bg-white/[0.03] backdrop-blur-sm border border-white/[0.06] rounded-3xl p-6 md:p-8 hover:bg-white/[0.06] hover:border-white/[0.12] transition-all duration-500 hover:-translate-y-1 ${
-                  idx === 3 ? 'lg:col-span-1 lg:translate-x-[50%]' : ''
-                } ${idx === 4 ? 'lg:col-span-1 lg:translate-x-[50%]' : ''}`}
+                className="group relative bg-white/[0.03] backdrop-blur-sm border border-white/[0.06] rounded-3xl p-6 md:p-8 hover:bg-white/[0.06] hover:border-white/[0.12] transition-all duration-500 hover:-translate-y-1"
               >
-                {/* Icon */}
+                <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${f.gradient} flex items-center justify-center mb-5 group-hover:scale-110 group-hover:shadow-lg transition-all duration-300`}>
+                  <span className="material-symbols-outlined text-white text-xl filled">{f.icon}</span>
+                </div>
+                <h3 className="text-lg font-bold text-white mb-2">{f.title}</h3>
+                <p className="text-sm text-slate-400 leading-relaxed">{f.desc}</p>
+              </div>
+            ))}
+          </div>
+          {/* Feature cards - bottom row centered */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mt-4 md:mt-6 max-w-3xl mx-auto">
+            {features.slice(3).map((f, idx) => (
+              <div
+                key={idx + 3}
+                className="group relative bg-white/[0.03] backdrop-blur-sm border border-white/[0.06] rounded-3xl p-6 md:p-8 hover:bg-white/[0.06] hover:border-white/[0.12] transition-all duration-500 hover:-translate-y-1"
+              >
                 <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${f.gradient} flex items-center justify-center mb-5 group-hover:scale-110 group-hover:shadow-lg transition-all duration-300`}>
                   <span className="material-symbols-outlined text-white text-xl filled">{f.icon}</span>
                 </div>
