@@ -1,8 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppState, useAppDispatch } from '../../context/AppContext';
 import Modal from '../ui/Modal';
 
-export default function BarangMasukForm({ isOpen, onClose }) {
+const formatCurrency = (val) => val ? parseInt(String(val).replace(/\./g, '').replace(/[^\d]/g, ''), 10).toLocaleString('id-ID') : '';
+const parseCurrency = (str) => parseInt(String(str).replace(/\./g, '').replace(/[^\d]/g, ''), 10) || 0;
+
+export default function BarangMasukForm({ isOpen, onClose, barangMasukToEdit = null }) {
   const { models } = useAppState();
   const dispatch = useAppDispatch();
 
@@ -13,13 +16,45 @@ export default function BarangMasukForm({ isOpen, onClose }) {
   const [newModelNama, setNewModelNama] = useState('');
   const [newModelHarga, setNewModelHarga] = useState('');
 
+  useEffect(() => {
+    if (barangMasukToEdit) {
+      setModelId(barangMasukToEdit.modelId);
+      setJumlah(barangMasukToEdit.jumlah);
+      setCatatan(barangMasukToEdit.catatan || '');
+    } else {
+      setModelId('');
+      setJumlah('');
+      setCatatan('');
+    }
+  }, [barangMasukToEdit, isOpen]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!modelId || !jumlah) return;
-    dispatch({
-      type: 'ADD_BARANG_MASUK',
-      payload: { modelId, jumlah: parseInt(jumlah), catatan },
-    });
+
+    const jumlahNum = parseInt(jumlah) || 0;
+
+    if (barangMasukToEdit) {
+      // Calculate new sisaBelumDistribusi based on edited total amount
+      const distributedAmount = barangMasukToEdit.jumlah - barangMasukToEdit.sisaBelumDistribusi;
+      const newSisa = Math.max(0, jumlahNum - distributedAmount);
+
+      dispatch({
+        type: 'EDIT_BARANG_MASUK',
+        payload: {
+          id: barangMasukToEdit.id,
+          modelId,
+          jumlah: jumlahNum,
+          sisaBelumDistribusi: newSisa,
+          catatan
+        }
+      });
+    } else {
+      dispatch({
+        type: 'ADD_BARANG_MASUK',
+        payload: { modelId, jumlah: jumlahNum, catatan },
+      });
+    }
     resetForm();
     onClose();
   };
@@ -28,7 +63,7 @@ export default function BarangMasukForm({ isOpen, onClose }) {
     if (!newModelNama || !newModelHarga) return;
     dispatch({
       type: 'ADD_MODEL',
-      payload: { nama: newModelNama, hargaJahit: parseInt(newModelHarga) },
+      payload: { nama: newModelNama, hargaJahit: parseCurrency(newModelHarga) },
     });
     setNewModelNama('');
     setNewModelHarga('');
@@ -42,14 +77,18 @@ export default function BarangMasukForm({ isOpen, onClose }) {
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Barang Masuk Baru">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={barangMasukToEdit ? 'Ubah Barang Masuk' : 'Barang Masuk Baru'}
+    >
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label className="block text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Model Pakaian</label>
+          <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Model Pakaian</label>
           <select
             value={modelId}
             onChange={(e) => setModelId(e.target.value)}
-            className="w-full bg-slate-900/80 border border-white/[0.08] text-slate-200 rounded-xl px-4 py-3 text-sm font-medium focus:border-purple-500 focus:ring-1 focus:ring-purple-500/25 transition-all"
+            className="input-base appearance-none"
             required
           >
             <option value="" className="bg-slate-900 text-slate-400">Pilih model...</option>
@@ -59,31 +98,34 @@ export default function BarangMasukForm({ isOpen, onClose }) {
               </option>
             ))}
           </select>
-          <button
-            type="button"
-            onClick={() => setShowNewModel(!showNewModel)}
-            className="mt-2 text-xs text-purple-400 hover:text-purple-300 font-bold flex items-center gap-1 transition-colors"
-          >
-            <span className="material-symbols-outlined text-[14px]">add</span>
-            Tambah Model Baru
-          </button>
+          {!barangMasukToEdit && (
+            <button
+              type="button"
+              onClick={() => setShowNewModel(!showNewModel)}
+              className="mt-2 text-xs text-purple-400 hover:text-purple-300 font-bold flex items-center gap-1 transition-colors"
+            >
+              <span className="material-symbols-outlined text-[14px]">add</span>
+              Tambah Model Baru
+            </button>
+          )}
         </div>
 
-        {showNewModel && (
+        {showNewModel && !barangMasukToEdit && (
           <div className="bg-slate-950/40 border border-white/[0.08] rounded-2xl p-4 space-y-3 animate-scale-in">
             <input
               type="text"
               placeholder="Nama model (misal: Gamis B)"
               value={newModelNama}
               onChange={(e) => setNewModelNama(e.target.value)}
-              className="w-full bg-slate-900/60 border border-white/[0.08] text-slate-200 placeholder-slate-500 rounded-xl px-4 py-2.5 text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-500/25 transition-all"
+              className="input-base"
             />
             <input
-              type="number"
+              type="text"
+              inputMode="numeric"
               placeholder="Harga jahit per pcs"
               value={newModelHarga}
-              onChange={(e) => setNewModelHarga(e.target.value)}
-              className="w-full bg-slate-900/60 border border-white/[0.08] text-slate-200 placeholder-slate-500 rounded-xl px-4 py-2.5 text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-500/25 transition-all"
+              onChange={(e) => setNewModelHarga(formatCurrency(e.target.value))}
+              className="input-base"
             />
             <button
               type="button"
@@ -96,26 +138,27 @@ export default function BarangMasukForm({ isOpen, onClose }) {
         )}
 
         <div>
-          <label className="block text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Jumlah Potong</label>
+          <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Jumlah Potong</label>
           <input
             type="number"
+            inputMode="numeric"
             value={jumlah}
             onChange={(e) => setJumlah(e.target.value)}
             placeholder="100"
             min="1"
-            className="w-full bg-slate-900/60 border border-white/[0.08] text-slate-200 placeholder-slate-500 rounded-xl px-4 py-3 text-sm font-medium focus:border-purple-500 focus:ring-1 focus:ring-purple-500/25 transition-all"
+            className="input-base font-medium"
             required
           />
         </div>
 
         <div>
-          <label className="block text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Catatan (opsional)</label>
+          <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Catatan (opsional)</label>
           <input
             type="text"
             value={catatan}
             onChange={(e) => setCatatan(e.target.value)}
             placeholder="Kain dari Pak Hasan"
-            className="w-full bg-slate-900/60 border border-white/[0.08] text-slate-200 placeholder-slate-500 rounded-xl px-4 py-3 text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-500/25 transition-all"
+            className="input-base"
           />
         </div>
 
@@ -123,10 +166,9 @@ export default function BarangMasukForm({ isOpen, onClose }) {
           type="submit"
           className="w-full py-3.5 bg-gradient-to-r from-purple-600 to-cyan-600 hover:shadow-purple-500/25 text-white rounded-2xl font-bold text-sm hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
         >
-          Simpan Barang Masuk
+          {barangMasukToEdit ? 'Simpan Perubahan' : 'Simpan Barang Masuk'}
         </button>
       </form>
     </Modal>
   );
 }
-

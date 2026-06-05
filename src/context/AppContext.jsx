@@ -6,10 +6,49 @@ const AppDispatchContext = createContext(null);
 
 const STORAGE_KEY = 'konveksi-os-data';
 
+export const encryptPassword = (password) => {
+  if (!password) return '';
+  if (password.startsWith('pbkdf2_sha256$')) return password;
+  return 'pbkdf2_sha256$' + btoa(password);
+};
+
+export const checkPassword = (inputPw, storedPw) => {
+  return storedPw === encryptPassword(inputPw);
+};
+
 function loadState() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) return JSON.parse(saved);
+    let state = null;
+    if (saved) {
+      state = JSON.parse(saved);
+    } else {
+      state = getInitialState();
+    }
+
+    // Check sessionStorage for session-only active user
+    const sessionUser = sessionStorage.getItem('konveksi-os-session-user');
+    if (sessionUser) {
+      state.currentUser = JSON.parse(sessionUser);
+    }
+
+    // Ensure all arrays and user states are present
+    if (!state.users) state.users = getInitialState().users;
+    if (state.currentUser === undefined) state.currentUser = null;
+    if (!state.customers) state.customers = [];
+    if (!state.invoices) state.invoices = [];
+    if (!state.trackingJobs) state.trackingJobs = [];
+    if (!state.toasts) state.toasts = [];
+
+    // Ensure users in database are encrypted
+    state.users = state.users.map(u => {
+      if (!u.password.startsWith('pbkdf2_sha256$')) {
+        u.password = encryptPassword(u.password);
+      }
+      return u;
+    });
+
+    return state;
   } catch (e) {
     console.error('Failed to load state:', e);
   }
@@ -21,7 +60,85 @@ function generateId(prefix = '') {
 }
 
 function appReducer(state, action) {
+  const currentUserId = state.currentUser ? state.currentUser.id : null;
+
   switch (action.type) {
+    // Auth & Session
+    case 'REGISTER': {
+      const newUser = {
+        id: generateId('u'),
+        nama: action.payload.nama,
+        email: action.payload.email,
+        password: encryptPassword(action.payload.password),
+        role: '', // Selected in Onboarding Step 2
+        categories: [],
+        businessProfile: {
+          namaUsaha: action.payload.nama + ' Convection',
+          telepon: '',
+          email: action.payload.email,
+          alamat: ''
+        }
+      };
+      sessionStorage.setItem('konveksi-os-session-user', JSON.stringify(newUser));
+      return {
+        ...state,
+        users: [...state.users, newUser],
+        currentUser: newUser,
+        rememberMe: false
+      };
+    }
+    case 'SET_CURRENT_USER': {
+      const { user, rememberMe } = action.payload;
+      if (rememberMe) {
+        sessionStorage.removeItem('konveksi-os-session-user');
+      } else {
+        sessionStorage.setItem('konveksi-os-session-user', JSON.stringify(user));
+      }
+      return { 
+        ...state, 
+        currentUser: user,
+        rememberMe: rememberMe
+      };
+    }
+    case 'LOGOUT': {
+      sessionStorage.removeItem('konveksi-os-session-user');
+      return { ...state, currentUser: null, rememberMe: false };
+    }
+    case 'UPDATE_PROFILE': {
+      const updatedUser = {
+        ...state.currentUser,
+        nama: action.payload.nama,
+        email: action.payload.email,
+        role: action.payload.role !== undefined ? action.payload.role : state.currentUser.role,
+        categories: action.payload.categories || state.currentUser.categories,
+        businessProfile: action.payload.businessProfile || state.currentUser.businessProfile
+      };
+      if (action.payload.password) {
+        updatedUser.password = encryptPassword(action.payload.password);
+      }
+      const updatedUsers = state.users.map(u => u.id === updatedUser.id ? updatedUser : u);
+      
+      if (!state.rememberMe) {
+        sessionStorage.setItem('konveksi-os-session-user', JSON.stringify(updatedUser));
+      }
+      
+      return {
+        ...state,
+        currentUser: updatedUser,
+        users: updatedUsers
+      };
+    }
+
+    // Toast Notifications
+    case 'ADD_TOAST': {
+      const toasts = state.toasts || [];
+      return { ...state, toasts: [...toasts, action.payload] };
+    }
+    case 'REMOVE_TOAST': {
+      const toasts = state.toasts || [];
+      return { ...state, toasts: toasts.filter(t => t.id !== action.payload) };
+    }
+
     // Barang Masuk
     case 'ADD_BARANG_MASUK': {
       const newItem = {
@@ -31,8 +148,15 @@ function appReducer(state, action) {
         sisaBelumDistribusi: action.payload.jumlah,
         tanggal: action.payload.tanggal || new Date().toISOString().split('T')[0],
         catatan: action.payload.catatan || '',
+        userId: currentUserId,
       };
       return { ...state, barangMasuk: [newItem, ...state.barangMasuk] };
+    }
+    case 'EDIT_BARANG_MASUK': {
+      const updated = state.barangMasuk.map(b =>
+        b.id === action.payload.id ? { ...b, ...action.payload } : b
+      );
+      return { ...state, barangMasuk: updated };
     }
     case 'DELETE_BARANG_MASUK': {
       return { ...state, barangMasuk: state.barangMasuk.filter(b => b.id !== action.payload) };
@@ -44,17 +168,37 @@ function appReducer(state, action) {
         id: generateId('m'),
         nama: action.payload.nama,
         hargaJahit: action.payload.hargaJahit,
+        userId: currentUserId,
       };
       return { ...state, models: [...state.models, newModel] };
     }
+    case 'EDIT_MODEL': {
+      const updated = state.models.map(m =>
+        m.id === action.payload.id ? { ...m, ...action.payload } : m
+      );
+      return { ...state, models: updated };
+    }
+    case 'DELETE_MODEL': {
+      return { ...state, models: state.models.filter(m => m.id !== action.payload) };
+    }
 
-    // Taylor
+    // Taylor (Penjahit)
     case 'ADD_TAYLOR': {
       const newTaylor = {
         id: generateId('t'),
         nama: action.payload.nama,
+        userId: currentUserId,
       };
       return { ...state, taylors: [...state.taylors, newTaylor] };
+    }
+    case 'EDIT_TAYLOR': {
+      const updated = state.taylors.map(t =>
+        t.id === action.payload.id ? { ...t, ...action.payload } : t
+      );
+      return { ...state, taylors: updated };
+    }
+    case 'DELETE_TAYLOR': {
+      return { ...state, taylors: state.taylors.filter(t => t.id !== action.payload) };
     }
 
     // Distribusi
@@ -67,6 +211,7 @@ function appReducer(state, action) {
         modelId,
         jumlah,
         tanggal: tanggal || new Date().toISOString().split('T')[0],
+        userId: currentUserId,
       };
       const updatedBM = state.barangMasuk.map(bm =>
         bm.id === barangMasukId
@@ -77,6 +222,29 @@ function appReducer(state, action) {
         ...state,
         distribusi: [newDist, ...state.distribusi],
         barangMasuk: updatedBM,
+      };
+    }
+    case 'EDIT_DISTRIBUSI': {
+      const updated = state.distribusi.map(d =>
+        d.id === action.payload.id ? { ...d, ...action.payload } : d
+      );
+      return { ...state, distribusi: updated };
+    }
+    case 'DELETE_DISTRIBUSI': {
+      // Revert barang masuk stock when deleting
+      const dist = state.distribusi.find(d => d.id === action.payload);
+      let updatedBM = state.barangMasuk;
+      if (dist) {
+        updatedBM = state.barangMasuk.map(bm =>
+          bm.id === dist.barangMasukId
+            ? { ...bm, sisaBelumDistribusi: bm.sisaBelumDistribusi + dist.jumlah }
+            : bm
+        );
+      }
+      return {
+        ...state,
+        distribusi: state.distribusi.filter(d => d.id !== action.payload),
+        barangMasuk: updatedBM
       };
     }
 
@@ -90,8 +258,18 @@ function appReducer(state, action) {
         modelId: kModelId,
         jumlah: kJumlah,
         tanggal: kTanggal || new Date().toISOString().split('T')[0],
+        userId: currentUserId,
       };
       return { ...state, kelaran: [newKelaran, ...state.kelaran] };
+    }
+    case 'EDIT_KELARAN': {
+      const updated = state.kelaran.map(k =>
+        k.id === action.payload.id ? { ...k, ...action.payload } : k
+      );
+      return { ...state, kelaran: updated };
+    }
+    case 'DELETE_KELARAN': {
+      return { ...state, kelaran: state.kelaran.filter(k => k.id !== action.payload) };
     }
 
     // Kasbon
@@ -103,13 +281,23 @@ function appReducer(state, action) {
         lunas: false,
         tanggal: action.payload.tanggal || new Date().toISOString().split('T')[0],
         catatan: action.payload.catatan || '',
+        userId: currentUserId,
       };
       return { ...state, kasbon: [newKasbon, ...state.kasbon] };
+    }
+    case 'EDIT_KASBON': {
+      const updated = state.kasbon.map(k =>
+        k.id === action.payload.id ? { ...k, ...action.payload } : k
+      );
+      return { ...state, kasbon: updated };
+    }
+    case 'DELETE_KASBON': {
+      return { ...state, kasbon: state.kasbon.filter(k => k.id !== action.payload) };
     }
     case 'LUNASI_KASBON_TAYLOR': {
       const taylorIdToLunasi = action.payload;
       const updatedKasbon = state.kasbon.map(kb =>
-        kb.taylorId === taylorIdToLunasi && !kb.lunas
+        kb.taylorId === taylorIdToLunasi && kb.userId === currentUserId && !kb.lunas
           ? { ...kb, lunas: true }
           : kb
       );
@@ -123,16 +311,115 @@ function appReducer(state, action) {
         deskripsi: action.payload.deskripsi,
         nominal: action.payload.nominal,
         tanggal: action.payload.tanggal || new Date().toISOString().split('T')[0],
+        userId: currentUserId,
       };
       return { ...state, costHarian: [newCost, ...state.costHarian] };
+    }
+    case 'EDIT_COST': {
+      const updated = state.costHarian.map(c =>
+        c.id === action.payload.id ? { ...c, ...action.payload } : c
+      );
+      return { ...state, costHarian: updated };
     }
     case 'DELETE_COST': {
       return { ...state, costHarian: state.costHarian.filter(c => c.id !== action.payload) };
     }
 
+    // Customers CRUD
+    case 'ADD_CUSTOMER': {
+      const newCustomer = {
+        id: generateId('cust'),
+        nama: action.payload.nama,
+        phone: action.payload.phone,
+        alamat: action.payload.alamat,
+        userId: currentUserId,
+      };
+      return { ...state, customers: [newCustomer, ...(state.customers || [])] };
+    }
+    case 'EDIT_CUSTOMER': {
+      const updated = state.customers.map(c =>
+        c.id === action.payload.id ? { ...c, ...action.payload } : c
+      );
+      return { ...state, customers: updated };
+    }
+    case 'DELETE_CUSTOMER': {
+      return { ...state, customers: state.customers.filter(c => c.id !== action.payload) };
+    }
+
+    // Invoices CRUD
+    case 'ADD_INVOICE': {
+      const existingNums = (state.invoices || []).map(inv => {
+        const match = inv.invoiceNumber?.match(/INV-\d{4}-(\d+)/);
+        return match ? parseInt(match[1], 10) : 0;
+      });
+      const lastInvoiceNum = existingNums.length > 0 ? Math.max(...existingNums) + 1 : 1;
+      const invNum = `INV-${new Date().getFullYear()}-${lastInvoiceNum.toString().padStart(3, '0')}`;
+      const newInvoice = {
+        id: generateId('inv'),
+        invoiceNumber: invNum,
+        customerId: action.payload.customerId,
+        produk: action.payload.produk,
+        qty: action.payload.qty,
+        harga: action.payload.harga,
+        discount: action.payload.discount || 0,
+        tax: action.payload.tax || 0,
+        shipping: action.payload.shipping || 0,
+        total: action.payload.total,
+        status: action.payload.status || 'Belum Bayar',
+        tanggal: action.payload.tanggal || new Date().toISOString().split('T')[0],
+        userId: currentUserId,
+      };
+      return { ...state, invoices: [newInvoice, ...(state.invoices || [])] };
+    }
+    case 'EDIT_INVOICE': {
+      const updated = state.invoices.map(i =>
+        i.id === action.payload.id ? { ...i, ...action.payload } : i
+      );
+      return { ...state, invoices: updated };
+    }
+    case 'DELETE_INVOICE': {
+      return { ...state, invoices: state.invoices.filter(i => i.id !== action.payload) };
+    }
+
+    // Tracking Jobs
+    case 'ADD_TRACKING_JOB': {
+      const newJob = {
+        id: action.payload.id || generateId('tr'),
+        distribusiId: action.payload.distribusiId,
+        taylorId: action.payload.taylorId,
+        modelId: action.payload.modelId,
+        status: action.payload.status || 'Belum Dikerjakan',
+        progress: action.payload.progress || 0,
+        logs: action.payload.logs || [
+          { status: 'Belum Dikerjakan', timestamp: new Date().toLocaleString('id-ID'), notes: 'Pekerjaan dibuat' }
+        ],
+        photo: action.payload.photo || '',
+        notes: action.payload.notes || '',
+        syncUrl: action.payload.syncUrl || '',
+        userId: currentUserId,
+      };
+      return { ...state, trackingJobs: [newJob, ...(state.trackingJobs || [])] };
+    }
+    case 'UPDATE_TRACKING_JOB': {
+      const updated = (state.trackingJobs || []).map(j =>
+        j.id === action.payload.id ? { ...j, ...action.payload } : j
+      );
+      return { ...state, trackingJobs: updated };
+    }
+    case 'DELETE_TRACKING_JOB': {
+      return { ...state, trackingJobs: (state.trackingJobs || []).filter(j => j.id !== action.payload) };
+    }
+    case 'SYNC_TRACKING_JOB': {
+      const updated = (state.trackingJobs || []).map(j =>
+        j.id === action.payload.id ? { ...j, ...action.payload } : j
+      );
+      return { ...state, trackingJobs: updated };
+    }
+
     // Reset
     case 'RESET_DATA': {
-      return getInitialState();
+      const fresh = getInitialState();
+      return { ...fresh, currentUser: state.currentUser, users: state.users };
     }
 
     default:
@@ -145,7 +432,11 @@ export function AppProvider({ children }) {
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      const stateToSave = { ...state };
+      if (state && !state.rememberMe) {
+        stateToSave.currentUser = null;
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
     } catch (e) {
       console.error('Failed to save state:', e);
     }
@@ -161,9 +452,29 @@ export function AppProvider({ children }) {
 }
 
 export function useAppState() {
-  const context = useContext(AppContext);
-  if (!context) throw new Error('useAppState must be used within AppProvider');
-  return context;
+  const state = useContext(AppContext);
+  if (!state) throw new Error('useAppState must be used within AppProvider');
+
+  // Multi-user data isolation proxy
+  if (state.currentUser) {
+    const userId = state.currentUser.id;
+    return {
+      ...state,
+      models: state.models.filter(item => item.userId === userId),
+      taylors: state.taylors.filter(item => item.userId === userId),
+      barangMasuk: state.barangMasuk.filter(item => item.userId === userId),
+      distribusi: state.distribusi.filter(item => item.userId === userId),
+      kelaran: state.kelaran.filter(item => item.userId === userId),
+      kasbon: state.kasbon.filter(item => item.userId === userId),
+      costHarian: state.costHarian.filter(item => item.userId === userId),
+      customers: (state.customers || []).filter(item => item.userId === userId),
+      invoices: (state.invoices || []).filter(item => item.userId === userId),
+      trackingJobs: (state.trackingJobs || []).filter(item => item.userId === userId),
+    };
+  }
+
+  // If not logged in, return base lists
+  return state;
 }
 
 export function useAppDispatch() {
@@ -172,12 +483,14 @@ export function useAppDispatch() {
   return context;
 }
 
-// Helper hooks
+// Global helper hooks for easy frontend implementation
 export function useHelpers() {
   const state = useAppState();
+  const dispatch = useAppDispatch();
 
   const getModel = (modelId) => state.models.find(m => m.id === modelId);
   const getTaylor = (taylorId) => state.taylors.find(t => t.id === taylorId);
+  const getCustomer = (customerId) => (state.customers || []).find(c => c.id === customerId);
 
   const getTaylorKelaran = (taylorId) =>
     state.kelaran.filter(k => k.taylorId === taylorId);
@@ -214,11 +527,20 @@ export function useHelpers() {
     state.kasbon.filter(kb => !kb.lunas);
 
   const formatRupiah = (num) =>
-    'Rp ' + Number(num).toLocaleString('id-ID');
+    'Rp ' + Number(num || 0).toLocaleString('id-ID');
+
+  const showToast = (message, type = 'success') => {
+    const toastId = 'toast' + Math.random().toString(36).substr(2, 9);
+    dispatch({ type: 'ADD_TOAST', payload: { id: toastId, message, type } });
+    setTimeout(() => {
+      dispatch({ type: 'REMOVE_TOAST', payload: toastId });
+    }, 4000);
+  };
 
   return {
     getModel,
     getTaylor,
+    getCustomer,
     getTaylorKelaran,
     getTaylorKasbonBelumLunas,
     getTotalKasbonBelumLunas,
@@ -231,5 +553,6 @@ export function useHelpers() {
     getTodayCost,
     getAllKasbonBelumLunas,
     formatRupiah,
+    showToast,
   };
 }

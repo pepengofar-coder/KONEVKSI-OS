@@ -53,7 +53,7 @@ export default function InvoiceTaylor() {
   return (
     <div className="space-y-6 animate-fade-in-up text-white">
       <div>
-        <h1 className="text-2xl md:text-3xl font-black bg-gradient-to-r from-purple-400 via-cyan-400 to-emerald-400 bg-clip-text text-transparent tracking-tight">Invoice Taylor</h1>
+        <h1 className="text-2xl md:text-3xl font-black font-display bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent tracking-tight">Invoice Taylor</h1>
         <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-1">
           Generate slip gaji & pembayaran taylor
         </p>
@@ -61,7 +61,7 @@ export default function InvoiceTaylor() {
 
       {/* Taylor Selector */}
       <div className="bg-gradient-to-br from-white/[0.04] to-white/[0.01] border border-white/[0.08] rounded-3xl p-5 md:p-6">
-        <label className="block text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 mb-3.5">
+        <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-3.5">
           Pilih Taylor
         </label>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -88,11 +88,11 @@ export default function InvoiceTaylor() {
           <div className="bg-gradient-to-r from-purple-900/60 to-cyan-900/60 border-b border-white/[0.06] p-6 text-white">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-cyan-400">Invoice Slip</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-400">Invoice Slip</p>
                 <h2 className="text-xl font-black mt-1 text-slate-100">{taylorData.taylor?.nama}</h2>
               </div>
               <div className="text-right">
-                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">Tanggal</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Tanggal</p>
                 <p className="font-bold text-sm text-slate-200 mt-1">{new Date().toLocaleDateString('id-ID')}</p>
               </div>
             </div>
@@ -101,7 +101,7 @@ export default function InvoiceTaylor() {
           <div className="p-6 space-y-6">
             {/* Breakdown */}
             <div>
-              <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 mb-3">
+              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-3">
                 Rincian Hasil Kerja
               </h3>
               {taylorData.modelBreakdown.length === 0 ? (
@@ -126,7 +126,7 @@ export default function InvoiceTaylor() {
             {/* Kasbon */}
             {taylorData.kasbonBelumLunas.length > 0 && (
               <div>
-                <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 mb-3">
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-3">
                   Potongan Kasbon
                 </h3>
                 <div className="space-y-2">
@@ -157,7 +157,7 @@ export default function InvoiceTaylor() {
                   </div>
                 )}
                 <div className="flex justify-between items-end pt-3.5 border-t border-white/[0.06]">
-                  <span className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-400">Sisa Dibayar</span>
+                  <span className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">Sisa Dibayar</span>
                   <span className="text-2xl font-black text-cyan-400">
                     {formatRupiah(Math.max(0, taylorData.sisaBayar))}
                   </span>

@@ -51,11 +51,11 @@ export default function DistribusiForm({ isOpen, onClose }) {
     <Modal isOpen={isOpen} onClose={onClose} title="Distribusi ke Taylor">
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label className="block text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Pilih Barang Masuk</label>
+          <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Pilih Barang Masuk</label>
           <select
             value={barangMasukId}
             onChange={(e) => setBarangMasukId(e.target.value)}
-            className="w-full bg-slate-900/80 border border-white/[0.08] text-slate-200 rounded-xl px-4 py-3 text-sm font-medium focus:border-purple-500 focus:ring-1 focus:ring-purple-500/25 transition-all"
+            className="input-base appearance-none"
             required
           >
             <option value="" className="bg-slate-900 text-slate-400">Pilih barang...</option>
@@ -71,11 +71,11 @@ export default function DistribusiForm({ isOpen, onClose }) {
         </div>
 
         <div>
-          <label className="block text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Taylor</label>
+          <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Taylor</label>
           <select
             value={taylorId}
             onChange={(e) => setTaylorId(e.target.value)}
-            className="w-full bg-slate-900/80 border border-white/[0.08] text-slate-200 rounded-xl px-4 py-3 text-sm font-medium focus:border-purple-500 focus:ring-1 focus:ring-purple-500/25 transition-all"
+            className="input-base appearance-none"
             required
           >
             <option value="" className="bg-slate-900 text-slate-400">Pilih taylor...</option>
@@ -100,7 +100,7 @@ export default function DistribusiForm({ isOpen, onClose }) {
               placeholder="Nama taylor (misal: Pak Ahmad)"
               value={newTaylorNama}
               onChange={(e) => setNewTaylorNama(e.target.value)}
-              className="w-full bg-slate-900/60 border border-white/[0.08] text-slate-200 placeholder-slate-500 rounded-xl px-4 py-2.5 text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-500/25 transition-all"
+              className="input-base"
             />
             <button
               type="button"
@@ -113,18 +113,19 @@ export default function DistribusiForm({ isOpen, onClose }) {
         )}
 
         <div>
-          <label className="block text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">
+          <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">
             Jumlah Potong
             {selectedBM && <span className="text-purple-400 ml-2">(Maks: {selectedBM.sisaBelumDistribusi})</span>}
           </label>
           <input
             type="number"
+            inputMode="numeric"
             value={jumlah}
             onChange={(e) => setJumlah(e.target.value)}
             placeholder="50"
             min="1"
             max={selectedBM?.sisaBelumDistribusi || 9999}
-            className="w-full bg-slate-900/60 border border-white/[0.08] text-slate-200 placeholder-slate-500 rounded-xl px-4 py-3 text-sm font-medium focus:border-purple-500 focus:ring-1 focus:ring-purple-500/25 transition-all"
+            className="input-base font-medium"
             required
           />
         </div>
@@ -150,4 +151,3 @@ export default function DistribusiForm({ isOpen, onClose }) {
     </Modal>
   );
 }
-

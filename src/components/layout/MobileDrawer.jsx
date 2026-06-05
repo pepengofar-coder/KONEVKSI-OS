@@ -1,0 +1,165 @@
+import { useEffect, useRef } from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { useAppState, useAppDispatch } from '../../context/AppContext';
+import { ROLE_ROUTES } from './AppLayout';
+
+const navGroups = [
+  { label: 'Utama', items: [{ to: '/dashboard', icon: 'dashboard', label: 'Dashboard' }] },
+  { label: 'Produksi', items: [
+    { to: '/barang-masuk', icon: 'inventory_2', label: 'Barang Masuk' },
+    { to: '/on-progress', icon: 'sync', label: 'On Progress' },
+    { to: '/kelaran', icon: 'check_circle', label: 'Kelaran' },
+  ]},
+  { label: 'Penjualan', items: [
+    { to: '/customers', icon: 'groups', label: 'Pelanggan' },
+    { to: '/invoice-pelanggan', icon: 'description', label: 'Invoice Pelanggan' },
+  ]},
+  { label: 'Keuangan Penjahit', items: [
+    { to: '/kasbon', icon: 'account_balance_wallet', label: 'Kasbon Taylor' },
+    { to: '/invoice', icon: 'receipt_long', label: 'Invoice Taylor' },
+  ]},
+  { label: 'Laporan & Kas', items: [
+    { to: '/cost-harian', icon: 'payments', label: 'Cost Harian' },
+    { to: '/laporan', icon: 'analytics', label: 'Laporan Keuangan' },
+  ]},
+  { label: 'Pengaturan', items: [{ to: '/profile', icon: 'settings', label: 'Pengaturan Usaha' }] },
+];
+
+export { navGroups };
+
+export default function MobileDrawer({ isOpen, onClose }) {
+  const state = useAppState();
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const drawerRef = useRef(null);
+
+  const userRole = state.currentUser?.role || 'Owner';
+  const userName = state.currentUser?.nama || 'Admin';
+  const userInitial = userName.charAt(0).toUpperCase();
+  const userRoleLabel = `${userRole} · ${state.currentUser?.businessProfile?.namaUsaha || 'Konveksi'}`;
+  const allowedRoutes = ROLE_ROUTES[userRole] || [];
+
+  const filteredNavGroups = navGroups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => allowedRoutes.includes(item.to)),
+    }))
+    .filter((group) => group.items.length > 0);
+
+  // Lock body scroll & handle Escape
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      const handleKey = (e) => { if (e.key === 'Escape') onClose(); };
+      document.addEventListener('keydown', handleKey);
+      return () => {
+        document.body.style.overflow = '';
+        document.removeEventListener('keydown', handleKey);
+      };
+    }
+  }, [isOpen, onClose]);
+
+  const handleLogout = () => {
+    dispatch({ type: 'LOGOUT' });
+    navigate('/login');
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="md:hidden fixed inset-0 z-50 animate-fade-in">
+      {/* Scrim */}
+      <div
+        className="absolute inset-0 bg-slate-950/70 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
+      {/* Drawer */}
+      <aside
+        ref={drawerRef}
+        className="absolute left-0 top-0 bottom-0 w-72 bg-slate-950/95 backdrop-blur-2xl border-r border-white/[0.06] flex flex-col animate-slide-in-left shadow-2xl"
+      >
+        {/* Brand */}
+        <div className="px-5 py-5 flex items-center gap-3 border-b border-white/[0.06]">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-purple-500/20 shrink-0">
+            <span className="material-symbols-outlined text-white text-[16px] filled">checkroom</span>
+          </div>
+          <div>
+            <h1 className="text-sm font-extrabold tracking-tight bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
+              Konveksi OS
+            </h1>
+            <p className="text-[9px] text-slate-500 uppercase tracking-[0.15em] font-bold leading-none mt-0.5">
+              Production Suite
+            </p>
+          </div>
+          <button onClick={onClose} className="ml-auto p-1.5 rounded-lg hover:bg-white/[0.06] text-slate-400">
+            <span className="material-symbols-outlined text-[20px]">close</span>
+          </button>
+        </div>
+
+        {/* Nav */}
+        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-5">
+          {filteredNavGroups.map((group) => (
+            <div key={group.label}>
+              <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-slate-500 px-3 mb-2">
+                {group.label}
+              </p>
+              <div className="space-y-0.5">
+                {group.items.map((item) => (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    onClick={onClose}
+                    end={item.to === '/dashboard'}
+                    className={({ isActive }) =>
+                      `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                        isActive
+                          ? 'bg-gradient-to-r from-purple-500/10 to-cyan-500/10 text-cyan-400 border border-white/[0.06]'
+                          : 'text-slate-400 hover:bg-white/[0.04] hover:text-slate-200'
+                      }`
+                    }
+                  >
+                    {({ isActive }) => (
+                      <>
+                        <span
+                          className="material-symbols-outlined text-[20px]"
+                          style={{
+                            fontVariationSettings: isActive ? "'FILL' 1, 'wght' 500" : "'FILL' 0, 'wght' 400",
+                          }}
+                        >
+                          {item.icon}
+                        </span>
+                        {item.label}
+                      </>
+                    )}
+                  </NavLink>
+                ))}
+              </div>
+            </div>
+          ))}
+        </nav>
+
+        {/* Footer */}
+        <div className="px-4 py-4 border-t border-white/[0.06]">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-600 to-cyan-600 flex items-center justify-center text-white text-xs font-bold shadow-md">
+              {userInitial}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-slate-200 truncate">{userName}</p>
+              <p className="text-[10px] text-slate-500 truncate">{userRoleLabel}</p>
+            </div>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-slate-400 hover:bg-red-500/10 hover:text-red-400 border border-white/[0.06] transition-all"
+          >
+            <span className="material-symbols-outlined text-[18px]">logout</span>
+            Keluar
+          </button>
+        </div>
+      </aside>
+    </div>
+  );
+}
