@@ -4,7 +4,7 @@ const navGroups = [
   {
     label: 'Utama',
     items: [
-      { to: '/', icon: 'dashboard', label: 'Dashboard' },
+      { to: '/dashboard', icon: 'dashboard', label: 'Dashboard' },
     ],
   },
   {
@@ -51,7 +51,7 @@ export default function Sidebar() {
                 <NavLink
                   key={item.to}
                   to={item.to}
-                  end={item.to === '/'}
+                  end={item.to === '/dashboard'}
                   className={({ isActive }) =>
                     `flex items-center gap-3 py-2.5 px-4 rounded-xl text-sm font-medium transition-all duration-200 ${
                       isActive

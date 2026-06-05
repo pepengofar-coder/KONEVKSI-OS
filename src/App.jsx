@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
 import AppLayout from './components/layout/AppLayout';
+import LandingPage from './pages/LandingPage';
 import Dashboard from './pages/Dashboard';
 import BarangMasuk from './pages/BarangMasuk';
 import OnProgress from './pages/OnProgress';
@@ -13,8 +14,12 @@ export default function App() {
   return (
     <AppProvider>
       <Routes>
+        {/* Landing page - no sidebar */}
+        <Route path="/" element={<LandingPage />} />
+
+        {/* App pages - with sidebar layout */}
         <Route element={<AppLayout />}>
-          <Route path="/" element={<Dashboard />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/barang-masuk" element={<BarangMasuk />} />
           <Route path="/on-progress" element={<OnProgress />} />
           <Route path="/kelaran" element={<Kelaran />} />

@@ -21,7 +21,7 @@ export default function TopBar({ title }) {
       <div className="flex items-center gap-2">
         <button
           className="p-2 rounded-full hover:bg-surface-container-high transition-colors text-on-surface-variant"
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/dashboard')}
         >
           <span className="material-symbols-outlined text-[20px]">home</span>
         </button>

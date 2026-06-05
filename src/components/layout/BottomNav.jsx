@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 
 const tabs = [
-  { to: '/', icon: 'dashboard', label: 'Dashboard' },
+  { to: '/dashboard', icon: 'dashboard', label: 'Dashboard' },
   { to: '/barang-masuk', icon: 'inventory_2', label: 'Produksi' },
   { to: '/kasbon', icon: 'account_balance_wallet', label: 'Keuangan' },
   { to: '/cost-harian', icon: 'payments', label: 'Kas' },
@@ -14,7 +14,7 @@ export default function BottomNav() {
         <NavLink
           key={tab.to}
           to={tab.to}
-          end={tab.to === '/'}
+          end={tab.to === '/dashboard'}
           className={({ isActive }) =>
             `flex flex-col items-center justify-center gap-0.5 py-1.5 px-3 rounded-2xl transition-all duration-200 ${
               isActive
