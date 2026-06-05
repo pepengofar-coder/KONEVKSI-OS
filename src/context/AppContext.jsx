@@ -35,6 +35,13 @@ function loadState() {
     // Ensure all arrays and user states are present
     if (!state.users) state.users = getInitialState().users;
     if (state.currentUser === undefined) state.currentUser = null;
+    if (!state.taylors) state.taylors = [];
+    if (!state.models) state.models = [];
+    if (!state.barangMasuk) state.barangMasuk = [];
+    if (!state.distribusi) state.distribusi = [];
+    if (!state.kelaran) state.kelaran = [];
+    if (!state.kasbon) state.kasbon = [];
+    if (!state.costHarian) state.costHarian = [];
     if (!state.customers) state.customers = [];
     if (!state.invoices) state.invoices = [];
     if (!state.trackingJobs) state.trackingJobs = [];
@@ -68,12 +75,13 @@ function appReducer(state, action) {
       const newUser = {
         id: generateId('u'),
         nama: action.payload.nama,
-        email: action.payload.email,
+        username: action.payload.username.toLowerCase(),
+        email: action.payload.email.toLowerCase(),
         password: encryptPassword(action.payload.password),
         role: '', // Selected in Onboarding Step 2
         categories: [],
         businessProfile: {
-          namaUsaha: action.payload.nama + ' Convection',
+          namaUsaha: action.payload.namaUsaha || (action.payload.nama + ' Convection'),
           telepon: '',
           email: action.payload.email,
           alamat: ''

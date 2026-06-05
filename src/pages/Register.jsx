@@ -9,6 +9,8 @@ export default function Register() {
   const { showToast } = useHelpers();
 
   const [nama, setNama] = useState('');
+  const [username, setUsername] = useState('');
+  const [namaUsaha, setNamaUsaha] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -30,8 +32,19 @@ export default function Register() {
     e.preventDefault();
     
     // Validations
-    if (!nama || !email || !password || !confirmPassword) {
+    if (!nama || !username || !namaUsaha || !email || !password || !confirmPassword) {
       showToast('Semua kolom wajib diisi!', 'error');
+      return;
+    }
+
+    const cleanUsername = username.trim().toLowerCase();
+    if (cleanUsername.length < 3) {
+      showToast('Username minimal 3 karakter!', 'error');
+      return;
+    }
+
+    if (!/^[a-zA-Z0-9_]+$/.test(cleanUsername)) {
+      showToast('Username hanya boleh huruf, angka, dan underscore!', 'error');
       return;
     }
 
@@ -42,6 +55,12 @@ export default function Register() {
 
     if (password !== confirmPassword) {
       showToast('Konfirmasi kata sandi tidak cocok!', 'error');
+      return;
+    }
+
+    const usernameExist = state.users.some(u => u.username?.toLowerCase() === cleanUsername);
+    if (usernameExist) {
+      showToast('Username sudah digunakan oleh akun lain!', 'error');
       return;
     }
 
@@ -57,7 +76,7 @@ export default function Register() {
     setTimeout(() => {
       dispatch({
         type: 'REGISTER',
-        payload: { nama, email, password }
+        payload: { nama, username: cleanUsername, namaUsaha, email, password }
       });
       showToast('Registrasi akun berhasil!', 'success');
       navigate('/onboarding');
@@ -97,6 +116,30 @@ export default function Register() {
                 value={nama}
                 onChange={(e) => setNama(e.target.value)}
                 placeholder="Ahmad Ziyad"
+                className="input-base"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-1.5">Username</label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="ahmad_ziyad"
+                className="input-base"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-1.5">Nama Bisnis / Usaha</label>
+              <input
+                type="text"
+                value={namaUsaha}
+                onChange={(e) => setNamaUsaha(e.target.value)}
+                placeholder="Ziyad Convection"
                 className="input-base"
                 required
               />

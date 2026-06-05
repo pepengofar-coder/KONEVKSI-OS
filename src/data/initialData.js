@@ -59,6 +59,7 @@ export const initialInvoices = [
 export const defaultUser = {
   id: 'u1',
   nama: 'Admin Konveksi',
+  username: 'admin',
   email: 'admin@konveksios.com',
   password: 'admin', // simple default password
   role: 'Owner',

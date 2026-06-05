@@ -87,7 +87,7 @@ export default function AppLayout() {
         <Sidebar />
         <main className="flex-1 flex flex-col overflow-hidden relative z-10 bg-transparent">
           <TopBar onOpenDrawer={() => setDrawerOpen(true)} />
-          <div className="flex-1 overflow-y-auto pattern-bg pb-24 md:pb-6">
+          <div className="flex-1 overflow-y-auto pb-24 md:pb-6">
             <div className="max-w-5xl mx-auto px-4 md:px-8 py-6 md:py-8 animate-fade-in">
               <Outlet />
             </div>

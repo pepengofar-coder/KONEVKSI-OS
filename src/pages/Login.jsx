@@ -8,7 +8,7 @@ export default function Login() {
   const navigate = useNavigate();
   const { showToast } = useHelpers();
 
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
@@ -27,14 +27,17 @@ export default function Login() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!email || !password) return;
+    if (!identifier || !password) return;
 
     setLoading(true);
 
     // Simulate database lookup network latency
     setTimeout(() => {
       const user = state.users.find(
-        (u) => u.email.toLowerCase() === email.toLowerCase() && checkPassword(password, u.password)
+        (u) => 
+          (u.email.toLowerCase() === identifier.toLowerCase() || 
+           (u.username && u.username.toLowerCase() === identifier.toLowerCase())) && 
+          checkPassword(password, u.password)
       );
 
       if (user) {
@@ -46,7 +49,7 @@ export default function Login() {
           navigate('/dashboard');
         }
       } else {
-        showToast('Email atau password salah!', 'error');
+        showToast('Username/Email atau password salah!', 'error');
         setLoading(false);
       }
     }, 800);
@@ -79,12 +82,12 @@ export default function Login() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Alamat Email</label>
+              <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Username atau Email</label>
               <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@konveksios.com"
+                type="text"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                placeholder="admin atau admin@konveksios.com"
                 className="input-base"
                 required
               />
