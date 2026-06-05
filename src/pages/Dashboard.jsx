@@ -50,14 +50,14 @@ export default function Dashboard() {
   const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 
   return (
-    <div className="space-y-6 animate-fade-in-up">
+    <div className="space-y-6 animate-fade-in-up text-white">
       {/* Header */}
       <div className="flex items-end justify-between">
         <div>
-          <p className="text-xs font-bold text-outline uppercase tracking-[0.15em]">
+          <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">
             {dayNames[today.getDay()]}, {today.getDate()} {monthNames[today.getMonth()]}
           </p>
-          <h1 className="text-2xl md:text-3xl font-black text-primary tracking-tight mt-1">
+          <h1 className="text-2xl md:text-3xl font-black bg-gradient-to-r from-purple-400 via-cyan-400 to-emerald-400 bg-clip-text text-transparent tracking-tight mt-1">
             Dashboard
           </h1>
         </div>
@@ -90,67 +90,67 @@ export default function Dashboard() {
 
       {/* Quick Actions */}
       <div>
-        <h2 className="text-sm font-bold text-on-surface-variant uppercase tracking-[0.1em] mb-3 px-1">
+        <h2 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3 px-1">
           Aksi Cepat
         </h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Link
             to="/barang-masuk"
-            className="bg-surface-container-lowest p-5 rounded-2xl flex flex-col items-center justify-center gap-2.5 transition-all active:scale-95 hover:shadow-md hover:shadow-primary/5 text-primary group"
+            className="bg-gradient-to-br from-white/[0.04] to-white/[0.01] border border-white/[0.08] p-5 rounded-2xl flex flex-col items-center justify-center gap-3 transition-all duration-300 active:scale-95 hover:bg-white/[0.06] hover:border-white/[0.15] hover:shadow-lg hover:shadow-purple-500/10 hover:-translate-y-0.5 text-slate-200 group"
           >
-            <span className="material-symbols-outlined text-2xl group-hover:scale-110 transition-transform">inventory_2</span>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-center">Barang Masuk</span>
+            <span className="material-symbols-outlined text-2xl text-purple-400 group-hover:scale-110 group-hover:text-cyan-400 transition-all duration-300">inventory_2</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-center text-slate-400 group-hover:text-slate-200 transition-colors">Barang Masuk</span>
           </Link>
           <Link
             to="/on-progress"
-            className="bg-surface-container-lowest p-5 rounded-2xl flex flex-col items-center justify-center gap-2.5 transition-all active:scale-95 hover:shadow-md hover:shadow-primary/5 text-primary group"
+            className="bg-gradient-to-br from-white/[0.04] to-white/[0.01] border border-white/[0.08] p-5 rounded-2xl flex flex-col items-center justify-center gap-3 transition-all duration-300 active:scale-95 hover:bg-white/[0.06] hover:border-white/[0.15] hover:shadow-lg hover:shadow-purple-500/10 hover:-translate-y-0.5 text-slate-200 group"
           >
-            <span className="material-symbols-outlined text-2xl group-hover:scale-110 transition-transform">sync</span>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-center">On Progress</span>
+            <span className="material-symbols-outlined text-2xl text-cyan-400 group-hover:scale-110 group-hover:text-purple-400 transition-all duration-300">sync</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-center text-slate-400 group-hover:text-slate-200 transition-colors">On Progress</span>
           </Link>
           <Link
             to="/kelaran"
-            className="bg-surface-container-lowest p-5 rounded-2xl flex flex-col items-center justify-center gap-2.5 transition-all active:scale-95 hover:shadow-md hover:shadow-primary/5 text-primary group"
+            className="bg-gradient-to-br from-white/[0.04] to-white/[0.01] border border-white/[0.08] p-5 rounded-2xl flex flex-col items-center justify-center gap-3 transition-all duration-300 active:scale-95 hover:bg-white/[0.06] hover:border-white/[0.15] hover:shadow-lg hover:shadow-purple-500/10 hover:-translate-y-0.5 text-slate-200 group"
           >
-            <span className="material-symbols-outlined text-2xl group-hover:scale-110 transition-transform">check_circle</span>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-center">Kelaran</span>
+            <span className="material-symbols-outlined text-2xl text-emerald-400 group-hover:scale-110 group-hover:text-cyan-400 transition-all duration-300">check_circle</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-center text-slate-400 group-hover:text-slate-200 transition-colors">Kelaran</span>
           </Link>
           <Link
             to="/invoice"
-            className="bg-surface-container-lowest p-5 rounded-2xl flex flex-col items-center justify-center gap-2.5 transition-all active:scale-95 hover:shadow-md hover:shadow-primary/5 text-primary group"
+            className="bg-gradient-to-br from-white/[0.04] to-white/[0.01] border border-white/[0.08] p-5 rounded-2xl flex flex-col items-center justify-center gap-3 transition-all duration-300 active:scale-95 hover:bg-white/[0.06] hover:border-white/[0.15] hover:shadow-lg hover:shadow-purple-500/10 hover:-translate-y-0.5 text-slate-200 group"
           >
-            <span className="material-symbols-outlined text-2xl group-hover:scale-110 transition-transform">receipt_long</span>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-center">Invoice</span>
+            <span className="material-symbols-outlined text-2xl text-amber-400 group-hover:scale-110 group-hover:text-purple-400 transition-all duration-300">receipt_long</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-center text-slate-400 group-hover:text-slate-200 transition-colors">Invoice</span>
           </Link>
         </div>
       </div>
 
       {/* Recent Activities */}
       <div>
-        <h2 className="text-sm font-bold text-on-surface-variant uppercase tracking-[0.1em] mb-3 px-1">
+        <h2 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3 px-1">
           Aktivitas Terbaru
         </h2>
-        <div className="bg-surface-container-lowest rounded-3xl divide-y divide-outline-variant/10 overflow-hidden">
+        <div className="bg-white/[0.02] border border-white/[0.06] backdrop-blur-md rounded-3xl divide-y divide-white/[0.04] overflow-hidden">
           {recentActivities.length === 0 ? (
-            <div className="p-8 text-center text-sm text-outline">Belum ada aktivitas</div>
+            <div className="p-8 text-center text-sm text-slate-500">Belum ada aktivitas</div>
           ) : (
             recentActivities.map((activity, idx) => (
               <div
                 key={idx}
-                className="flex items-center gap-3 px-5 py-3.5 hover:bg-surface-container-low/50 transition-colors"
+                className="flex items-center gap-4 px-5 py-4 hover:bg-white/[0.03] transition-colors"
               >
-                <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${
                   activity.type === 'kelaran'
-                    ? 'bg-tertiary-fixed/20 text-tertiary'
+                    ? 'bg-purple-500/10 text-purple-400 border-purple-500/20'
                     : activity.type === 'kasbon'
-                    ? 'bg-warning-container text-on-warning-container'
-                    : 'bg-surface-container-high text-on-surface-variant'
+                    ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                    : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'
                 }`}>
                   <span className="material-symbols-outlined text-[18px]">{activity.icon}</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-on-surface truncate">{activity.text}</p>
-                  <p className="text-[10px] text-outline font-medium">{activity.date}</p>
+                  <p className="text-sm font-semibold text-slate-200 truncate">{activity.text}</p>
+                  <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">{activity.date}</p>
                 </div>
               </div>
             ))
@@ -161,33 +161,33 @@ export default function Dashboard() {
       {/* FAB with quick menu */}
       <div className="fixed bottom-20 md:bottom-8 right-4 md:right-8 z-40">
         {showQuickMenu && (
-          <div className="absolute bottom-16 right-0 bg-surface-container-lowest rounded-2xl shadow-2xl p-2 min-w-[180px] animate-scale-in">
+          <div className="absolute bottom-16 right-0 bg-slate-900/95 border border-white/[0.08] backdrop-blur-2xl rounded-2xl shadow-2xl p-2.5 min-w-[190px] animate-scale-in text-white shadow-black/80">
             <button
               onClick={() => { setShowBarangMasuk(true); setShowQuickMenu(false); }}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-surface-container-low transition-colors text-left"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/[0.06] transition-colors text-left text-slate-300 hover:text-white"
             >
-              <span className="material-symbols-outlined text-primary text-[20px]">inventory_2</span>
-              <span className="text-sm font-medium">Barang Masuk</span>
+              <span className="material-symbols-outlined text-purple-400 text-[20px]">inventory_2</span>
+              <span className="text-xs font-semibold tracking-wide">Barang Masuk</span>
             </button>
             <button
               onClick={() => { setShowKasbon(true); setShowQuickMenu(false); }}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-surface-container-low transition-colors text-left"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/[0.06] transition-colors text-left text-slate-300 hover:text-white"
             >
-              <span className="material-symbols-outlined text-primary text-[20px]">account_balance_wallet</span>
-              <span className="text-sm font-medium">Kasbon</span>
+              <span className="material-symbols-outlined text-amber-400 text-[20px]">account_balance_wallet</span>
+              <span className="text-xs font-semibold tracking-wide">Kasbon</span>
             </button>
             <button
               onClick={() => { setShowCost(true); setShowQuickMenu(false); }}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-surface-container-low transition-colors text-left"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/[0.06] transition-colors text-left text-slate-300 hover:text-white"
             >
-              <span className="material-symbols-outlined text-primary text-[20px]">payments</span>
-              <span className="text-sm font-medium">Cost Harian</span>
+              <span className="material-symbols-outlined text-cyan-400 text-[20px]">payments</span>
+              <span className="text-xs font-semibold tracking-wide">Cost Harian</span>
             </button>
           </div>
         )}
         <button
           onClick={() => setShowQuickMenu(!showQuickMenu)}
-          className={`flex items-center justify-center w-14 h-14 bg-primary text-on-primary rounded-2xl shadow-2xl shadow-primary/25 hover:shadow-primary/35 hover:scale-105 active:scale-95 transition-all duration-200 ${showQuickMenu ? 'rotate-45' : ''}`}
+          className={`flex items-center justify-center w-14 h-14 bg-gradient-to-r from-purple-600 to-cyan-600 text-white rounded-2xl shadow-2xl shadow-purple-500/30 hover:shadow-purple-500/50 hover:scale-105 active:scale-95 transition-all duration-200 ${showQuickMenu ? 'rotate-45' : ''}`}
         >
           <span className="material-symbols-outlined text-[26px]">add</span>
         </button>
@@ -200,3 +200,4 @@ export default function Dashboard() {
     </div>
   );
 }
+

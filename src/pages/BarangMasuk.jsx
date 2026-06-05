@@ -13,17 +13,17 @@ export default function BarangMasuk() {
   const [showDistribusi, setShowDistribusi] = useState(false);
 
   return (
-    <div className="space-y-6 animate-fade-in-up">
+    <div className="space-y-6 animate-fade-in-up text-white">
       <div className="flex items-end justify-between">
         <div>
-          <h1 className="text-2xl md:text-3xl font-black text-primary tracking-tight">Barang Masuk</h1>
-          <p className="text-sm text-on-surface-variant font-medium mt-1">
+          <h1 className="text-2xl md:text-3xl font-black bg-gradient-to-r from-purple-400 via-cyan-400 to-emerald-400 bg-clip-text text-transparent tracking-tight">Barang Masuk</h1>
+          <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-1">
             {barangMasuk.length} entri tercatat
           </p>
         </div>
         <button
           onClick={() => setShowDistribusi(true)}
-          className="hidden md:flex items-center gap-2 px-4 py-2.5 bg-secondary-container text-on-secondary-container rounded-xl text-xs font-bold hover:bg-secondary hover:text-on-secondary transition-all"
+          className="hidden md:flex items-center gap-2 px-4 py-2.5 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] text-slate-200 hover:text-white rounded-xl text-xs font-bold transition-all hover:scale-[1.03] active:scale-[0.97]"
         >
           <span className="material-symbols-outlined text-[18px]">send</span>
           Distribusi
@@ -44,16 +44,16 @@ export default function BarangMasuk() {
             return (
               <div
                 key={bm.id}
-                className="bg-surface-container-lowest p-5 rounded-2xl hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 group"
+                className="bg-gradient-to-br from-white/[0.04] to-white/[0.01] border border-white/[0.08] hover:border-white/[0.15] p-5 rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10 group"
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-xl bg-primary-fixed/30 flex items-center justify-center text-primary shrink-0">
+                    <div className="w-11 h-11 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center justify-center shrink-0">
                       <span className="material-symbols-outlined text-[20px]">checkroom</span>
                     </div>
                     <div>
-                      <h3 className="font-bold text-on-surface">{model?.nama || 'Model'}</h3>
-                      <p className="text-xs text-outline font-medium">{bm.tanggal}</p>
+                      <h3 className="font-bold text-slate-200">{model?.nama || 'Model'}</h3>
+                      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">{bm.tanggal}</p>
                     </div>
                   </div>
                   <Badge variant={bm.sisaBelumDistribusi === 0 ? 'success' : bm.sisaBelumDistribusi < bm.jumlah ? 'primary' : 'default'}>
@@ -64,28 +64,28 @@ export default function BarangMasuk() {
                 <div className="flex items-center justify-between text-sm">
                   <div className="flex gap-4">
                     <div>
-                      <p className="text-[10px] text-outline font-bold uppercase tracking-widest">Total</p>
-                      <p className="font-bold text-on-surface">{bm.jumlah} pcs</p>
+                      <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest leading-none mb-1">Total</p>
+                      <p className="font-bold text-slate-200">{bm.jumlah} pcs</p>
                     </div>
                     <div>
-                      <p className="text-[10px] text-outline font-bold uppercase tracking-widest">Ongkos</p>
-                      <p className="font-bold text-primary">{formatRupiah(model?.hargaJahit || 0)}/pcs</p>
+                      <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest leading-none mb-1">Ongkos</p>
+                      <p className="font-bold text-purple-400">{formatRupiah(model?.hargaJahit || 0)}/pcs</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Progress bar */}
-                <div className="mt-3">
-                  <div className="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden">
+                <div className="mt-4">
+                  <div className="w-full bg-slate-950/60 border border-white/[0.04] h-1.5 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-primary to-tertiary rounded-full transition-all duration-500"
+                      className="h-full bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full transition-all duration-500"
                       style={{ width: `${pctDistributed}%` }}
                     />
                   </div>
                 </div>
 
                 {bm.catatan && (
-                  <p className="mt-2.5 text-xs text-outline italic">{bm.catatan}</p>
+                  <p className="mt-3 text-xs text-slate-400 italic font-medium">Catatan: {bm.catatan}</p>
                 )}
               </div>
             );

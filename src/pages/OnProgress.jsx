@@ -26,17 +26,17 @@ export default function OnProgress() {
   const taylorIds = Object.keys(taylorGroups);
 
   return (
-    <div className="space-y-6 animate-fade-in-up">
+    <div className="space-y-6 animate-fade-in-up text-white">
       <div className="flex items-end justify-between">
         <div>
-          <h1 className="text-2xl md:text-3xl font-black text-primary tracking-tight">On Progress</h1>
-          <p className="text-sm text-on-surface-variant font-medium mt-1">
+          <h1 className="text-2xl md:text-3xl font-black bg-gradient-to-r from-purple-400 via-cyan-400 to-emerald-400 bg-clip-text text-transparent tracking-tight">On Progress</h1>
+          <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-1">
             Barang yang sedang dijahit taylor
           </p>
         </div>
         <button
           onClick={() => setShowKelaran(true)}
-          className="hidden md:flex items-center gap-2 px-4 py-2.5 bg-tertiary-container text-on-tertiary-container rounded-xl text-xs font-bold hover:bg-tertiary hover:text-on-tertiary transition-all"
+          className="hidden md:flex items-center gap-2 px-4 py-2.5 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] text-slate-200 hover:text-white rounded-xl text-xs font-bold transition-all hover:scale-[1.03] active:scale-[0.97]"
         >
           <span className="material-symbols-outlined text-[18px]">check_circle</span>
           Catat Kelaran
@@ -60,12 +60,12 @@ export default function OnProgress() {
                 {/* Taylor Header */}
                 <div className="flex items-center justify-between px-1">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-on-primary text-sm font-bold">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-cyan-600 flex items-center justify-center text-white text-sm font-bold shadow-md shadow-purple-500/20">
                       {taylor?.nama?.charAt(0) || '?'}
                     </div>
                     <div>
-                      <h3 className="font-bold text-on-surface text-sm">{taylor?.nama}</h3>
-                      <p className="text-[10px] text-outline font-bold uppercase tracking-widest">
+                      <h3 className="font-bold text-slate-200 text-sm">{taylor?.nama}</h3>
+                      <p className="text-[9px] text-slate-500 font-black uppercase tracking-[0.15em] mt-0.5">
                         {totalSisa} pcs sedang dijahit
                       </p>
                     </div>
@@ -73,33 +73,35 @@ export default function OnProgress() {
                 </div>
 
                 {/* Items */}
-                {items.map((d) => {
-                  const model = getModel(d.modelId);
-                  const pctDone = ((d.jumlah - d.sisa) / d.jumlah) * 100;
-                  return (
-                    <div
-                      key={d.id}
-                      className="bg-surface-container-lowest p-4 rounded-2xl border-l-4 border-primary/30 hover:border-primary transition-colors"
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <div>
-                          <h4 className="font-bold text-on-surface text-sm">{model?.nama}</h4>
-                          <p className="text-[10px] text-outline">{d.tanggal}</p>
+                <div className="grid grid-cols-1 gap-3">
+                  {items.map((d) => {
+                    const model = getModel(d.modelId);
+                    const pctDone = ((d.jumlah - d.sisa) / d.jumlah) * 100;
+                    return (
+                      <div
+                        key={d.id}
+                        className="bg-gradient-to-br from-white/[0.04] to-white/[0.01] border-t border-r border-b border-white/[0.08] border-l-4 border-l-purple-500 p-4 rounded-2xl hover:border-white/[0.15] hover:shadow-md hover:shadow-purple-500/5 transition-all duration-300"
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <div>
+                            <h4 className="font-bold text-slate-200 text-sm">{model?.nama}</h4>
+                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">{d.tanggal}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm font-black text-purple-400">{d.sisa} pcs</p>
+                            <p className="text-[9px] text-slate-500 font-black uppercase tracking-wider mt-0.5">sisa dari {d.jumlah}</p>
+                          </div>
                         </div>
-                        <div className="text-right">
-                          <p className="text-sm font-black text-primary">{d.sisa} pcs</p>
-                          <p className="text-[10px] text-outline">sisa dari {d.jumlah}</p>
+                        <div className="w-full bg-slate-950/60 border border-white/[0.04] h-1.5 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full transition-all duration-500"
+                            style={{ width: `${pctDone}%` }}
+                          />
                         </div>
                       </div>
-                      <div className="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-gradient-to-r from-primary to-tertiary rounded-full transition-all duration-500"
-                          style={{ width: `${pctDone}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
             );
           })}

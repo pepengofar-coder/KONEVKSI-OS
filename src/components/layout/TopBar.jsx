@@ -1,34 +1,31 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function TopBar({ title }) {
-  const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   return (
-    <header className="bg-surface/70 backdrop-blur-xl sticky top-0 z-40 flex justify-between items-center w-full px-4 md:px-6 h-14 md:h-16">
+    <header className="bg-slate-950/70 backdrop-blur-xl border-b border-white/[0.06] sticky top-0 z-40 flex justify-between items-center w-full px-4 md:px-6 h-14 md:h-16 text-white">
       <div className="flex items-center gap-3">
-        <button
-          className="md:hidden p-1.5 rounded-full hover:bg-surface-container-high transition-colors"
-          onClick={() => setMenuOpen(!menuOpen)}
-        >
-          <span className="material-symbols-outlined text-primary text-[22px]">menu</span>
-        </button>
-        <span className="text-lg md:text-xl font-bold text-primary tracking-tighter">
+        {/* Logo Icon for Mobile */}
+        <div className="md:hidden w-7 h-7 rounded-lg bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-purple-500/10 shrink-0">
+          <span className="material-symbols-outlined text-white text-[14px] filled">checkroom</span>
+        </div>
+        <span className="text-base md:text-lg font-black tracking-tighter bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
           {title || 'Konveksi OS'}
         </span>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
         <button
-          className="p-2 rounded-full hover:bg-surface-container-high transition-colors text-on-surface-variant"
+          className="p-2 rounded-xl hover:bg-white/[0.06] transition-all text-slate-300 hover:text-white flex items-center justify-center"
           onClick={() => navigate('/dashboard')}
         >
           <span className="material-symbols-outlined text-[20px]">home</span>
         </button>
-        <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-on-primary text-xs font-bold">
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-600 to-cyan-600 flex items-center justify-center text-white text-xs font-bold shadow-md shadow-purple-500/20">
           A
         </div>
       </div>
     </header>
   );
 }
+

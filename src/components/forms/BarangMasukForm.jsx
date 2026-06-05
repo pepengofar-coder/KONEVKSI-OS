@@ -45,16 +45,16 @@ export default function BarangMasukForm({ isOpen, onClose }) {
     <Modal isOpen={isOpen} onClose={onClose} title="Barang Masuk Baru">
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label className="block text-[10px] font-bold uppercase tracking-widest text-outline mb-2">Model Pakaian</label>
+          <label className="block text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Model Pakaian</label>
           <select
             value={modelId}
             onChange={(e) => setModelId(e.target.value)}
-            className="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 text-sm font-medium focus:ring-2 focus:ring-primary/20"
+            className="w-full bg-slate-900/80 border border-white/[0.08] text-slate-200 rounded-xl px-4 py-3 text-sm font-medium focus:border-purple-500 focus:ring-1 focus:ring-purple-500/25 transition-all"
             required
           >
-            <option value="">Pilih model...</option>
+            <option value="" className="bg-slate-900 text-slate-400">Pilih model...</option>
             {models.map((m) => (
-              <option key={m.id} value={m.id}>
+              <option key={m.id} value={m.id} className="bg-slate-900 text-slate-200">
                 {m.nama} — Rp {m.hargaJahit.toLocaleString('id-ID')}/pcs
               </option>
             ))}
@@ -62,7 +62,7 @@ export default function BarangMasukForm({ isOpen, onClose }) {
           <button
             type="button"
             onClick={() => setShowNewModel(!showNewModel)}
-            className="mt-2 text-xs text-primary font-semibold flex items-center gap-1 hover:underline"
+            className="mt-2 text-xs text-purple-400 hover:text-purple-300 font-bold flex items-center gap-1 transition-colors"
           >
             <span className="material-symbols-outlined text-[14px]">add</span>
             Tambah Model Baru
@@ -70,25 +70,25 @@ export default function BarangMasukForm({ isOpen, onClose }) {
         </div>
 
         {showNewModel && (
-          <div className="bg-surface-container-low rounded-2xl p-4 space-y-3 animate-scale-in">
+          <div className="bg-slate-950/40 border border-white/[0.08] rounded-2xl p-4 space-y-3 animate-scale-in">
             <input
               type="text"
               placeholder="Nama model (misal: Gamis B)"
               value={newModelNama}
               onChange={(e) => setNewModelNama(e.target.value)}
-              className="w-full bg-surface-container-lowest border-none rounded-xl px-4 py-2.5 text-sm"
+              className="w-full bg-slate-900/60 border border-white/[0.08] text-slate-200 placeholder-slate-500 rounded-xl px-4 py-2.5 text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-500/25 transition-all"
             />
             <input
               type="number"
               placeholder="Harga jahit per pcs"
               value={newModelHarga}
               onChange={(e) => setNewModelHarga(e.target.value)}
-              className="w-full bg-surface-container-lowest border-none rounded-xl px-4 py-2.5 text-sm"
+              className="w-full bg-slate-900/60 border border-white/[0.08] text-slate-200 placeholder-slate-500 rounded-xl px-4 py-2.5 text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-500/25 transition-all"
             />
             <button
               type="button"
               onClick={handleAddModel}
-              className="w-full py-2.5 bg-secondary-container text-on-secondary-container rounded-xl text-xs font-bold"
+              className="w-full py-2.5 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] text-slate-200 hover:text-white rounded-xl text-xs font-bold transition-all duration-200"
             >
               Simpan Model
             </button>
@@ -96,32 +96,32 @@ export default function BarangMasukForm({ isOpen, onClose }) {
         )}
 
         <div>
-          <label className="block text-[10px] font-bold uppercase tracking-widest text-outline mb-2">Jumlah Potong</label>
+          <label className="block text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Jumlah Potong</label>
           <input
             type="number"
             value={jumlah}
             onChange={(e) => setJumlah(e.target.value)}
             placeholder="100"
             min="1"
-            className="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 text-sm font-medium"
+            className="w-full bg-slate-900/60 border border-white/[0.08] text-slate-200 placeholder-slate-500 rounded-xl px-4 py-3 text-sm font-medium focus:border-purple-500 focus:ring-1 focus:ring-purple-500/25 transition-all"
             required
           />
         </div>
 
         <div>
-          <label className="block text-[10px] font-bold uppercase tracking-widest text-outline mb-2">Catatan (opsional)</label>
+          <label className="block text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Catatan (opsional)</label>
           <input
             type="text"
             value={catatan}
             onChange={(e) => setCatatan(e.target.value)}
             placeholder="Kain dari Pak Hasan"
-            className="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 text-sm"
+            className="w-full bg-slate-900/60 border border-white/[0.08] text-slate-200 placeholder-slate-500 rounded-xl px-4 py-3 text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-500/25 transition-all"
           />
         </div>
 
         <button
           type="submit"
-          className="w-full py-3.5 bg-primary text-on-primary rounded-2xl font-bold text-sm hover:bg-primary-container hover:text-on-primary-container transition-all active:scale-[0.98]"
+          className="w-full py-3.5 bg-gradient-to-r from-purple-600 to-cyan-600 hover:shadow-purple-500/25 text-white rounded-2xl font-bold text-sm hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
         >
           Simpan Barang Masuk
         </button>
@@ -129,3 +129,4 @@ export default function BarangMasukForm({ isOpen, onClose }) {
     </Modal>
   );
 }
+
