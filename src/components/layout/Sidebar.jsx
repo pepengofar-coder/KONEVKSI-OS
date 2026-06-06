@@ -19,11 +19,14 @@ export default function Sidebar() {
   const userBusinessRole = state.currentUser ? (state.currentUser.businessRole || 'Owner') : 'Owner';
   const userRoleLabel = state.currentUser ? `${state.currentUser.role} · ${businessName}` : 'Owner';
 
+  // Filter nav groups by user's business role
   const allowedRoutes = ROLE_ROUTES[userBusinessRole] || [];
-  const filteredNavGroups = navGroups.map((group) => {
-    const items = group.items.filter((item) => allowedRoutes.includes(item.to));
-    return { ...group, items };
-  }).filter((group) => group.items.length > 0);
+  const filteredNavGroups = navGroups
+    .map(group => ({
+      ...group,
+      items: group.items.filter(item => allowedRoutes.includes(item.to))
+    }))
+    .filter(group => group.items.length > 0);
 
   return (
     <aside className="hidden md:flex flex-col h-screen py-6 bg-white/[0.02] md:bg-white/[0.03] backdrop-blur-3xl w-72 border-r border-white/10 shrink-0 relative z-20">

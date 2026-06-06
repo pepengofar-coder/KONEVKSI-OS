@@ -6,12 +6,12 @@ const PAGE_TITLES = {
   '/barang-masuk': 'Barang Masuk',
   '/on-progress': 'On Progress',
   '/kelaran': 'Kelaran',
-  '/kasbon': 'Kasbon Taylor',
-  '/invoice': 'Invoice Taylor',
+  '/kasbon-taylor': 'Kasbon Taylor',
+  '/invoice-taylor': 'Invoice Taylor',
   '/cost-harian': 'Cost Harian',
   '/laporan': 'Laporan Keuangan',
   '/invoice-pelanggan': 'Invoice Pelanggan',
-  '/customers': 'Pelanggan',
+  '/pelanggan': 'Pelanggan',
   '/profile': 'Pengaturan Usaha',
 };
 

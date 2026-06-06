@@ -50,19 +50,14 @@ function PageLoader() {
 
 function DomainRedirector({ children }) {
   const navigate = useNavigate();
-  const location = useLocation();
   const state = useAppState();
-  const user = state?.currentUser;
+  const currentUser = state?.currentUser;
 
   useEffect(() => {
-    if (!user) return; // belum login → jangan redirect
-
-    const publicPaths = ['/', '/login', '/register', '/super-admin/login'];
-    if (publicPaths.includes(location.pathname)) {
-      if (user.role === "SUPER_ADMIN") navigate("/super-admin/dashboard");
-      else navigate("/dashboard");
-    }
-  }, [user, location.pathname, navigate]);
+    if (!currentUser) return; // Belum login → jangan redirect
+    if (currentUser.role === "SUPER_ADMIN") navigate("/super-admin/dashboard");
+    else navigate("/dashboard"); // USER / ADMIN → dashboard normal
+  }, [currentUser]);
 
   return children;
 }
@@ -85,12 +80,12 @@ export default function App() {
             <Route path="/barang-masuk" element={<BarangMasuk />} />
             <Route path="/on-progress" element={<OnProgress />} />
             <Route path="/kelaran" element={<Kelaran />} />
-            <Route path="/kasbon" element={<Kasbon />} />
-            <Route path="/invoice" element={<InvoiceTaylor />} />
+            <Route path="/kasbon-taylor" element={<Kasbon />} />
+            <Route path="/invoice-taylor" element={<InvoiceTaylor />} />
             <Route path="/cost-harian" element={<CostHarian />} />
             <Route path="/laporan" element={<LaporanKeuangan />} />
             <Route path="/invoice-pelanggan" element={<InvoicePelanggan />} />
-            <Route path="/customers" element={<Customers />} />
+            <Route path="/pelanggan" element={<Customers />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/pricing" element={<Pricing />} />
           </Route>

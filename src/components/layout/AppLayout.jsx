@@ -8,9 +8,9 @@ import MobileDrawer from './MobileDrawer';
 import UpgradeModal from '../ui/UpgradeModal';
 
 export const ROLE_ROUTES = {
-  'Owner': ['/dashboard', '/barang-masuk', '/on-progress', '/kelaran', '/kasbon', '/invoice', '/cost-harian', '/laporan', '/invoice-pelanggan', '/customers', '/profile', '/pricing'],
-  'Admin Keuangan': ['/dashboard', '/kasbon', '/invoice', '/cost-harian', '/laporan', '/invoice-pelanggan', '/profile', '/pricing'],
-  'Staff Administrasi': ['/dashboard', '/barang-masuk', '/on-progress', '/kelaran', '/customers', '/profile', '/pricing']
+  'Owner': ['/dashboard', '/barang-masuk', '/on-progress', '/kelaran', '/kasbon-taylor', '/invoice-taylor', '/cost-harian', '/laporan', '/invoice-pelanggan', '/pelanggan', '/profile', '/pricing'],
+  'Admin Keuangan': ['/dashboard', '/kasbon-taylor', '/invoice-taylor', '/cost-harian', '/laporan', '/invoice-pelanggan', '/profile', '/pricing'],
+  'Staff Administrasi': ['/dashboard', '/barang-masuk', '/on-progress', '/kelaran', '/pelanggan', '/profile', '/pricing']
 };
 
 export default function AppLayout() {
@@ -24,29 +24,21 @@ export default function AppLayout() {
   // Auth Guard & Onboarding Redirect
   useEffect(() => {
     const user = state.currentUser;
-    if (!user) return navigate("/login"); 
-    if (user.role === "SUPER_ADMIN") return navigate("/super-admin/dashboard");
-    
-    // Onboarding check for regular user
+    if (!user) {
+      return navigate("/login");
+    }
+
+    // SUPER_ADMIN should never reach AppLayout (should be caught by DomainRedirector)
+    // But as defensive guard: redirect to their dashboard
+    if (user.role === "SUPER_ADMIN") {
+      return navigate("/super-admin/dashboard");
+    }
+
+    // Redirect to onboarding if user hasn't set up business profile
     if (!user.categories || user.categories.length === 0 || !user.businessRole) {
-      navigate('/onboarding');
+      return navigate('/onboarding');
     }
   }, [state.currentUser, navigate]);
-
-  // Role Security Route Guard
-  useEffect(() => {
-    if (state.currentUser && state.currentUser.role !== 'ADMIN' && state.currentUser.role !== 'SUPER_ADMIN') {
-      const businessRole = state.currentUser.businessRole;
-      const path = location.pathname;
-      const allowed = ROLE_ROUTES[businessRole] || [];
-      
-      const isAllowed = allowed.includes(path);
-      if (!isAllowed && path !== '/onboarding') {
-        showToast(`Akses Ditolak: Anda tidak memiliki akses ke ${path}.`, 'error');
-        navigate('/dashboard');
-      }
-    }
-  }, [state.currentUser, location.pathname, navigate]);
 
   if (!state.currentUser) {
     return null; // Prevents flashing dashboard before redirect

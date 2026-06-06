@@ -12,10 +12,7 @@ const tabs = [
 export default function BottomNav({ onOpenDrawer }) {
   const state = useAppState();
   const location = useLocation();
-  const userRole = state.currentUser ? state.currentUser.role : 'Owner';
-  const allowedRoutes = ROLE_ROUTES[userRole] || [];
-
-  const filteredTabs = tabs.filter((tab) => allowedRoutes.includes(tab.to));
+  const filteredTabs = tabs;
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center px-2 pb-5 pt-2 bg-slate-950/40 border-t border-white/10 backdrop-blur-3xl z-45 rounded-t-[1.5rem] shadow-[0_-8px_32px_rgba(0,0,0,0.5)]">

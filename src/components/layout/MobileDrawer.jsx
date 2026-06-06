@@ -11,12 +11,12 @@ const navGroups = [
     { to: '/kelaran', icon: 'check_circle', label: 'Kelaran' },
   ]},
   { label: 'Penjualan', items: [
-    { to: '/customers', icon: 'groups', label: 'Pelanggan' },
+    { to: '/pelanggan', icon: 'groups', label: 'Pelanggan' },
     { to: '/invoice-pelanggan', icon: 'description', label: 'Invoice Pelanggan' },
   ]},
   { label: 'Keuangan Penjahit', items: [
-    { to: '/kasbon', icon: 'account_balance_wallet', label: 'Kasbon Taylor' },
-    { to: '/invoice', icon: 'receipt_long', label: 'Invoice Taylor' },
+    { to: '/kasbon-taylor', icon: 'account_balance_wallet', label: 'Kasbon Taylor' },
+    { to: '/invoice-taylor', icon: 'receipt_long', label: 'Invoice Taylor' },
   ]},
   { label: 'Laporan & Kas', items: [
     { to: '/cost-harian', icon: 'payments', label: 'Cost Harian' },
@@ -37,14 +37,15 @@ export default function MobileDrawer({ isOpen, onClose }) {
   const userName = state.currentUser?.nama || 'Admin';
   const userInitial = userName.charAt(0).toUpperCase();
   const userRoleLabel = `${state.currentUser?.role || 'USER'} · ${state.currentUser?.businessProfile?.namaUsaha || 'Konveksi'}`;
-  const allowedRoutes = ROLE_ROUTES[userBusinessRole] || [];
 
+  // Filter nav groups by user's business role
+  const allowedRoutes = ROLE_ROUTES[userBusinessRole] || [];
   const filteredNavGroups = navGroups
-    .map((group) => ({
+    .map(group => ({
       ...group,
-      items: group.items.filter((item) => allowedRoutes.includes(item.to)),
+      items: group.items.filter(item => allowedRoutes.includes(item.to))
     }))
-    .filter((group) => group.items.length > 0);
+    .filter(group => group.items.length > 0);
 
   // Lock body scroll & handle Escape
   useEffect(() => {

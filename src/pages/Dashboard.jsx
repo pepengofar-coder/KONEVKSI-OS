@@ -25,7 +25,7 @@ export default function Dashboard() {
   const totalCostRp = todayCost.reduce((s, c) => s + c.nominal, 0);
   const totalKasbonRp = kasbonBelumLunas.reduce((s, kb) => s + kb.nominal, 0);
 
-  const userRole = state.currentUser?.role || 'Owner';
+  const userRole = state.currentUser?.businessRole || 'Owner';
   const businessName = state.currentUser?.businessProfile?.namaUsaha || 'Konveksi Anda';
 
   // Monthly Revenue Calculation
@@ -50,8 +50,8 @@ export default function Dashboard() {
   // Hero quick action definitions with route-based filtering
   const heroQuickActions = [
     { label: 'Buat Order', icon: 'shopping_cart', to: '/invoice-pelanggan', color: 'purple' },
-    { label: 'Buat Invoice', icon: 'receipt_long', to: '/invoice', color: 'cyan' },
-    { label: 'Tambah Pelanggan', icon: 'person_add', to: '/customers', color: 'emerald' },
+    { label: 'Buat Invoice', icon: 'receipt_long', to: '/invoice-taylor', color: 'cyan' },
+    { label: 'Tambah Pelanggan', icon: 'person_add', to: '/pelanggan', color: 'emerald' },
     { label: 'Tracking Produksi', icon: 'sync', to: '/on-progress', color: 'amber' },
   ];
 
@@ -404,7 +404,7 @@ export default function Dashboard() {
                 <span className="text-[10px] font-black uppercase tracking-widest text-center text-slate-400 group-hover:text-slate-200 transition-colors">Kelaran</span>
               </Link>
               <Link
-                to="/invoice"
+                to="/invoice-taylor"
                 className="bg-gradient-to-br from-white/[0.04] to-white/[0.01] border border-white/[0.08] p-5 rounded-2xl flex flex-col items-center justify-center gap-3 transition-all duration-300 active:scale-95 hover:bg-white/[0.06] hover:border-white/[0.15] hover:shadow-lg hover:shadow-purple-500/10 hover:-translate-y-0.5 text-slate-200 group"
               >
                 <span className="material-symbols-outlined text-2xl text-amber-400 group-hover:scale-110 group-hover:text-purple-400 transition-all duration-300">receipt_long</span>
@@ -416,7 +416,7 @@ export default function Dashboard() {
           {userRole === 'Admin Keuangan' && (
             <>
               <Link
-                to="/kasbon"
+                to="/kasbon-taylor"
                 className="bg-gradient-to-br from-white/[0.04] to-white/[0.01] border border-white/[0.08] p-5 rounded-2xl flex flex-col items-center justify-center gap-3 transition-all duration-300 active:scale-95 hover:bg-white/[0.06] hover:border-white/[0.15] hover:shadow-lg hover:shadow-purple-500/10 hover:-translate-y-0.5 text-slate-200 group"
               >
                 <span className="material-symbols-outlined text-2xl text-amber-400 group-hover:scale-110 group-hover:text-cyan-400 transition-all duration-300">account_balance_wallet</span>
@@ -470,7 +470,7 @@ export default function Dashboard() {
                 <span className="text-[10px] font-black uppercase tracking-widest text-center text-slate-400 group-hover:text-slate-200 transition-colors">Kelaran</span>
               </Link>
               <Link
-                to="/customers"
+                to="/pelanggan"
                 className="bg-gradient-to-br from-white/[0.04] to-white/[0.01] border border-white/[0.08] p-5 rounded-2xl flex flex-col items-center justify-center gap-3 transition-all duration-300 active:scale-95 hover:bg-white/[0.06] hover:border-white/[0.15] hover:shadow-lg hover:shadow-purple-500/10 hover:-translate-y-0.5 text-slate-200 group"
               >
                 <span className="material-symbols-outlined text-2xl text-amber-400 group-hover:scale-110 group-hover:text-cyan-400 transition-all duration-300">groups</span>
