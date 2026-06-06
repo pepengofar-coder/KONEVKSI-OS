@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useAppState, useAppDispatch, useHelpers } from '../context/AppContext';
 import CostForm from '../components/forms/CostForm';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
-import FAB from '../components/ui/FAB';
 import EmptyState from '../components/ui/EmptyState';
 
 export default function CostHarian() {
@@ -62,11 +61,20 @@ export default function CostHarian() {
 
   return (
     <div className="space-y-6 animate-fade-in-up text-white">
-      <div>
-        <h1 className="text-2xl md:text-3xl font-black font-display bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent tracking-tight">Cost Harian</h1>
-        <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-1">
-          Pengeluaran operasional sehari-hari
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-black font-display bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent tracking-tight">Cost Harian</h1>
+          <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-1">
+            Pengeluaran operasional sehari-hari
+          </p>
+        </div>
+        <button
+          onClick={() => { setCostToEdit(null); setShowForm(true); }}
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-cyan-600 text-white font-bold text-sm shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 hover:scale-[1.02] active:scale-98 transition-all"
+        >
+          <span className="material-symbols-outlined text-[20px]">add</span>
+          Tambah Cost
+        </button>
       </div>
 
       {/* Summary Cards */}
@@ -216,7 +224,6 @@ export default function CostHarian() {
         </div>
       )}
 
-      <FAB onClick={() => { setCostToEdit(null); setShowForm(true); }} icon="add" label="Tambah Cost" />
       <CostForm isOpen={showForm} onClose={() => { setShowForm(false); setCostToEdit(null); }} costToEdit={costToEdit} />
       
       {/* Confirm Delete */}

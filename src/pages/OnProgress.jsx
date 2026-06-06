@@ -4,7 +4,6 @@ import DistribusiForm from '../components/forms/DistribusiForm';
 import KelaranForm from '../components/forms/KelaranForm';
 import TrackingJobForm from '../components/forms/TrackingJobForm';
 import Badge from '../components/ui/Badge';
-import FAB from '../components/ui/FAB';
 import EmptyState from '../components/ui/EmptyState';
 
 export default function OnProgress() {
@@ -38,28 +37,26 @@ export default function OnProgress() {
 
   return (
     <div className="space-y-6 animate-fade-in-up text-white">
-      <div className="flex items-end justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-black font-display bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent tracking-tight">On Progress</h1>
           <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-1">
             Barang yang sedang dijahit taylor
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          {/* Mobile Catat Kelaran button */}
+        <div className="flex items-center gap-2.5 w-full sm:w-auto">
           <button
-            onClick={() => setShowKelaran(true)}
-            className="flex md:hidden items-center gap-1.5 px-3 py-2.5 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] text-slate-200 hover:text-white rounded-xl text-[10px] font-bold transition-all active:scale-[0.97]"
+            onClick={() => setShowDistribusi(true)}
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-cyan-600 text-white font-bold text-sm shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 hover:scale-[1.02] active:scale-98 transition-all"
           >
-            <span className="material-symbols-outlined text-[16px]">check_circle</span>
-            Kelaran
+            <span className="material-symbols-outlined text-[20px]">send</span>
+            Distribusi
           </button>
-          {/* Desktop Catat Kelaran button */}
           <button
             onClick={() => setShowKelaran(true)}
-            className="hidden md:flex items-center gap-2 px-4 py-2.5 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] text-slate-200 hover:text-white rounded-xl text-xs font-bold transition-all hover:scale-[1.03] active:scale-[0.97]"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] text-slate-200 hover:text-white font-bold text-sm transition-all hover:scale-[1.02] active:scale-98"
           >
-            <span className="material-symbols-outlined text-[18px]">check_circle</span>
+            <span className="material-symbols-outlined text-[20px]">check_circle</span>
             Catat Kelaran
           </button>
         </div>
@@ -106,45 +103,62 @@ export default function OnProgress() {
                     return (
                       <div
                         key={d.id}
-                        className="bg-gradient-to-br from-white/[0.04] to-white/[0.01] border-t border-r border-b border-white/[0.08] border-l-4 border-l-purple-500 p-4 rounded-2xl hover:border-white/[0.15] hover:shadow-md hover:shadow-purple-500/5 transition-all duration-300"
+                        className="bg-gradient-to-br from-white/[0.04] to-white/[0.01] border border-white/[0.08] border-l-4 border-l-purple-500 p-5 rounded-3xl hover:border-white/[0.15] hover:shadow-md hover:shadow-purple-500/5 transition-all duration-300"
                       >
-                        <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-3 gap-3">
-                          <div>
-                            <h4 className="font-bold text-slate-200 text-sm">{model?.nama}</h4>
-                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">{d.tanggal}</p>
+                        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                          <div className="min-w-0 flex-1 space-y-3">
+                            {/* Header Info */}
+                            <div className="flex flex-wrap items-center gap-2">
+                              {trackJob ? (
+                                <Badge variant="primary">
+                                  {trackJob.status}
+                                </Badge>
+                              ) : (
+                                <Badge variant="default">
+                                  Belum Dikerjakan
+                                </Badge>
+                              )}
+                              <h4 className="font-bold text-slate-200 text-sm">{model?.nama}</h4>
+                              <span className="text-[10px] text-slate-400 border border-white/10 px-2 py-0.5 rounded-md font-semibold bg-white/[0.02]">{d.tanggal}</span>
+                            </div>
+                            
+                            {/* Detail Nominal/pcs */}
+                            <div>
+                              <div className="flex items-baseline gap-2">
+                                <p className="text-sm font-black text-cyan-400">{d.sisa} pcs</p>
+                                <p className="text-[10px] text-slate-500 font-black uppercase tracking-wider">sisa dari {d.jumlah}</p>
+                              </div>
+                            </div>
+
+                            {/* Progress Bar */}
+                            <div className="w-full bg-slate-950/60 border border-white/[0.04] h-1.5 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full transition-all duration-500"
+                                style={{ width: `${pctDone}%` }}
+                              />
+                            </div>
                           </div>
-                          
-                          {/* Live Tracking Status + Sisa count - stacked on mobile */}
-                          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+
+                          {/* Tracking Action Button */}
+                          <div className="flex w-full shrink-0 lg:w-auto mt-2 lg:mt-0">
                             {trackJob ? (
                               <button
                                 onClick={() => handleOpenTracking(d)}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 text-[10px] font-bold hover:bg-cyan-500/20 transition-all shadow-sm"
+                                className="w-full lg:w-auto flex items-center justify-center gap-1.5 px-6 py-3 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 text-xs font-bold hover:bg-cyan-500/20 transition-all shadow-sm active:scale-95"
                               >
                                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
-                                {trackJob.status} ({trackJob.progress}%)
+                                Tracking ({trackJob.progress}%)
                               </button>
                             ) : (
                               <button
                                 onClick={() => handleOpenTracking(d)}
-                                className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-slate-400 hover:text-slate-200 text-[10px] font-bold transition-all"
+                                className="w-full lg:w-auto flex items-center justify-center gap-1.5 px-6 py-3 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-slate-400 hover:text-slate-200 text-xs font-bold transition-all active:scale-95"
                               >
-                                <span className="material-symbols-outlined text-[12px]">share</span>
+                                <span className="material-symbols-outlined text-[14px]">share</span>
                                 Aktifkan Link
                               </button>
                             )}
-                            <div className="text-left sm:text-right">
-                              <p className="text-sm font-black text-purple-400">{d.sisa} pcs</p>
-                              <p className="text-[10px] text-slate-500 font-black uppercase tracking-wider mt-0.5">sisa dari {d.jumlah}</p>
-                            </div>
                           </div>
-                        </div>
-                        
-                        <div className="w-full bg-slate-950/60 border border-white/[0.04] h-1.5 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full transition-all duration-500"
-                            style={{ width: `${pctDone}%` }}
-                          />
                         </div>
                       </div>
                     );
@@ -156,7 +170,6 @@ export default function OnProgress() {
         </div>
       )}
 
-      <FAB onClick={() => setShowDistribusi(true)} icon="send" label="Distribusi" />
       <DistribusiForm isOpen={showDistribusi} onClose={() => setShowDistribusi(false)} />
       <KelaranForm isOpen={showKelaran} onClose={() => setShowKelaran(false)} />
       

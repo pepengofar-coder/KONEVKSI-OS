@@ -4,7 +4,6 @@ import BarangMasukForm from '../components/forms/BarangMasukForm';
 import DistribusiForm from '../components/forms/DistribusiForm';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import Badge from '../components/ui/Badge';
-import FAB from '../components/ui/FAB';
 import EmptyState from '../components/ui/EmptyState';
 
 export default function BarangMasuk() {
@@ -69,21 +68,29 @@ export default function BarangMasuk() {
 
   return (
     <div className="space-y-6 animate-fade-in-up text-white">
-      <div className="flex items-end justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-black font-display bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent tracking-tight">Barang Masuk</h1>
           <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-1">
             {barangMasuk.length} entri tercatat
           </p>
         </div>
-        {/* Distribusi button - visible on all screens */}
-        <button
-          onClick={() => setShowDistribusi(true)}
-          className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] text-slate-200 hover:text-white rounded-xl text-[10px] sm:text-xs font-bold transition-all hover:scale-[1.03] active:scale-[0.97]"
-        >
-          <span className="material-symbols-outlined text-[16px] sm:text-[18px]">send</span>
-          Distribusi
-        </button>
+        <div className="flex items-center gap-2.5 w-full sm:w-auto">
+          <button
+            onClick={() => { setItemToEdit(null); setShowForm(true); }}
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-cyan-600 text-white font-bold text-sm shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 hover:scale-[1.02] active:scale-98 transition-all"
+          >
+            <span className="material-symbols-outlined text-[20px]">add</span>
+            Barang Masuk
+          </button>
+          <button
+            onClick={() => setShowDistribusi(true)}
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] text-slate-200 hover:text-white font-bold text-sm transition-all hover:scale-[1.02] active:scale-98"
+          >
+            <span className="material-symbols-outlined text-[20px]">send</span>
+            Distribusi
+          </button>
+        </div>
       </div>
 
       {/* Search and Filters */}
@@ -135,69 +142,75 @@ export default function BarangMasuk() {
             return (
               <div
                 key={bm.id}
-                className="bg-gradient-to-br from-white/[0.04] to-white/[0.01] border border-white/[0.08] hover:border-white/[0.15] p-5 rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10 group relative"
+                className="bg-gradient-to-br from-white/[0.04] to-white/[0.01] border border-white/[0.08] hover:border-white/[0.15] p-5 rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10 group"
               >
-                {/* Floating Edit/Delete buttons */}
-                <div className="absolute top-4 right-4 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={() => handleEditClick(bm)}
-                    className="p-1.5 rounded-lg text-slate-400 hover:bg-white/[0.06] hover:text-cyan-400 transition-all"
-                    title="Ubah data"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">edit</span>
-                  </button>
-                  {currentUser?.role === 'Owner' && (
-                    <button
-                      onClick={() => handleDeleteClick(bm)}
-                      className="p-1.5 rounded-lg text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-all"
-                      title="Hapus data"
-                    >
-                      <span className="material-symbols-outlined text-[16px]">delete</span>
-                    </button>
+                <div className="flex flex-col gap-4">
+                  {/* Card Header */}
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center justify-center shrink-0">
+                        <span className="material-symbols-outlined text-[20px]">checkroom</span>
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-slate-200 text-sm md:text-base">{model?.nama || 'Model'}</h3>
+                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">{bm.tanggal}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Badge variant={bm.sisaBelumDistribusi === 0 ? 'success' : bm.sisaBelumDistribusi < bm.jumlah ? 'primary' : 'default'}>
+                        {bm.sisaBelumDistribusi === 0 ? 'Terdistribusi' : `Sisa ${bm.sisaBelumDistribusi}`}
+                      </Badge>
+                      
+                      {/* Action buttons in flow */}
+                      <div className="flex items-center gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => handleEditClick(bm)}
+                          className="p-1.5 rounded-lg text-slate-400 hover:bg-white/[0.06] hover:text-cyan-400 transition-all flex items-center justify-center"
+                          title="Ubah data"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">edit</span>
+                        </button>
+                        {currentUser?.role === 'Owner' && (
+                          <button
+                            onClick={() => handleDeleteClick(bm)}
+                            className="p-1.5 rounded-lg text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-all flex items-center justify-center"
+                            title="Hapus data"
+                          >
+                            <span className="material-symbols-outlined text-[16px]">delete</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex gap-4">
+                      <div>
+                        <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest leading-none mb-1">Total</p>
+                        <p className="font-bold text-slate-200">{bm.jumlah} pcs</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest leading-none mb-1">Ongkos</p>
+                        <p className="font-bold text-purple-400">{formatRupiah(model?.hargaJahit || 0)}/pcs</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Progress bar */}
+                  <div>
+                    <div className="w-full bg-slate-950/60 border border-white/[0.04] h-1.5 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full transition-all duration-500"
+                        style={{ width: `${pctDistributed}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {bm.catatan && (
+                    <p className="text-xs text-slate-400 italic font-medium">Catatan: {bm.catatan}</p>
                   )}
                 </div>
-
-                <div className="flex items-start justify-between mb-3 pr-16">
-                  <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center justify-center shrink-0">
-                      <span className="material-symbols-outlined text-[20px]">checkroom</span>
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-slate-200">{model?.nama || 'Model'}</h3>
-                      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">{bm.tanggal}</p>
-                    </div>
-                  </div>
-                  <Badge variant={bm.sisaBelumDistribusi === 0 ? 'success' : bm.sisaBelumDistribusi < bm.jumlah ? 'primary' : 'default'}>
-                    {bm.sisaBelumDistribusi === 0 ? 'Terdistribusi' : `Sisa ${bm.sisaBelumDistribusi}`}
-                  </Badge>
-                </div>
-
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex gap-4">
-                    <div>
-                      <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest leading-none mb-1">Total</p>
-                      <p className="font-bold text-slate-200">{bm.jumlah} pcs</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest leading-none mb-1">Ongkos</p>
-                      <p className="font-bold text-purple-400">{formatRupiah(model?.hargaJahit || 0)}/pcs</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Progress bar */}
-                <div className="mt-4">
-                  <div className="w-full bg-slate-950/60 border border-white/[0.04] h-1.5 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full transition-all duration-500"
-                      style={{ width: `${pctDistributed}%` }}
-                    />
-                  </div>
-                </div>
-
-                {bm.catatan && (
-                  <p className="mt-3 text-xs text-slate-400 italic font-medium">Catatan: {bm.catatan}</p>
-                )}
               </div>
             );
           })}
@@ -239,7 +252,6 @@ export default function BarangMasuk() {
         </div>
       )}
 
-      <FAB onClick={() => { setItemToEdit(null); setShowForm(true); }} icon="add" label="Barang Masuk" />
       <BarangMasukForm isOpen={showForm} onClose={() => { setShowForm(false); setItemToEdit(null); }} barangMasukToEdit={itemToEdit} />
       <DistribusiForm isOpen={showDistribusi} onClose={() => setShowDistribusi(false)} />
       
