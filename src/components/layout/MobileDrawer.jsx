@@ -33,11 +33,11 @@ export default function MobileDrawer({ isOpen, onClose }) {
   const navigate = useNavigate();
   const drawerRef = useRef(null);
 
-  const userRole = state.currentUser?.role || 'Owner';
+  const userBusinessRole = state.currentUser?.businessRole || 'Owner';
   const userName = state.currentUser?.nama || 'Admin';
   const userInitial = userName.charAt(0).toUpperCase();
-  const userRoleLabel = `${userRole} · ${state.currentUser?.businessProfile?.namaUsaha || 'Konveksi'}`;
-  const allowedRoutes = ROLE_ROUTES[userRole] || [];
+  const userRoleLabel = `${state.currentUser?.role || 'USER'} · ${state.currentUser?.businessProfile?.namaUsaha || 'Konveksi'}`;
+  const allowedRoutes = ROLE_ROUTES[userBusinessRole] || [];
 
   const filteredNavGroups = navGroups
     .map((group) => ({

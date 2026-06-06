@@ -15,11 +15,11 @@ export default function Sidebar() {
 
   const userInitial = state.currentUser ? state.currentUser.nama.charAt(0).toUpperCase() : 'A';
   const userName = state.currentUser ? state.currentUser.nama : 'Admin';
-  const userRole = state.currentUser ? state.currentUser.role : 'Owner';
   const businessName = state.currentUser?.businessProfile?.namaUsaha || 'Konveksi';
+  const userBusinessRole = state.currentUser ? (state.currentUser.businessRole || 'Owner') : 'Owner';
   const userRoleLabel = state.currentUser ? `${state.currentUser.role} · ${businessName}` : 'Owner';
 
-  const allowedRoutes = ROLE_ROUTES[userRole] || [];
+  const allowedRoutes = ROLE_ROUTES[userBusinessRole] || [];
   const filteredNavGroups = navGroups.map((group) => {
     const items = group.items.filter((item) => allowedRoutes.includes(item.to));
     return { ...group, items };
