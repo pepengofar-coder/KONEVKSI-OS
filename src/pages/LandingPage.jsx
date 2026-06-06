@@ -150,18 +150,15 @@ export default function LandingPage() {
       {/* ======= HERO ======= */}
       <section className="relative min-h-screen flex items-center justify-center pt-20 pb-20">
         {/* Background gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-950 via-slate-950 to-cyan-950" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-900/30 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#12082e] via-[#0b081e] to-[#08182b]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-900/10 via-transparent to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-slate-950 to-transparent" />
-
-        <Particles />
-        <GeoShapes />
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-6 w-full">
           {/* Main Card with Glassmorphism */}
           <div className="relative max-w-6xl mx-auto animate-fade-in-up">
             {/* Glow effect */}
-            <div className="absolute -inset-1 bg-gradient-to-r from-purple-600/30 via-cyan-500/30 to-emerald-600/30 rounded-[3rem] blur-2xl opacity-60" />
+            <div className="absolute -inset-1 bg-gradient-to-r from-purple-600/20 via-cyan-500/20 to-emerald-600/20 rounded-[3rem] blur-2xl opacity-65" />
 
             {/* Main Content Card */}
             <div className="relative bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-3xl border border-white/[0.15] rounded-3xl md:rounded-4xl overflow-hidden shadow-2xl shadow-purple-950/60">
