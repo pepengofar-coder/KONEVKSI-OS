@@ -510,11 +510,21 @@ export function useAppState() {
   const state = useContext(AppContext);
   if (!state) throw new Error('useAppState must be used within AppProvider');
 
+  // Sync currentUser with users database to guarantee fresh plan and profile data
+  let currentUser = state.currentUser;
+  if (currentUser) {
+    const freshUser = state.users.find(u => u.id === currentUser.id);
+    if (freshUser) {
+      currentUser = freshUser;
+    }
+  }
+
   // Multi-user data isolation proxy
-  if (state.currentUser) {
-    const userId = state.currentUser.id;
+  if (currentUser) {
+    const userId = currentUser.id;
     return {
       ...state,
+      currentUser,
       models: state.models.filter(item => item.userId === userId),
       taylors: state.taylors.filter(item => item.userId === userId),
       barangMasuk: state.barangMasuk.filter(item => item.userId === userId),

@@ -101,7 +101,19 @@ export default function Profile() {
                 {user.nama ? user.nama.charAt(0).toUpperCase() : 'A'}
               </div>
               <h3 className="text-lg font-bold text-slate-100">{user.nama}</h3>
-              <p className="text-xs text-cyan-400 font-semibold mt-1">{user.role}</p>
+              <div className="flex items-center justify-center gap-2 mt-1.5">
+                <p className="text-xs text-cyan-400 font-semibold">{user.role}</p>
+                <span className="text-slate-500 text-xs">•</span>
+                <span className={`text-[9px] font-black tracking-widest px-2 py-0.5 rounded-full uppercase ${
+                  (user.plan || 'FREE') === 'PREMIUM'
+                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                    : (user.plan || 'FREE') === 'BUSINESS'
+                    ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                    : 'bg-slate-500/20 text-slate-400 border border-slate-500/30'
+                }`}>
+                  {user.plan || 'FREE'}
+                </span>
+              </div>
               
               <div className="w-full border-t border-white/[0.06] my-6 pt-6 space-y-3 text-left">
                 <div>

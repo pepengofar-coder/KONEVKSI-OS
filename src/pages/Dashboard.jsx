@@ -222,10 +222,23 @@ export default function Dashboard() {
               <h1 className="font-display text-2xl md:text-3xl lg:text-4xl font-black bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent tracking-tight leading-tight">
                 {businessName}
               </h1>
-              <div className="flex items-center gap-3 mt-3">
+              <div className="flex items-center flex-wrap gap-2.5 mt-3">
                 <Badge variant={roleBadgeVariant} icon={roleBadgeIcon}>
                   {userRole}
                 </Badge>
+                <Link
+                  to="/pricing"
+                  className={`text-[8px] font-black tracking-widest px-2 py-0.5 rounded-full uppercase hover:scale-[1.03] active:scale-[0.97] transition-all flex items-center gap-1 shrink-0 ${
+                    (state.currentUser?.plan || 'FREE') === 'PREMIUM'
+                      ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                      : (state.currentUser?.plan || 'FREE') === 'BUSINESS'
+                      ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                      : 'bg-slate-500/20 text-slate-400 border border-slate-500/30'
+                  }`}
+                >
+                  <span className="w-1 h-1 rounded-full bg-current animate-pulse shrink-0" />
+                  {state.currentUser?.plan || 'FREE'} PLAN
+                </Link>
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                   {dayNames[today.getDay()]} &middot; {today.getDate()} {monthNames[today.getMonth()]} {today.getFullYear()}
                 </span>
