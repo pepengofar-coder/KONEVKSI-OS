@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAppState, useAppDispatch, useHelpers, checkPassword } from '../context/AppContext';
+import { useAppState, useAppDispatch, useHelpers, verifyPassword, needsMigration, hashPassword } from '../context/AppContext';
 
 export default function Login() {
   const state = useAppState();
@@ -13,6 +13,8 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorField, setErrorField] = useState(''); // 'identifier' | 'password' | ''
+  const [errorMessage, setErrorMessage] = useState('');
 
   // Redirect if already logged in
   useEffect(() => {
@@ -25,34 +27,74 @@ export default function Login() {
     }
   }, [state.currentUser, navigate]);
 
-  const handleSubmit = (e) => {
+  const clearError = () => {
+    setErrorField('');
+    setErrorMessage('');
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!identifier || !password) return;
 
+    clearError();
     setLoading(true);
 
-    // Simulate database lookup network latency
-    setTimeout(() => {
+    try {
+      // Step 1: Find user by username or email
       const user = state.users.find(
-        (u) => 
-          (u.email.toLowerCase() === identifier.toLowerCase() || 
-           (u.username && u.username.toLowerCase() === identifier.toLowerCase())) && 
-          checkPassword(password, u.password)
+        (u) =>
+          u.email.toLowerCase() === identifier.toLowerCase() ||
+          (u.username && u.username.toLowerCase() === identifier.toLowerCase())
       );
 
-      if (user) {
-        dispatch({ type: 'SET_CURRENT_USER', payload: { user, rememberMe } });
-        showToast(`Selamat datang kembali, ${user.nama}!`, 'success');
-        if (!user.categories || user.categories.length === 0 || !user.role) {
-          navigate('/onboarding');
-        } else {
-          navigate('/dashboard');
-        }
-      } else {
-        showToast('Username/Email atau password salah!', 'error');
+      if (!user) {
+        setErrorField('identifier');
+        setErrorMessage('Username atau email tidak terdaftar.');
+        showToast('Username atau email tidak terdaftar.', 'error');
+        setPassword('');
         setLoading(false);
+        return;
       }
-    }, 800);
+
+      // Step 2: Verify password (async — uses Web Crypto API)
+      const isValid = await verifyPassword(password, user.password);
+
+      if (!isValid) {
+        setErrorField('password');
+        setErrorMessage('Password salah. Silakan coba lagi.');
+        showToast('Password salah.', 'error');
+        setPassword('');
+        setLoading(false);
+        return;
+      }
+
+      // Step 3: Login success — set current user
+      dispatch({ type: 'SET_CURRENT_USER', payload: { user, rememberMe } });
+      showToast(`Selamat datang kembali, ${user.nama || user.name}!`, 'success');
+
+      // Step 4: Lazy password migration — upgrade legacy hash to PBKDF2
+      if (needsMigration(user.password)) {
+        try {
+          const newHash = await hashPassword(password);
+          dispatch({ type: 'MIGRATE_PASSWORD', payload: { userId: user.id, newHashedPassword: newHash } });
+        } catch {
+          // Migration failure is non-critical — user can still use the app
+          console.warn('Password migration skipped.');
+        }
+      }
+
+      // Step 5: Redirect
+      if (!user.categories || user.categories.length === 0 || !user.businessRole) {
+        navigate('/onboarding');
+      } else {
+        navigate('/dashboard');
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      showToast('Terjadi kesalahan saat login. Silakan coba lagi.', 'error');
+      setPassword('');
+      setLoading(false);
+    }
   };
 
   return (
@@ -84,13 +126,20 @@ export default function Login() {
             <div>
               <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Username atau Email</label>
               <input
+                id="login-identifier"
                 type="text"
                 value={identifier}
-                onChange={(e) => setIdentifier(e.target.value)}
-                placeholder="admin atau admin@konveksios.com"
-                className="input-base"
+                onChange={(e) => { setIdentifier(e.target.value); if (errorField === 'identifier') clearError(); }}
+                placeholder="username atau email@contoh.com"
+                className={`input-base ${errorField === 'identifier' ? 'ring-2 ring-red-500/50 border-red-500/40' : ''}`}
                 required
               />
+              {errorField === 'identifier' && (
+                <p className="mt-1.5 text-[11px] text-red-400 font-semibold flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[14px]">error</span>
+                  {errorMessage}
+                </p>
+              )}
             </div>
 
             <div>
@@ -100,11 +149,12 @@ export default function Login() {
               </div>
               <div className="relative">
                 <input
+                  id="login-password"
                   type={showPassword ? "text" : "password"}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => { setPassword(e.target.value); if (errorField === 'password') clearError(); }}
                   placeholder="••••••••"
-                  className="input-base pr-10"
+                  className={`input-base pr-10 ${errorField === 'password' ? 'ring-2 ring-red-500/50 border-red-500/40' : ''}`}
                   required
                 />
                 <button
@@ -117,6 +167,12 @@ export default function Login() {
                   </span>
                 </button>
               </div>
+              {errorField === 'password' && (
+                <p className="mt-1.5 text-[11px] text-red-400 font-semibold flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[14px]">error</span>
+                  {errorMessage}
+                </p>
+              )}
             </div>
 
             {/* Remember Me Checkbox */}

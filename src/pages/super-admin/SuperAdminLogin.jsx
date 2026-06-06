@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAppState, useAppDispatch, useHelpers, checkPassword } from '../../context/AppContext';
+import { useAppState, useAppDispatch, useHelpers, verifyPassword, needsMigration, hashPassword } from '../../context/AppContext';
 
 export default function SuperAdminLogin() {
   const state = useAppState();
@@ -12,6 +12,8 @@ export default function SuperAdminLogin() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorField, setErrorField] = useState(''); // 'username' | 'password' | ''
+  const [errorMessage, setErrorMessage] = useState('');
 
   // Redirect if already logged in as super-admin/admin
   useEffect(() => {
@@ -20,39 +22,74 @@ export default function SuperAdminLogin() {
     }
   }, [state.currentUser, navigate]);
 
-  const handleSubmit = (e) => {
+  const clearError = () => {
+    setErrorField('');
+    setErrorMessage('');
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!username || !password) return;
 
+    clearError();
     setLoading(true);
 
-    setTimeout(() => {
+    try {
+      // Step 1: Find user by username
       const user = state.users.find(
-        (u) => 
-          u.username.toLowerCase() === username.toLowerCase() && 
-          checkPassword(password, u.password)
+        (u) => u.username.toLowerCase() === username.toLowerCase()
       );
 
-      if (user) {
-        if (user.role === 'SUPER_ADMIN' || user.role === 'ADMIN') {
-          dispatch({ type: 'SET_CURRENT_USER', payload: { user, rememberMe: true } });
-          showToast(`Selamat datang di Portal Super Admin, ${user.nama || user.name}!`, 'success');
-          navigate('/super-admin/dashboard');
-        } else {
-          showToast('Username atau password salah', 'error');
-          setLoading(false);
-        }
-      } else {
-        showToast('Username atau password salah', 'error');
+      if (!user) {
+        setErrorField('username');
+        setErrorMessage('Username tidak ditemukan.');
+        showToast('Username tidak ditemukan.', 'error');
+        setPassword('');
         setLoading(false);
+        return;
       }
-    }, 800);
-  };
 
-  const handleUseSeedAdmin = () => {
-    setUsername('zenirastrore');
-    setPassword('abu_ziyadh280292');
-    showToast('Kredensial Super Admin default berhasil diisi.', 'info');
+      // Step 2: Verify password (async — Web Crypto API)
+      const isValid = await verifyPassword(password, user.password);
+
+      if (!isValid) {
+        setErrorField('password');
+        setErrorMessage('Password salah.');
+        showToast('Password salah.', 'error');
+        setPassword('');
+        setLoading(false);
+        return;
+      }
+
+      // Step 3: Check role
+      if (user.role !== 'SUPER_ADMIN' && user.role !== 'ADMIN') {
+        showToast('Akses ditolak: Akun ini bukan administrator.', 'error');
+        setPassword('');
+        setLoading(false);
+        return;
+      }
+
+      // Step 4: Login success
+      dispatch({ type: 'SET_CURRENT_USER', payload: { user, rememberMe: true } });
+      showToast(`Selamat datang di Portal Super Admin, ${user.nama || user.name}!`, 'success');
+
+      // Step 5: Lazy password migration
+      if (needsMigration(user.password)) {
+        try {
+          const newHash = await hashPassword(password);
+          dispatch({ type: 'MIGRATE_PASSWORD', payload: { userId: user.id, newHashedPassword: newHash } });
+        } catch {
+          console.warn('Password migration skipped.');
+        }
+      }
+
+      navigate('/super-admin/dashboard');
+    } catch (err) {
+      console.error('Login error:', err);
+      showToast('Terjadi kesalahan saat login.', 'error');
+      setPassword('');
+      setLoading(false);
+    }
   };
 
   return (
@@ -84,24 +121,32 @@ export default function SuperAdminLogin() {
             <div>
               <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Username atau Email</label>
               <input
+                id="sa-login-username"
                 type="text"
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="zenirastrore"
-                className="input-base"
+                onChange={(e) => { setUsername(e.target.value); if (errorField === 'username') clearError(); }}
+                placeholder="username admin"
+                className={`input-base ${errorField === 'username' ? 'ring-2 ring-red-500/50 border-red-500/40' : ''}`}
                 required
               />
+              {errorField === 'username' && (
+                <p className="mt-1.5 text-[11px] text-red-400 font-semibold flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[14px]">error</span>
+                  {errorMessage}
+                </p>
+              )}
             </div>
 
             <div>
               <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Kata Sandi</label>
               <div className="relative">
                 <input
+                  id="sa-login-password"
                   type={showPassword ? "text" : "password"}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => { setPassword(e.target.value); if (errorField === 'password') clearError(); }}
                   placeholder="••••••••"
-                  className="input-base pr-10"
+                  className={`input-base pr-10 ${errorField === 'password' ? 'ring-2 ring-red-500/50 border-red-500/40' : ''}`}
                   required
                 />
                 <button
@@ -114,6 +159,12 @@ export default function SuperAdminLogin() {
                   </span>
                 </button>
               </div>
+              {errorField === 'password' && (
+                <p className="mt-1.5 text-[11px] text-red-400 font-semibold flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[14px]">error</span>
+                  {errorMessage}
+                </p>
+              )}
             </div>
 
             <button
@@ -131,16 +182,6 @@ export default function SuperAdminLogin() {
               )}
             </button>
           </form>
-
-          <div className="mt-6 pt-4 border-t border-white/[0.06] flex flex-col gap-2">
-            <button
-              onClick={handleUseSeedAdmin}
-              className="w-full py-2.5 bg-slate-800/80 hover:bg-slate-800 border border-white/10 hover:border-white/20 text-slate-300 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2"
-            >
-              <span className="material-symbols-outlined text-[16px]">vpn_key</span>
-              Isi Super Admin Default
-            </button>
-          </div>
         </div>
       </div>
     </div>

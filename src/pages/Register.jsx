@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAppState, useAppDispatch, useHelpers } from '../context/AppContext';
+import { useAppState, useAppDispatch, useHelpers, hashPassword } from '../context/AppContext';
 
 export default function Register() {
   const state = useAppState();
@@ -28,7 +28,7 @@ export default function Register() {
     }
   }, [state.currentUser, navigate]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     // Validations
@@ -72,15 +72,21 @@ export default function Register() {
 
     setLoading(true);
 
-    // Simulate network delay
-    setTimeout(() => {
+    try {
+      // Hash password securely with PBKDF2 before storing
+      const hashedPassword = await hashPassword(password);
+
       dispatch({
-        type: 'REGISTER',
-        payload: { nama, username: cleanUsername, namaUsaha, email, password }
+        type: 'REGISTER_ASYNC',
+        payload: { nama, username: cleanUsername, namaUsaha, email, hashedPassword }
       });
       showToast('Registrasi akun berhasil!', 'success');
       navigate('/onboarding');
-    }, 1000);
+    } catch (err) {
+      console.error('Registration error:', err);
+      showToast('Terjadi kesalahan saat mendaftarkan akun.', 'error');
+      setLoading(false);
+    }
   };
 
   return (

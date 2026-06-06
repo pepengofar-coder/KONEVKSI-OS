@@ -1,19 +1,25 @@
 import { createContext, useContext, useReducer, useEffect } from 'react';
 import { getInitialState } from '../data/initialData';
+import { hashPassword, verifyPassword, needsMigration } from '../utils/cryptoUtils';
 
 const AppContext = createContext(null);
 const AppDispatchContext = createContext(null);
 
 const STORAGE_KEY = 'konveksi-os-data';
 
-export const encryptPassword = (password) => {
+// Re-export crypto utilities for use in login/register pages
+export { hashPassword, verifyPassword, needsMigration };
+
+// Legacy Base64 encoding — only used for seeding initial data and reading old hashes
+export const legacyEncryptPassword = (password) => {
   if (!password) return '';
   if (password.startsWith('pbkdf2_sha256$')) return password;
   return 'pbkdf2_sha256$' + btoa(password);
 };
 
+// Legacy check — synchronous, only for backward compatibility during migration
 export const checkPassword = (inputPw, storedPw) => {
-  return storedPw === encryptPassword(inputPw);
+  return storedPw === legacyEncryptPassword(inputPw);
 };
 
 function loadState() {
@@ -49,7 +55,7 @@ function loadState() {
     if (!state.adminLogs) state.adminLogs = [];
     if (!state.toasts) state.toasts = [];
 
-    // Ensure zenirastrore admin exists in state.users
+    // Ensure zenirastrore admin exists in state.users (seed only if missing)
     const adminExists = state.users.some(u => u.username === 'zenirastrore');
     if (!adminExists) {
       const defaultAdmin = {
@@ -58,7 +64,7 @@ function loadState() {
         name: 'Admin Zenirastrore',
         username: 'zenirastrore',
         email: 'zenirastrore@konveksios.com',
-        password: encryptPassword('abu_ziyadh280292'),
+        password: legacyEncryptPassword('abu_ziyadh280292'),
         role: 'SUPER_ADMIN',
         businessRole: 'Owner',
         plan: 'BUSINESS',
@@ -79,14 +85,15 @@ function loadState() {
       state.users.push(defaultAdmin);
     }
 
-    // Ensure users in database are encrypted and have default plan properties
+    // Ensure users in database have default plan properties
+    // NOTE: No longer force-reset passwords — existing hashes are preserved
+    // Password migration happens lazily on successful login via MIGRATE_PASSWORD action
     state.users = state.users.map(u => {
-      if (u.username === 'zenirastrore') {
+      if (u.username === 'zenirastrore' && (u.role === undefined || u.role === '')) {
         u.role = 'SUPER_ADMIN';
-        u.password = encryptPassword('abu_ziyadh280292');
       }
       if (!u.password.startsWith('pbkdf2_sha256$')) {
-        u.password = encryptPassword(u.password);
+        u.password = legacyEncryptPassword(u.password);
       }
       if (!u.plan) {
         u.plan = u.username === 'admin' ? 'PREMIUM' : 'FREE';
@@ -149,13 +156,14 @@ function appReducer(state, action) {
   switch (action.type) {
     // Auth & Session
     case 'REGISTER': {
+      // Legacy sync registration — kept for backward compatibility
       const newUser = {
         id: generateId('u'),
         nama: action.payload.nama,
         name: action.payload.nama,
         username: action.payload.username.toLowerCase(),
         email: action.payload.email.toLowerCase(),
-        password: encryptPassword(action.payload.password),
+        password: legacyEncryptPassword(action.payload.password),
         role: 'USER', // system role
         businessRole: '', // Selected in Onboarding Step 2
         plan: 'FREE',
@@ -181,6 +189,40 @@ function appReducer(state, action) {
         rememberMe: false
       };
     }
+    case 'REGISTER_ASYNC': {
+      // New async registration — receives pre-hashed password from Register page
+      const newUserAsync = {
+        id: generateId('u'),
+        nama: action.payload.nama,
+        name: action.payload.nama,
+        username: action.payload.username.toLowerCase(),
+        email: action.payload.email.toLowerCase(),
+        password: action.payload.hashedPassword, // already hashed with PBKDF2
+        role: 'USER',
+        businessRole: '',
+        plan: 'FREE',
+        planStatus: 'ACTIVE',
+        planStartedAt: Date.now(),
+        planExpiresAt: null,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        categories: [],
+        businessProfile: {
+          namaUsaha: action.payload.namaUsaha || (action.payload.nama + ' Convection'),
+          telepon: '',
+          email: action.payload.email,
+          alamat: ''
+        },
+        businessName: action.payload.namaUsaha || (action.payload.nama + ' Convection')
+      };
+      sessionStorage.setItem('konveksi-os-session-user', JSON.stringify(newUserAsync));
+      return {
+        ...state,
+        users: [...state.users, newUserAsync],
+        currentUser: newUserAsync,
+        rememberMe: false
+      };
+    }
     case 'SET_CURRENT_USER': {
       const { user, rememberMe } = action.payload;
       if (rememberMe) {
@@ -197,6 +239,18 @@ function appReducer(state, action) {
     case 'LOGOUT': {
       sessionStorage.removeItem('konveksi-os-session-user');
       return { ...state, currentUser: null, rememberMe: false };
+    }
+    case 'MIGRATE_PASSWORD': {
+      // Lazily upgrade a user's password hash from legacy Base64 to PBKDF2
+      const { userId, newHashedPassword } = action.payload;
+      const migratedUsers = state.users.map(u =>
+        u.id === userId ? { ...u, password: newHashedPassword, updatedAt: Date.now() } : u
+      );
+      let migratedCurrentUser = state.currentUser;
+      if (migratedCurrentUser && migratedCurrentUser.id === userId) {
+        migratedCurrentUser = { ...migratedCurrentUser, password: newHashedPassword, updatedAt: Date.now() };
+      }
+      return { ...state, users: migratedUsers, currentUser: migratedCurrentUser };
     }
     case 'UPDATE_PROFILE': {
       const isBusinessRole = ['Owner', 'Admin Keuangan', 'Staff Administrasi'].includes(action.payload.role);
@@ -216,7 +270,7 @@ function appReducer(state, action) {
         businessName: action.payload.businessProfile?.namaUsaha || action.payload.businessName || state.currentUser.businessName || ''
       };
       if (action.payload.password) {
-        updatedUser.password = encryptPassword(action.payload.password);
+        updatedUser.password = legacyEncryptPassword(action.payload.password);
       }
       const updatedUsers = state.users.map(u => u.id === updatedUser.id ? updatedUser : u);
       
