@@ -33,11 +33,21 @@ export default function SuperAdminSettings() {
   const dispatch = useAppDispatch();
   const { showToast, formatRupiah } = useHelpers();
 
-  const [settings, setSettings] = useState(loadSettings);
+  const [settings, setSettings] = useState(() => state.saasSettings || loadSettings());
   const [hasChanges, setHasChanges] = useState(false);
-  const [savedSettings, setSavedSettings] = useState(loadSettings);
+  const [savedSettings, setSavedSettings] = useState(() => state.saasSettings || loadSettings());
 
   const isSuperAdmin = state.currentUser?.role === 'SUPER_ADMIN';
+
+  // Sync settings when global saasSettings updates
+  useEffect(() => {
+    if (state.saasSettings) {
+      setSavedSettings(state.saasSettings);
+      if (!hasChanges) {
+        setSettings(state.saasSettings);
+      }
+    }
+  }, [state.saasSettings, hasChanges]);
 
   const update = (key, value) => {
     setSettings(prev => ({ ...prev, [key]: value }));
@@ -56,8 +66,9 @@ export default function SuperAdminSettings() {
       return;
     }
 
-    // Persist to localStorage
+    // Persist to localStorage and global state
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    dispatch({ type: 'UPDATE_SAAS_SETTINGS', payload: settings });
     setSavedSettings({ ...settings });
     setHasChanges(false);
 

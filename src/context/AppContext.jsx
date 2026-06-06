@@ -55,6 +55,46 @@ function loadState() {
     if (!state.adminLogs) state.adminLogs = [];
     if (!state.toasts) state.toasts = [];
 
+    // Ensure saasSettings exist in state
+    if (!state.saasSettings) {
+      try {
+        const savedSettings = localStorage.getItem('konveksi-os-saas-settings');
+        state.saasSettings = savedSettings ? JSON.parse(savedSettings) : {
+          bankMandiri: '131-00-153482-9',
+          bankMandiriName: 'a.n. Zenirastrore Convection',
+          bankBca: '781-0539-281',
+          bankBcaName: 'a.n. Zenirastrore Convection',
+          bankBsi: '',
+          bankBsiName: '',
+          premiumPrice: '99000',
+          businessPrice: '199000',
+          premiumActive: true,
+          businessActive: true,
+          freeActive: true,
+          autoApprove: false,
+          trialDays: '7',
+          gracePeriodDays: '3',
+        };
+      } catch {
+        state.saasSettings = {
+          bankMandiri: '131-00-153482-9',
+          bankMandiriName: 'a.n. Zenirastrore Convection',
+          bankBca: '781-0539-281',
+          bankBcaName: 'a.n. Zenirastrore Convection',
+          bankBsi: '',
+          bankBsiName: '',
+          premiumPrice: '99000',
+          businessPrice: '199000',
+          premiumActive: true,
+          businessActive: true,
+          freeActive: true,
+          autoApprove: false,
+          trialDays: '7',
+          gracePeriodDays: '3',
+        };
+      }
+    }
+
     // Ensure zenirastrore admin exists in state.users (seed only if missing)
     const adminExists = state.users.some(u => u.username === 'zenirastrore');
     if (!adminExists) {
@@ -882,6 +922,14 @@ function appReducer(state, action) {
         paymentOrders: freshData.paymentOrders,
         adminLogs: freshData.adminLogs,
         currentUser: freshData.currentUser,
+        saasSettings: freshData.saasSettings,
+      };
+    }
+
+    case 'UPDATE_SAAS_SETTINGS': {
+      return {
+        ...state,
+        saasSettings: action.payload
       };
     }
 
@@ -934,13 +982,19 @@ export function AppProvider({ children }) {
         if (!newRawVal) return;
         const parsed = JSON.parse(newRawVal);
         
-        // Check if users or paymentOrders changed
+        // Check if users, paymentOrders or saasSettings changed
         const currentUsersStr = JSON.stringify(state?.users || []);
         const nextUsersStr = JSON.stringify(parsed?.users || []);
         const currentOrdersStr = JSON.stringify(state?.paymentOrders || []);
         const nextOrdersStr = JSON.stringify(parsed?.paymentOrders || []);
+        const currentSettingsStr = JSON.stringify(state?.saasSettings || {});
+        const nextSettingsStr = JSON.stringify(parsed?.saasSettings || {});
         
-        if (currentUsersStr !== nextUsersStr || currentOrdersStr !== nextOrdersStr) {
+        if (
+          currentUsersStr !== nextUsersStr || 
+          currentOrdersStr !== nextOrdersStr || 
+          currentSettingsStr !== nextSettingsStr
+        ) {
           dispatch({ type: 'SYNC_STATE' });
         }
       } catch (err) {
@@ -965,7 +1019,7 @@ export function AppProvider({ children }) {
       window.removeEventListener('storage', handleStorageChange);
       clearInterval(interval);
     };
-  }, [state?.users, state?.paymentOrders]);
+  }, [state?.users, state?.paymentOrders, state?.saasSettings]);
 
   return (
     <AppContext.Provider value={state}>

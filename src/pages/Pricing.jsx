@@ -26,21 +26,22 @@ export default function Pricing() {
   // Manual payment state
   const [paymentProof, setPaymentProof] = useState('');
   const [isSubmittingProof, setIsSubmittingProof] = useState(false);
-  const [bankSettings, setBankSettings] = useState({
+  const bankSettings = state.saasSettings || {
     bankMandiri: '131-00-153482-9',
+    bankMandiriName: 'a.n. Zenirastrore Convection',
     bankBca: '781-0539-281',
+    bankBcaName: 'a.n. Zenirastrore Convection',
+    bankBsi: '',
+    bankBsiName: '',
     premiumPrice: '99000',
     businessPrice: '199000',
-    autoApprove: false
-  });
-
-  // Load bank settings
-  useEffect(() => {
-    const saved = localStorage.getItem('konveksi-os-saas-settings');
-    if (saved) {
-      setBankSettings(JSON.parse(saved));
-    }
-  }, []);
+    premiumActive: true,
+    businessActive: true,
+    freeActive: true,
+    autoApprove: false,
+    trialDays: '7',
+    gracePeriodDays: '3',
+  };
 
   const pendingOrder = (state.paymentOrders || []).find(
     (o) => o.userId === currentUserId && o.status === 'PENDING'
@@ -363,12 +364,21 @@ export default function Pricing() {
               ))}
             </div>
           </div>
-          <button
-            onClick={() => handleOpenCheckout('PREMIUM')}
-            className={`w-full py-4 rounded-2xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-[0.98] ${currentPlan === 'PREMIUM' ? 'bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 cursor-default shadow-md shadow-cyan-500/10' : 'bg-gradient-to-r from-purple-600 to-cyan-600 hover:shadow-purple-500/25 shadow-lg text-white'}`}
-          >
-            {currentPlan === 'PREMIUM' ? 'Rencana Aktif' : 'Mulai PREMIUM'}
-          </button>
+          {bankSettings.premiumActive === false ? (
+            <button
+              disabled={true}
+              className="w-full py-4 rounded-2xl text-xs font-bold bg-white/[0.02] border border-white/[0.04] text-slate-500 cursor-not-allowed text-center"
+            >
+              Tidak Tersedia
+            </button>
+          ) : (
+            <button
+              onClick={() => handleOpenCheckout('PREMIUM')}
+              className={`w-full py-4 rounded-2xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-[0.98] ${currentPlan === 'PREMIUM' ? 'bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 cursor-default shadow-md shadow-cyan-500/10' : 'bg-gradient-to-r from-purple-600 to-cyan-600 hover:shadow-purple-500/25 shadow-lg text-white'}`}
+            >
+              {currentPlan === 'PREMIUM' ? 'Rencana Aktif' : 'Mulai PREMIUM'}
+            </button>
+          )}
         </div>
 
         {/* BUSINESS CARD */}
@@ -400,12 +410,21 @@ export default function Pricing() {
               ))}
             </div>
           </div>
-          <button
-            onClick={() => handleOpenCheckout('BUSINESS')}
-            className={`w-full py-3.5 rounded-2xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-[0.98] ${currentPlan === 'BUSINESS' ? 'bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 cursor-default shadow-md shadow-cyan-500/10' : 'bg-white/[0.06] border border-white/10 hover:bg-white/[0.12] text-slate-100'}`}
-          >
-            {currentPlan === 'BUSINESS' ? 'Rencana Aktif' : 'Mulai BUSINESS'}
-          </button>
+          {bankSettings.businessActive === false ? (
+            <button
+              disabled={true}
+              className="w-full py-3.5 rounded-2xl text-xs font-bold bg-white/[0.02] border border-white/[0.04] text-slate-500 cursor-not-allowed text-center"
+            >
+              Tidak Tersedia
+            </button>
+          ) : (
+            <button
+              onClick={() => handleOpenCheckout('BUSINESS')}
+              className={`w-full py-3.5 rounded-2xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-[0.98] ${currentPlan === 'BUSINESS' ? 'bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 cursor-default shadow-md shadow-cyan-500/10' : 'bg-white/[0.06] border border-white/10 hover:bg-white/[0.12] text-slate-100'}`}
+            >
+              {currentPlan === 'BUSINESS' ? 'Rencana Aktif' : 'Mulai BUSINESS'}
+            </button>
+          )}
         </div>
       </div>
 
@@ -554,21 +573,35 @@ export default function Pricing() {
                   <p className="text-slate-300 font-bold">Silakan transfer sesuai nominal tagihan ke salah satu rekening berikut:</p>
                   
                   <div className="space-y-2">
-                    <div className="flex justify-between items-center bg-slate-900 p-2.5 rounded-xl border border-white/[0.04]">
-                      <div>
-                        <span className="block text-[8px] font-black uppercase text-slate-500">BANK MANDIRI</span>
-                        <span className="font-mono text-cyan-400 text-xs font-black">{bankSettings.bankMandiri}</span>
+                    {bankSettings.bankMandiri && (
+                      <div className="flex justify-between items-center bg-slate-900 p-2.5 rounded-xl border border-white/[0.04]">
+                        <div>
+                          <span className="block text-[8px] font-black uppercase text-slate-500">BANK MANDIRI</span>
+                          <span className="font-mono text-cyan-400 text-xs font-black">{bankSettings.bankMandiri}</span>
+                        </div>
+                        <span className="text-[10px] text-slate-400 font-bold">{bankSettings.bankMandiriName || 'a.n. Konveksi OS'}</span>
                       </div>
-                      <span className="text-[10px] text-slate-400 font-bold">a.n. Konveksi OS</span>
-                    </div>
+                    )}
 
-                    <div className="flex justify-between items-center bg-slate-900 p-2.5 rounded-xl border border-white/[0.04]">
-                      <div>
-                        <span className="block text-[8px] font-black uppercase text-slate-500">BANK BCA</span>
-                        <span className="font-mono text-cyan-400 text-xs font-black">{bankSettings.bankBca}</span>
+                    {bankSettings.bankBca && (
+                      <div className="flex justify-between items-center bg-slate-900 p-2.5 rounded-xl border border-white/[0.04]">
+                        <div>
+                          <span className="block text-[8px] font-black uppercase text-slate-500">BANK BCA</span>
+                          <span className="font-mono text-cyan-400 text-xs font-black">{bankSettings.bankBca}</span>
+                        </div>
+                        <span className="text-[10px] text-slate-400 font-bold">{bankSettings.bankBcaName || 'a.n. Konveksi OS'}</span>
                       </div>
-                      <span className="text-[10px] text-slate-400 font-bold">a.n. Konveksi OS</span>
-                    </div>
+                    )}
+
+                    {bankSettings.bankBsi && (
+                      <div className="flex justify-between items-center bg-slate-900 p-2.5 rounded-xl border border-white/[0.04]">
+                        <div>
+                          <span className="block text-[8px] font-black uppercase text-slate-500">BANK BSI</span>
+                          <span className="font-mono text-cyan-400 text-xs font-black">{bankSettings.bankBsi}</span>
+                        </div>
+                        <span className="text-[10px] text-slate-400 font-bold">{bankSettings.bankBsiName || 'a.n. Konveksi OS'}</span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-2 pt-2 border-t border-white/[0.06]">
