@@ -27,12 +27,14 @@ export default function Pricing() {
   const [paymentProof, setPaymentProof] = useState('');
   const [isSubmittingProof, setIsSubmittingProof] = useState(false);
   const bankSettings = state.saasSettings || {
-    bankMandiri: '131-00-153482-9',
-    bankMandiriName: 'a.n. Zenirastrore Convection',
-    bankBca: '781-0539-281',
-    bankBcaName: 'a.n. Zenirastrore Convection',
-    bankBsi: '',
-    bankBsiName: '',
+    activePaymentOption: 'seabank',
+    seabankNumber: '131-00-153482-9',
+    seabankName: 'a.n. Zenirastrore Convection',
+    jagoNumber: '781-0539-281',
+    jagoName: 'a.n. Zenirastrore Convection',
+    gopayNumber: '081234567890',
+    gopayName: 'a.n. Zenirastrore Convection',
+    freePrice: '0',
     premiumPrice: '99000',
     businessPrice: '199000',
     premiumActive: true,

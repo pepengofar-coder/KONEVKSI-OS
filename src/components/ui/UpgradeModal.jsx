@@ -61,7 +61,7 @@ export default function UpgradeModal() {
             onClick={handleUpgradeClick}
             className="w-full py-4 bg-gradient-to-r from-purple-600 to-cyan-600 hover:shadow-purple-500/25 hover:shadow-lg text-white rounded-2xl font-bold text-sm hover:scale-[1.01] active:scale-[0.99] transition-all duration-300 shadow-lg text-center"
           >
-            Upgrade Sekarang — Mulai dari Rp 99.000
+            Upgrade Sekarang — Mulai dari Rp {Number(state.saasSettings?.premiumPrice || '99000').toLocaleString('id-ID')}
           </button>
           <button
             onClick={handleClose}
