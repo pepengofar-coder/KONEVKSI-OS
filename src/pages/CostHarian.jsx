@@ -169,7 +169,7 @@ export default function CostHarian() {
                           >
                             <span className="material-symbols-outlined text-[14px]">edit</span>
                           </button>
-                          {currentUser?.role === 'Owner' && (
+                          {(currentUser?.businessRole || currentUser?.role) === 'Owner' && (
                             <button
                               onClick={() => handleDeleteClick(c)}
                               className="p-1 rounded-lg text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-all"

@@ -52,12 +52,25 @@ function DomainRedirector({ children }) {
   const navigate = useNavigate();
   const state = useAppState();
   const currentUser = state?.currentUser;
+  const location = useLocation();
 
   useEffect(() => {
     if (!currentUser) return; // Belum login → jangan redirect
-    if (currentUser.role === "SUPER_ADMIN") navigate("/super-admin/dashboard");
-    else navigate("/dashboard"); // USER / ADMIN → dashboard normal
-  }, [currentUser]);
+    
+    const path = location.pathname;
+    
+    if (currentUser.role === "SUPER_ADMIN") {
+      const isRegularUserRoute = !path.startsWith('/super-admin');
+      if (isRegularUserRoute || path === '/' || path === '/login' || path === '/register' || path === '/reset-password') {
+        navigate("/super-admin/dashboard", { replace: true });
+      }
+    } else {
+      const isSuperAdminRoute = path.startsWith('/super-admin');
+      if (isSuperAdminRoute || path === '/' || path === '/login' || path === '/register' || path === '/reset-password') {
+        navigate("/dashboard", { replace: true });
+      }
+    }
+  }, [currentUser, location.pathname, navigate]);
 
   return children;
 }

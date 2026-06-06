@@ -177,7 +177,7 @@ export default function Customers() {
                     >
                       <span className="material-symbols-outlined text-[16px]">edit</span>
                     </button>
-                    {state.currentUser?.role === 'Owner' && (
+                    {(state.currentUser?.businessRole || state.currentUser?.role) === 'Owner' && (
                       <button
                         onClick={() => handleDeleteClick(customer)}
                         className="p-1.5 rounded-lg text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-all"

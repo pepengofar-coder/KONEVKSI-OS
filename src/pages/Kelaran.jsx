@@ -154,7 +154,7 @@ export default function Kelaran() {
                           >
                             <span className="material-symbols-outlined text-[18px] sm:text-[16px]">edit</span>
                           </button>
-                          {currentUser?.role === 'Owner' && (
+                          {(currentUser?.businessRole || currentUser?.role) === 'Owner' && (
                             <button
                               onClick={() => handleDeleteClick(k)}
                               className="p-2 sm:p-1.5 rounded-lg text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-all flex items-center justify-center"
