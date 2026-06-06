@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useHelpers } from '../../context/AppContext';
+import { useAppState, useHelpers } from '../../context/AppContext';
 
-export default function AdminSettings() {
+export default function SuperAdminSettings() {
+  const state = useAppState();
   const { showToast } = useHelpers();
 
   const [bankMandiri, setBankMandiri] = useState('131-00-153482-9');
@@ -9,6 +10,8 @@ export default function AdminSettings() {
   const [premiumPrice, setPremiumPrice] = useState('99000');
   const [businessPrice, setBusinessPrice] = useState('199000');
   const [autoApprove, setAutoApprove] = useState(false);
+
+  const isSuperAdmin = state.currentUser?.role === 'SUPER_ADMIN';
 
   useEffect(() => {
     // Load config from localStorage
@@ -25,6 +28,10 @@ export default function AdminSettings() {
 
   const handleSave = (e) => {
     e.preventDefault();
+    if (!isSuperAdmin) {
+      showToast('Akses Ditolak: Hanya Super Admin yang dapat menyimpan setelan platform!', 'error');
+      return;
+    }
     const config = {
       bankMandiri,
       bankBca,
@@ -58,6 +65,13 @@ export default function AdminSettings() {
               Tujuan Rekening Bank Pembayaran
             </h3>
 
+            {!isSuperAdmin && (
+              <div className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs rounded-xl flex items-center gap-2">
+                <span className="material-symbols-outlined text-base">warning</span>
+                <span>Hanya Super Admin yang dapat merubah tujuan transfer rekening.</span>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
                 <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">No. Rekening Bank Mandiri</label>
@@ -65,7 +79,8 @@ export default function AdminSettings() {
                   type="text"
                   value={bankMandiri}
                   onChange={(e) => setBankMandiri(e.target.value)}
-                  className="input-base"
+                  disabled={!isSuperAdmin}
+                  className="input-base disabled:opacity-50"
                   required
                 />
               </div>
@@ -75,7 +90,8 @@ export default function AdminSettings() {
                   type="text"
                   value={bankBca}
                   onChange={(e) => setBankBca(e.target.value)}
-                  className="input-base"
+                  disabled={!isSuperAdmin}
+                  className="input-base disabled:opacity-50"
                   required
                 />
               </div>
@@ -96,7 +112,8 @@ export default function AdminSettings() {
                   type="number"
                   value={premiumPrice}
                   onChange={(e) => setPremiumPrice(e.target.value)}
-                  className="input-base"
+                  disabled={!isSuperAdmin}
+                  className="input-base disabled:opacity-50"
                   required
                 />
               </div>
@@ -106,7 +123,8 @@ export default function AdminSettings() {
                   type="number"
                   value={businessPrice}
                   onChange={(e) => setBusinessPrice(e.target.value)}
-                  className="input-base"
+                  disabled={!isSuperAdmin}
+                  className="input-base disabled:opacity-50"
                   required
                 />
               </div>
@@ -130,8 +148,12 @@ export default function AdminSettings() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => setAutoApprove(!autoApprove)}
-                  className={`w-12 h-6 rounded-full p-1 transition-colors duration-300 flex ${
+                  onClick={() => {
+                    if (!isSuperAdmin) return;
+                    setAutoApprove(!autoApprove);
+                  }}
+                  disabled={!isSuperAdmin}
+                  className={`w-12 h-6 rounded-full p-1 transition-colors duration-300 flex disabled:opacity-50 ${
                     autoApprove ? 'bg-cyan-500 justify-end' : 'bg-slate-800 justify-start'
                   }`}
                 >
@@ -144,7 +166,12 @@ export default function AdminSettings() {
           <div className="flex justify-end">
             <button
               type="submit"
-              className="w-full py-3.5 bg-gradient-to-r from-purple-600 to-cyan-600 hover:shadow-purple-500/25 text-white rounded-2xl font-bold text-xs hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-2 shadow-lg"
+              disabled={!isSuperAdmin}
+              className={`w-full py-3.5 text-white rounded-2xl font-bold text-xs transition-all flex items-center justify-center gap-2 shadow-lg ${
+                isSuperAdmin 
+                  ? 'bg-gradient-to-r from-purple-600 to-cyan-600 hover:shadow-purple-500/25 hover:scale-[1.02] active:scale-[0.98]' 
+                  : 'bg-slate-800 border border-slate-700 opacity-50 cursor-not-allowed'
+              }`}
             >
               <span className="material-symbols-outlined text-[18px]">save</span>
               Simpan Setelan Platform

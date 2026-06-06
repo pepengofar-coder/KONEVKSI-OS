@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAppState, useAppDispatch, useHelpers } from '../../context/AppContext';
 
-export default function AdminUsers() {
+export default function SuperAdminUsers() {
   const state = useAppState();
   const dispatch = useAppDispatch();
   const { showToast } = useHelpers();
@@ -17,6 +17,8 @@ export default function AdminUsers() {
   const [editExpiryDate, setEditExpiryDate] = useState('');
 
   const users = state.users || [];
+
+  const isSuperAdmin = state.currentUser?.role === 'SUPER_ADMIN';
 
   // Filter out the logged-in admin from basic list (or show all users)
   const filteredUsers = users.filter(u => {
@@ -53,6 +55,10 @@ export default function AdminUsers() {
   };
 
   const handleSaveEdit = () => {
+    if (!isSuperAdmin) {
+      showToast('Akses Ditolak: Hanya Super Admin yang dapat memodifikasi lisensi/role!', 'error');
+      return;
+    }
     if (!selectedUserForEdit) return;
 
     const expiryTimestamp = editExpiryDate ? new Date(editExpiryDate).getTime() : null;
@@ -127,7 +133,7 @@ export default function AdminUsers() {
             <tbody className="divide-y divide-white/[0.06]">
               {filteredUsers.map((user) => {
                 const stats = getUserStats(user.id);
-                const isUserAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
+                const isUserAdmin = user.role === 'SUPER_ADMIN' || user.role === 'ADMIN';
 
                 return (
                   <tr key={user.id} className="hover:bg-white/[0.01] transition-all text-xs">
@@ -233,7 +239,7 @@ export default function AdminUsers() {
                         <button
                           onClick={() => handleOpenEdit(user)}
                           className="p-1.5 hover:bg-white/[0.04] rounded-xl text-slate-400 hover:text-purple-400 transition-colors"
-                          title="Ubah Lisensi & Paket"
+                          title={isSuperAdmin ? "Ubah Lisensi & Paket" : "Ubah Lisensi & Paket (Super Admin Only)"}
                         >
                           <span className="material-symbols-outlined text-[18px]">edit</span>
                         </button>
@@ -365,7 +371,13 @@ export default function AdminUsers() {
                   setSelectedUserForDetails(null);
                   handleOpenEdit(selectedUserForDetails);
                 }}
-                className="w-full py-3 bg-gradient-to-r from-purple-600 to-cyan-600 hover:shadow-purple-500/20 text-white rounded-xl text-xs font-bold transition-all shadow-lg flex items-center justify-center gap-1.5"
+                disabled={!isSuperAdmin}
+                className={`w-full py-3 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                  isSuperAdmin 
+                    ? 'bg-gradient-to-r from-purple-600 to-cyan-600 hover:shadow-purple-500/20 cursor-pointer shadow-lg' 
+                    : 'bg-slate-800 text-slate-600 border border-slate-700 opacity-50 cursor-not-allowed'
+                }`}
+                title={!isSuperAdmin ? 'Hanya Super Admin yang dapat memodifikasi data.' : 'Ubah Lisensi'}
               >
                 <span className="material-symbols-outlined text-[16px]">edit</span>
                 Override Lisensi & Role
@@ -392,6 +404,13 @@ export default function AdminUsers() {
               </button>
             </div>
 
+            {!isSuperAdmin && (
+              <div className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs rounded-xl flex items-center gap-2">
+                <span className="material-symbols-outlined text-base">warning</span>
+                <span>Hanya Super Admin yang dapat mengubah setelan lisensi/role pengguna.</span>
+              </div>
+            )}
+
             <div className="space-y-4">
               {/* SaaS Plan Tier */}
               <div>
@@ -399,7 +418,8 @@ export default function AdminUsers() {
                 <select
                   value={editPlan}
                   onChange={(e) => setEditPlan(e.target.value)}
-                  className="input-base cursor-pointer"
+                  disabled={!isSuperAdmin}
+                  className="input-base cursor-pointer disabled:opacity-50"
                 >
                   <option value="FREE" className="bg-slate-900 text-slate-200">FREE</option>
                   <option value="PREMIUM" className="bg-slate-900 text-slate-200">PREMIUM</option>
@@ -413,7 +433,8 @@ export default function AdminUsers() {
                 <select
                   value={editStatus}
                   onChange={(e) => setEditStatus(e.target.value)}
-                  className="input-base cursor-pointer"
+                  disabled={!isSuperAdmin}
+                  className="input-base cursor-pointer disabled:opacity-50"
                 >
                   <option value="ACTIVE" className="bg-slate-900 text-slate-200">ACTIVE</option>
                   <option value="PENDING" className="bg-slate-900 text-slate-200">PENDING</option>
@@ -428,7 +449,8 @@ export default function AdminUsers() {
                   type="date"
                   value={editExpiryDate}
                   onChange={(e) => setEditExpiryDate(e.target.value)}
-                  className="input-base"
+                  disabled={!isSuperAdmin}
+                  className="input-base disabled:opacity-50"
                 />
               </div>
 
@@ -438,7 +460,8 @@ export default function AdminUsers() {
                 <select
                   value={editRole}
                   onChange={(e) => setEditRole(e.target.value)}
-                  className="input-base cursor-pointer"
+                  disabled={!isSuperAdmin}
+                  className="input-base cursor-pointer disabled:opacity-50"
                 >
                   <option value="USER" className="bg-slate-900 text-slate-200">USER (Tenant Biasa)</option>
                   <option value="ADMIN" className="bg-slate-900 text-slate-200">ADMIN (Platform Administrator)</option>
@@ -456,7 +479,12 @@ export default function AdminUsers() {
               </button>
               <button
                 onClick={handleSaveEdit}
-                className="px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-purple-600 to-cyan-600 text-white shadow-lg"
+                disabled={!isSuperAdmin}
+                className={`px-4 py-2 rounded-xl text-xs font-bold text-white shadow-lg ${
+                  isSuperAdmin 
+                    ? 'bg-gradient-to-r from-purple-600 to-cyan-600 cursor-pointer' 
+                    : 'bg-slate-800 border border-slate-700 opacity-50 cursor-not-allowed'
+                }`}
               >
                 Simpan Perubahan
               </button>

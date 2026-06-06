@@ -1,17 +1,18 @@
 import { useNavigate } from 'react-router-dom';
 import { useAppState, useHelpers } from '../../context/AppContext';
 
-export default function AdminDashboard() {
+export default function SuperAdminDashboard() {
   const state = useAppState();
   const navigate = useNavigate();
   const { formatRupiah } = useHelpers();
 
-  // Filter users to exclude ADMINs
-  const customers = (state.users || []).filter(u => u.role !== 'ADMIN' && u.role !== 'SUPER_ADMIN');
+  // Filter users to exclude SUPER_ADMIN and ADMIN
+  const customers = (state.users || []).filter(u => u.role !== 'SUPER_ADMIN' && u.role !== 'ADMIN');
   const totalUsers = customers.length;
   
   const premiumCount = customers.filter(u => u.plan === 'PREMIUM' && u.planStatus === 'ACTIVE').length;
   const businessCount = customers.filter(u => u.plan === 'BUSINESS' && u.planStatus === 'ACTIVE').length;
+  const freeCount = customers.filter(u => u.plan === 'FREE' || u.planStatus === 'EXPIRED').length;
   
   const pendingPayments = (state.paymentOrders || []).filter(o => o.status === 'PENDING');
   const pendingCount = pendingPayments.length;
@@ -37,14 +38,14 @@ export default function AdminDashboard() {
   );
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 font-sans">
       {/* Welcome Banner */}
       <div>
         <h1 className="text-2xl md:text-3xl font-black font-display bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
-          Dashboard Admin
+          Dashboard Super Admin
         </h1>
         <p className="text-xs text-slate-400 mt-1">
-          Ringkasan platform, metrik bisnis SaaS, dan persetujuan upgrade manual.
+          Statistik global, metrik bisnis SaaS, dan manajemen portal Konveksi OS.
         </p>
       </div>
 
@@ -65,19 +66,21 @@ export default function AdminDashboard() {
           <div className="absolute top-0 right-0 p-3 text-purple-400 opacity-20">
             <span className="material-symbols-outlined text-[40px]">workspace_premium</span>
           </div>
-          <span className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Tier Premium</span>
-          <span className="block text-2xl font-black text-slate-100 mt-2 font-display">{premiumCount}</span>
-          <span className="block text-[10px] text-cyan-400 mt-1 font-bold">Aktif & Berlangganan</span>
+          <span className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Premium / Business</span>
+          <span className="block text-2xl font-black text-slate-100 mt-2 font-display">
+            {premiumCount} / {businessCount}
+          </span>
+          <span className="block text-[10px] text-cyan-400 mt-1 font-bold">Total Berlangganan</span>
         </div>
 
         {/* Metric 3 */}
         <div className="bg-white/[0.02] border border-white/[0.06] rounded-3xl p-5 relative overflow-hidden backdrop-blur-xl">
           <div className="absolute top-0 right-0 p-3 text-yellow-400 opacity-20">
-            <span className="material-symbols-outlined text-[40px]">business_center</span>
+            <span className="material-symbols-outlined text-[40px]">person_outline</span>
           </div>
-          <span className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Tier Business</span>
-          <span className="block text-2xl font-black text-slate-100 mt-2 font-display">{businessCount}</span>
-          <span className="block text-[10px] text-purple-400 mt-1 font-bold">Fitur Bisnis Lengkap</span>
+          <span className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Free / Expired</span>
+          <span className="block text-2xl font-black text-slate-100 mt-2 font-display">{freeCount}</span>
+          <span className="block text-[10px] text-slate-400 mt-1">Free Tier</span>
         </div>
 
         {/* Metric 4 */}
@@ -112,7 +115,7 @@ export default function AdminDashboard() {
               Verifikasi Pembayaran Manual ({pendingCount})
             </h3>
             <button
-              onClick={() => navigate('/admin/payments')}
+              onClick={() => navigate('/super-admin/payments')}
               className="text-xs text-cyan-400 hover:text-cyan-300 font-bold"
             >
               Lihat Semua
@@ -129,10 +132,10 @@ export default function AdminDashboard() {
                   </p>
                 </div>
                 <button
-                  onClick={() => navigate('/admin/payments')}
+                  onClick={() => navigate('/super-admin/payments')}
                   className="px-3 py-1.5 bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-xl text-[10px] font-bold hover:bg-rose-500/30 transition-all"
                 >
-                  ACC Sekarang
+                  Verifikasi
                 </button>
               </div>
             ))}
@@ -152,7 +155,7 @@ export default function AdminDashboard() {
               Registrasi Tenant Terbaru
             </h3>
             <button
-              onClick={() => navigate('/admin/users')}
+              onClick={() => navigate('/super-admin/users')}
               className="text-xs text-cyan-400 hover:text-cyan-300 font-bold"
             >
               Lihat Semua
@@ -207,7 +210,7 @@ export default function AdminDashboard() {
                   </p>
                 </div>
                 <button
-                  onClick={() => navigate('/admin/subscriptions')}
+                  onClick={() => navigate('/super-admin/subscriptions')}
                   className="px-3 py-1.5 bg-yellow-500/10 text-yellow-300 border border-yellow-500/20 rounded-xl text-[10px] font-bold hover:bg-yellow-500/20 transition-all"
                 >
                   Kelola

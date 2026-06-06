@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppState, useAppDispatch, useHelpers, checkPassword } from '../../context/AppContext';
 
-export default function AdminLogin() {
+export default function SuperAdminLogin() {
   const state = useAppState();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -13,10 +13,10 @@ export default function AdminLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Redirect if already logged in as admin
+  // Redirect if already logged in as super-admin/admin
   useEffect(() => {
-    if (state.currentUser && (state.currentUser.role === 'ADMIN' || state.currentUser.role === 'SUPER_ADMIN')) {
-      navigate('/admin/dashboard');
+    if (state.currentUser && (state.currentUser.role === 'SUPER_ADMIN' || state.currentUser.role === 'ADMIN')) {
+      navigate('/super-admin/dashboard');
     }
   }, [state.currentUser, navigate]);
 
@@ -34,16 +34,16 @@ export default function AdminLogin() {
       );
 
       if (user) {
-        if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
+        if (user.role === 'SUPER_ADMIN' || user.role === 'ADMIN') {
           dispatch({ type: 'SET_CURRENT_USER', payload: { user, rememberMe: true } });
-          showToast(`Selamat datang di Portal Admin, ${user.nama || user.name}!`, 'success');
-          navigate('/admin/dashboard');
+          showToast(`Selamat datang di Portal Super Admin, ${user.nama || user.name}!`, 'success');
+          navigate('/super-admin/dashboard');
         } else {
-          showToast('Akses Ditolak: Akun Anda bukan Administrator!', 'error');
+          showToast('Username atau password salah', 'error');
           setLoading(false);
         }
       } else {
-        showToast('Username atau password salah!', 'error');
+        showToast('Username atau password salah', 'error');
         setLoading(false);
       }
     }, 800);
@@ -52,7 +52,7 @@ export default function AdminLogin() {
   const handleUseSeedAdmin = () => {
     setUsername('zenirastrore');
     setPassword('abu_ziyadh280292');
-    showToast('Kredensial admin default berhasil diisi.', 'info');
+    showToast('Kredensial Super Admin default berhasil diisi.', 'info');
   };
 
   return (
@@ -77,12 +77,12 @@ export default function AdminLogin() {
               <span className="material-symbols-outlined text-white text-2xl filled">shield</span>
             </div>
             <h2 className="text-2xl font-black tracking-tight bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">Konveksi OS</h2>
-            <p className="text-xs text-slate-400 font-bold mt-1">Portal Administrasi Platform</p>
+            <p className="text-xs text-slate-400 font-bold mt-1">Portal Super Admin Platform</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Username Administrator</label>
+              <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Username atau Email</label>
               <input
                 type="text"
                 value={username}
@@ -127,7 +127,7 @@ export default function AdminLogin() {
                   Mengautentikasi...
                 </>
               ) : (
-                'Masuk Portal Admin'
+                'Masuk Portal Super Admin'
               )}
             </button>
           </form>
@@ -138,7 +138,7 @@ export default function AdminLogin() {
               className="w-full py-2.5 bg-slate-800/80 hover:bg-slate-800 border border-white/10 hover:border-white/20 text-slate-300 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2"
             >
               <span className="material-symbols-outlined text-[16px]">vpn_key</span>
-              Isi Admin Kredensial Default
+              Isi Super Admin Default
             </button>
           </div>
         </div>

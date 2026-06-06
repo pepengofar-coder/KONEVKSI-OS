@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAppState, useAppDispatch, useHelpers } from '../../context/AppContext';
 
-export default function AdminSubscriptions() {
+export default function SuperAdminSubscriptions() {
   const state = useAppState();
   const dispatch = useAppDispatch();
   const { showToast } = useHelpers();
@@ -9,13 +9,14 @@ export default function AdminSubscriptions() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('ALL'); // ALL, ACTIVE, WARNING, EXPIRED
 
-  const customers = (state.users || []).filter(u => u.role !== 'ADMIN' && u.role !== 'SUPER_ADMIN');
+  const customers = (state.users || []).filter(u => u.role !== 'SUPER_ADMIN' && u.role !== 'ADMIN');
   const today = Date.now();
   const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
 
+  const isSuperAdmin = state.currentUser?.role === 'SUPER_ADMIN';
+
   // Classify and filter users
   const filteredUsers = customers.filter(user => {
-    // Exclude FREE plans from sub list or show them separately? Let's show all paying or previously paying users
     const isPayingUser = user.plan !== 'FREE' || user.planStatus === 'PENDING' || user.planExpiresAt !== null;
     if (!isPayingUser) return false;
 
@@ -39,6 +40,10 @@ export default function AdminSubscriptions() {
   });
 
   const handleExtend = (userId, days) => {
+    if (!isSuperAdmin) {
+      showToast('Akses Ditolak: Hanya Super Admin yang dapat memperpanjang lisensi!', 'error');
+      return;
+    }
     dispatch({
       type: 'EXTEND_SUBSCRIPTION',
       payload: { userId, days }
@@ -47,6 +52,10 @@ export default function AdminSubscriptions() {
   };
 
   const handleCancelSubscription = (userId) => {
+    if (!isSuperAdmin) {
+      showToast('Akses Ditolak: Hanya Super Admin yang dapat membatalkan subscription!', 'error');
+      return;
+    }
     dispatch({
       type: 'MANUAL_UPDATE_PLAN',
       payload: {
@@ -60,6 +69,10 @@ export default function AdminSubscriptions() {
   };
 
   const handleUpgradeToBusiness = (userId) => {
+    if (!isSuperAdmin) {
+      showToast('Akses Ditolak: Hanya Super Admin yang dapat meningkatkan paket!', 'error');
+      return;
+    }
     dispatch({
       type: 'MANUAL_UPDATE_PLAN',
       payload: {
@@ -191,13 +204,25 @@ export default function AdminSubscriptions() {
               <div className="flex flex-wrap items-center gap-2 shrink-0 border-t lg:border-t-0 pt-4 lg:pt-0 border-white/[0.06]">
                 <button
                   onClick={() => handleExtend(user.id, 30)}
-                  className="px-3.5 py-2 rounded-xl text-xs font-bold bg-white/[0.04] hover:bg-white/[0.08] text-slate-200 border border-white/10 hover:border-white/20 transition-all"
+                  disabled={!isSuperAdmin}
+                  className={`px-3.5 py-2 rounded-xl text-xs font-bold border transition-all ${
+                    isSuperAdmin 
+                      ? 'bg-white/[0.04] hover:bg-white/[0.08] text-slate-200 border-white/10 hover:border-white/20 cursor-pointer' 
+                      : 'bg-slate-800 text-slate-600 border-slate-700 opacity-50 cursor-not-allowed'
+                  }`}
+                  title={!isSuperAdmin ? 'Hanya Super Admin yang dapat memperpanjang lisensi.' : '+30 Hari'}
                 >
                   +30 Hari
                 </button>
                 <button
                   onClick={() => handleExtend(user.id, 365)}
-                  className="px-3.5 py-2 rounded-xl text-xs font-bold bg-white/[0.04] hover:bg-white/[0.08] text-slate-200 border border-white/10 hover:border-white/20 transition-all"
+                  disabled={!isSuperAdmin}
+                  className={`px-3.5 py-2 rounded-xl text-xs font-bold border transition-all ${
+                    isSuperAdmin 
+                      ? 'bg-white/[0.04] hover:bg-white/[0.08] text-slate-200 border-white/10 hover:border-white/20 cursor-pointer' 
+                      : 'bg-slate-800 text-slate-600 border-slate-700 opacity-50 cursor-not-allowed'
+                  }`}
+                  title={!isSuperAdmin ? 'Hanya Super Admin yang dapat memperpanjang lisensi.' : '+1 Tahun'}
                 >
                   +1 Tahun
                 </button>
@@ -205,7 +230,13 @@ export default function AdminSubscriptions() {
                 {user.plan !== 'BUSINESS' && (
                   <button
                     onClick={() => handleUpgradeToBusiness(user.id)}
-                    className="px-3.5 py-2 rounded-xl text-xs font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30 hover:bg-purple-500/35 transition-all"
+                    disabled={!isSuperAdmin}
+                    className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+                      isSuperAdmin 
+                        ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30 hover:bg-purple-500/35 cursor-pointer shadow-lg' 
+                        : 'bg-slate-800 text-slate-600 border border-slate-700 opacity-50 cursor-not-allowed'
+                    }`}
+                    title={!isSuperAdmin ? 'Hanya Super Admin yang dapat menaikkan paket.' : 'Set Business'}
                   >
                     Set Business
                   </button>
@@ -213,7 +244,13 @@ export default function AdminSubscriptions() {
 
                 <button
                   onClick={() => handleCancelSubscription(user.id)}
-                  className="px-3.5 py-2 rounded-xl text-xs font-bold bg-rose-500/15 text-rose-300 border border-rose-500/20 hover:bg-rose-500/25 transition-all"
+                  disabled={!isSuperAdmin}
+                  className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+                    isSuperAdmin 
+                      ? 'bg-rose-500/15 text-rose-300 border border-rose-500/20 hover:bg-rose-500/25 cursor-pointer' 
+                      : 'bg-slate-800 text-slate-600 border border-slate-700 opacity-50 cursor-not-allowed'
+                  }`}
+                  title={!isSuperAdmin ? 'Hanya Super Admin yang dapat membatalkan paket.' : 'Batal / Free'}
                 >
                   Batal / Free
                 </button>

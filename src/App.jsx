@@ -26,15 +26,15 @@ const Onboarding = lazy(() => import('./pages/Onboarding'));
 const TrackingPublic = lazy(() => import('./pages/TrackingPublic'));
 const Pricing = lazy(() => import('./pages/Pricing'));
 
-// Admin pages lazy loads
-const AdminLayout = lazy(() => import('./components/layout/AdminLayout'));
-const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'));
-const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
-const AdminPayments = lazy(() => import('./pages/admin/AdminPayments'));
-const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
-const AdminSubscriptions = lazy(() => import('./pages/admin/AdminSubscriptions'));
-const AdminLogs = lazy(() => import('./pages/admin/AdminLogs'));
-const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
+// Super Admin pages lazy loads
+const SuperAdminLayout = lazy(() => import('./components/layout/SuperAdminLayout'));
+const SuperAdminLogin = lazy(() => import('./pages/super-admin/SuperAdminLogin'));
+const SuperAdminDashboard = lazy(() => import('./pages/super-admin/SuperAdminDashboard'));
+const SuperAdminPayments = lazy(() => import('./pages/super-admin/SuperAdminPayments'));
+const SuperAdminUsers = lazy(() => import('./pages/super-admin/SuperAdminUsers'));
+const SuperAdminSubscriptions = lazy(() => import('./pages/super-admin/SuperAdminSubscriptions'));
+const SuperAdminLogs = lazy(() => import('./pages/super-admin/SuperAdminLogs'));
+const SuperAdminSettings = lazy(() => import('./pages/super-admin/SuperAdminSettings'));
 
 // Loading skeleton for lazy-loaded pages
 function PageLoader() {
@@ -55,15 +55,15 @@ function DomainRedirector({ children }) {
   useEffect(() => {
     const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     const isMockAdminDomain = new URLSearchParams(window.location.search).get('domain') === 'admin';
-    const isAdminDomain = window.location.hostname === 'zenira.konveksios.vercel.app' || (isLocalhost && isMockAdminDomain);
+    const isAdminDomain = window.location.hostname === 'akonveksi.vercel.app' || (isLocalhost && isMockAdminDomain);
     
     if (isAdminDomain) {
-      if (location.pathname === '/' || !location.pathname.startsWith('/admin')) {
-        navigate('/admin/dashboard');
+      if (location.pathname === '/' || !location.pathname.startsWith('/super-admin')) {
+        navigate('/super-admin/dashboard');
       }
     } else if (!isLocalhost) {
-      if (location.pathname.startsWith('/admin')) {
-        window.location.href = `https://zenira.konveksios.vercel.app${location.pathname}${location.search}`;
+      if (location.pathname.startsWith('/super-admin')) {
+        window.location.href = `https://akonveksi.vercel.app${location.pathname}${location.search}`;
       }
     }
   }, [location.pathname, navigate]);
@@ -99,15 +99,15 @@ export default function App() {
             <Route path="/pricing" element={<Pricing />} />
           </Route>
 
-          {/* Admin Routes */}
-          <Route path="/admin/login" element={<AdminLogin />} />
-          <Route element={<AdminLayout />}>
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            <Route path="/admin/payments" element={<AdminPayments />} />
-            <Route path="/admin/users" element={<AdminUsers />} />
-            <Route path="/admin/subscriptions" element={<AdminSubscriptions />} />
-            <Route path="/admin/logs" element={<AdminLogs />} />
-            <Route path="/admin/settings" element={<AdminSettings />} />
+          {/* Super Admin Routes */}
+          <Route path="/super-admin/login" element={<SuperAdminLogin />} />
+          <Route element={<SuperAdminLayout />}>
+            <Route path="/super-admin/dashboard" element={<SuperAdminDashboard />} />
+            <Route path="/super-admin/payments" element={<SuperAdminPayments />} />
+            <Route path="/super-admin/users" element={<SuperAdminUsers />} />
+            <Route path="/super-admin/subscriptions" element={<SuperAdminSubscriptions />} />
+            <Route path="/super-admin/logs" element={<SuperAdminLogs />} />
+            <Route path="/super-admin/settings" element={<SuperAdminSettings />} />
           </Route>
 
           {/* 404 catch-all */}

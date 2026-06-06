@@ -1,6 +1,6 @@
 import { useAppState } from '../../context/AppContext';
 
-export default function AdminLogs() {
+export default function SuperAdminLogs() {
   const state = useAppState();
   const logs = state.adminLogs || [];
 
@@ -28,7 +28,7 @@ export default function AdminLogs() {
           Audit Log Keamanan & Platform
         </h1>
         <p className="text-xs text-slate-400 mt-1">
-          Riwayat lengkap aktivitas administratif yang dilakukan oleh admin atau sistem platform Konveksi OS.
+          Riwayat lengkap aktivitas administratif yang dilakukan oleh super admin atau sistem platform Konveksi OS.
         </p>
       </div>
 

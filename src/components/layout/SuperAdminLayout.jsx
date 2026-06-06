@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Outlet, useNavigate, useLocation, NavLink } from 'react-router-dom';
 import { useAppState, useAppDispatch, useHelpers } from '../../context/AppContext';
 
-export default function AdminLayout() {
+export default function SuperAdminLayout() {
   const state = useAppState();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -13,20 +13,20 @@ export default function AdminLayout() {
   // Guard: Redirect if not logged in or not admin
   useEffect(() => {
     if (!state.currentUser) {
-      navigate('/admin/login');
-    } else if (state.currentUser.role !== 'ADMIN' && state.currentUser.role !== 'SUPER_ADMIN') {
+      navigate('/super-admin/login');
+    } else if (state.currentUser.role !== 'SUPER_ADMIN' && state.currentUser.role !== 'ADMIN') {
       showToast('Akses Ditolak: Halaman ini hanya untuk Administrator.', 'error');
       navigate('/dashboard');
     }
   }, [state.currentUser, navigate]);
 
-  if (!state.currentUser || (state.currentUser.role !== 'ADMIN' && state.currentUser.role !== 'SUPER_ADMIN')) {
+  if (!state.currentUser || (state.currentUser.role !== 'SUPER_ADMIN' && state.currentUser.role !== 'ADMIN')) {
     return null; // Don't flash layout
   }
 
   const handleLogout = () => {
     dispatch({ type: 'LOGOUT' });
-    navigate('/admin/login');
+    navigate('/super-admin/login');
   };
 
   const adminName = state.currentUser.nama || state.currentUser.name || 'Admin';
@@ -37,13 +37,19 @@ export default function AdminLayout() {
   const pendingPaymentsCount = (state.paymentOrders || []).filter(o => o.status === 'PENDING').length;
 
   const menuItems = [
-    { to: '/admin/dashboard', label: 'Dashboard', icon: 'dashboard' },
-    { to: '/admin/payments', label: 'Pembayaran', icon: 'payments', badge: pendingPaymentsCount > 0 ? pendingPaymentsCount : null },
-    { to: '/admin/users', label: 'Pengguna', icon: 'group' },
-    { to: '/admin/subscriptions', label: 'Subscription', icon: 'card_membership' },
-    { to: '/admin/logs', label: 'Audit Log', icon: 'receipt_long' },
-    { to: '/admin/settings', label: 'Pengaturan', icon: 'settings' },
+    { to: '/super-admin/dashboard', label: 'Dashboard', icon: 'dashboard' },
+    { to: '/super-admin/payments', label: 'Pembayaran', icon: 'payments', badge: pendingPaymentsCount > 0 ? pendingPaymentsCount : null },
+    { to: '/super-admin/users', label: 'Pengguna', icon: 'group' },
+    { to: '/super-admin/subscriptions', label: 'Subscription', icon: 'card_membership' },
+    { to: '/super-admin/logs', label: 'Audit Log', icon: 'receipt_long' },
+    { to: '/super-admin/settings', label: 'Pengaturan', icon: 'settings' },
   ];
+
+  const isSuperAdmin = state.currentUser.role === 'SUPER_ADMIN';
+  const roleLabel = isSuperAdmin ? 'SUPER ADMIN' : 'ADMIN (Terbatas)';
+  const badgeColor = isSuperAdmin 
+    ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' 
+    : 'bg-amber-500/20 text-amber-300 border border-amber-500/30';
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-0 md:p-6 lg:p-8 premium-bg relative overflow-hidden text-slate-100 font-sans">
@@ -88,7 +94,7 @@ export default function AdminLayout() {
             </div>
             <div>
               <h1 className="text-base font-black tracking-tighter bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">Konveksi OS</h1>
-              <p className="text-[9px] text-slate-400 uppercase tracking-[0.2em] font-extrabold leading-none mt-0.5">ADMIN PORTAL</p>
+              <p className="text-[9px] text-slate-400 uppercase tracking-[0.2em] font-extrabold leading-none mt-0.5">SUPER ADMIN PORTAL</p>
             </div>
           </div>
 
@@ -139,7 +145,10 @@ export default function AdminLayout() {
                 </div>
                 <div className="min-w-0">
                   <p className="text-xs font-bold text-slate-100 leading-tight truncate">{adminName}</p>
-                  <p className="text-[9px] text-slate-400 truncate mt-0.5">@{adminUsername} · {state.currentUser.role}</p>
+                  <p className="text-[9px] text-slate-400 truncate mt-0.5">@{adminUsername}</p>
+                  <span className={`inline-block text-[7px] font-black tracking-widest px-1 py-0.5 rounded-md uppercase mt-1 ${badgeColor}`}>
+                    {roleLabel}
+                  </span>
                 </div>
               </div>
               <button
@@ -161,7 +170,7 @@ export default function AdminLayout() {
             </div>
             <div>
               <h1 className="text-sm font-black tracking-tighter bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">Konveksi OS</h1>
-              <p className="text-[8px] text-slate-400 uppercase tracking-[0.2em] font-extrabold leading-none mt-0.5">ADMIN PORTAL</p>
+              <p className="text-[8px] text-slate-400 uppercase tracking-[0.2em] font-extrabold leading-none mt-0.5">SUPER ADMIN PORTAL</p>
             </div>
           </div>
           <button
@@ -174,7 +183,7 @@ export default function AdminLayout() {
           </button>
         </header>
 
-        {/* Mobile Drawer (Menu List overlay) */}
+        {/* Mobile Drawer */}
         {mobileMenuOpen && (
           <div className="md:hidden fixed inset-x-0 top-[73px] bottom-0 z-30 bg-slate-950/95 backdrop-blur-2xl border-t border-white/10 flex flex-col p-6 space-y-6 animate-fade-in">
             <nav className="flex-1 space-y-2">
@@ -211,7 +220,7 @@ export default function AdminLayout() {
                   </div>
                   <div>
                     <p className="text-xs font-bold text-slate-100">{adminName}</p>
-                    <p className="text-[9px] text-slate-400">@{adminUsername} · {state.currentUser.role}</p>
+                    <p className="text-[9px] text-slate-400">@{adminUsername} · <span className="text-rose-300 font-bold">{roleLabel}</span></p>
                   </div>
                 </div>
                 <button
@@ -230,6 +239,13 @@ export default function AdminLayout() {
         <main className="flex-1 flex flex-col overflow-hidden relative z-10 bg-transparent">
           <div className="flex-1 overflow-y-auto">
             <div className="max-w-6xl mx-auto px-4 md:px-8 py-6 md:py-8 animate-fade-in">
+              {/* Limited rights notice banner if not Super Admin */}
+              {!isSuperAdmin && (
+                <div className="mb-6 p-3 bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs rounded-2xl flex items-center gap-2">
+                  <span className="material-symbols-outlined text-base">info</span>
+                  <span><strong>Hak Akses Terbatas:</strong> Anda login dengan role ADMIN. Anda hanya dapat melihat data secara read-only. Tindakan modifikasi dinonaktifkan.</span>
+                </div>
+              )}
               <Outlet />
             </div>
           </div>

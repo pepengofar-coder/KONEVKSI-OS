@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAppState, useAppDispatch, useHelpers } from '../../context/AppContext';
 
-export default function AdminPayments() {
+export default function SuperAdminPayments() {
   const state = useAppState();
   const dispatch = useAppDispatch();
   const { formatRupiah, showToast } = useHelpers();
@@ -17,6 +17,8 @@ export default function AdminPayments() {
 
   const orders = state.paymentOrders || [];
 
+  const isSuperAdmin = state.currentUser?.role === 'SUPER_ADMIN';
+
   // Filter orders
   const filteredOrders = orders.filter(o => {
     const matchesStatus = filterStatus === 'ALL' || o.status === filterStatus;
@@ -28,12 +30,16 @@ export default function AdminPayments() {
   });
 
   const handleApprove = () => {
+    if (!isSuperAdmin) {
+      showToast('Akses Ditolak: Hanya Super Admin yang dapat menyetujui pembayaran!', 'error');
+      return;
+    }
     if (!approveModalOrder) return;
     dispatch({
       type: 'APPROVE_PAYMENT',
       payload: {
         orderId: approveModalOrder.id,
-        adminNote: adminNote || 'Pembayaran diverifikasi secara manual oleh Admin.'
+        adminNote: adminNote || 'Pembayaran diverifikasi secara manual oleh Super Admin.'
       }
     });
     showToast(`Upgrade pembayaran untuk ${approveModalOrder.businessName || approveModalOrder.username} disetujui!`, 'success');
@@ -42,6 +48,10 @@ export default function AdminPayments() {
   };
 
   const handleReject = () => {
+    if (!isSuperAdmin) {
+      showToast('Akses Ditolak: Hanya Super Admin yang dapat menolak pembayaran!', 'error');
+      return;
+    }
     if (!rejectModalOrder) return;
     if (!adminNote.trim()) {
       showToast('Harap masukkan alasan penolakan pembayaran!', 'error');
@@ -60,14 +70,14 @@ export default function AdminPayments() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 font-sans">
       {/* Header */}
       <div>
         <h1 className="text-2xl md:text-3xl font-black font-display bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
           Verifikasi Bukti Transfer
         </h1>
         <p className="text-xs text-slate-400 mt-1">
-          Periksa bukti transfer dari pengguna dan lakukan ACC untuk mengaktifkan paket Premium/Business.
+          Tinjau bukti pembayaran manual dan lakukan ACC untuk mengaktifkan lisensi premium/business.
         </p>
       </div>
 
@@ -179,19 +189,33 @@ export default function AdminPayments() {
                 <div className="flex flex-col sm:flex-row gap-2">
                   <button
                     onClick={() => {
+                      if (!isSuperAdmin) return;
                       setRejectModalOrder(order);
                       setAdminNote('');
                     }}
-                    className="px-4 py-2 rounded-xl text-xs font-bold bg-rose-500/10 text-rose-300 border border-rose-500/20 hover:bg-rose-500/25 transition-all text-center"
+                    disabled={!isSuperAdmin}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all text-center ${
+                      isSuperAdmin 
+                        ? 'bg-rose-500/10 text-rose-300 border border-rose-500/20 hover:bg-rose-500/25 cursor-pointer' 
+                        : 'bg-slate-800 text-slate-600 border border-slate-700 opacity-50 cursor-not-allowed'
+                    }`}
+                    title={!isSuperAdmin ? 'Hanya Super Admin yang dapat melakukan tindakan ini.' : 'Tolak'}
                   >
                     Tolak
                   </button>
                   <button
                     onClick={() => {
+                      if (!isSuperAdmin) return;
                       setApproveModalOrder(order);
                       setAdminNote('');
                     }}
-                    className="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 hover:bg-emerald-500/25 transition-all text-center flex items-center gap-1.5"
+                    disabled={!isSuperAdmin}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all text-center flex items-center gap-1.5 ${
+                      isSuperAdmin
+                        ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 hover:bg-emerald-500/25 cursor-pointer shadow-lg'
+                        : 'bg-slate-800 text-slate-600 border border-slate-700 opacity-50 cursor-not-allowed'
+                    }`}
+                    title={!isSuperAdmin ? 'Hanya Super Admin yang dapat melakukan tindakan ini.' : 'ACC Pembayaran'}
                   >
                     <span className="material-symbols-outlined text-[14px]">check</span>
                     Setujui (ACC)
@@ -228,7 +252,7 @@ export default function AdminPayments() {
       )}
 
       {/* Approve ACC Modal */}
-      {approveModalOrder && (
+      {approveModalOrder && isSuperAdmin && (
         <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-white/10 p-6 rounded-3xl max-w-md w-full shadow-2xl animate-scale-in">
             <h3 className="text-lg font-bold text-slate-100 flex items-center gap-2">
@@ -269,7 +293,7 @@ export default function AdminPayments() {
       )}
 
       {/* Reject Modal */}
-      {rejectModalOrder && (
+      {rejectModalOrder && isSuperAdmin && (
         <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-white/10 p-6 rounded-3xl max-w-md w-full shadow-2xl animate-scale-in">
             <h3 className="text-lg font-bold text-slate-100 flex items-center gap-2">
@@ -285,7 +309,7 @@ export default function AdminPayments() {
               <textarea
                 value={adminNote}
                 onChange={(e) => setAdminNote(e.target.value)}
-                placeholder="Contoh: Bukti transfer buram/tidak terbaca. Harap upload kembali."
+                placeholder="Contoh: Bukti transfer buram. Harap upload kembali."
                 rows="3"
                 className="input-base resize-none"
                 required
