@@ -12,12 +12,11 @@ export default function SuperAdminLayout() {
 
   // Guard: Redirect if not logged in or not super admin
   useEffect(() => {
-    if (!state.currentUser) {
-      navigate('/super-admin/login');
-    } else if (state.currentUser.role !== 'SUPER_ADMIN') {
-      showToast('Akses Ditolak: Halaman ini hanya untuk Super Administrator.', 'error');
-      navigate('/dashboard');
-    }
+    const user = state.currentUser;
+    if (!user) return navigate("/login"); 
+    if (user.role === "SUPER_ADMIN") return; // Allow access
+    showToast('Akses Ditolak: Halaman ini hanya untuk Super Administrator.', 'error');
+    return navigate("/dashboard");
   }, [state.currentUser, navigate]);
 
   if (!state.currentUser || state.currentUser.role !== 'SUPER_ADMIN') {

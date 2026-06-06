@@ -123,7 +123,7 @@ export default function LandingPage() {
           </div>
           {isLoggedIn ? (
             <Link
-              to={state.currentUser.role === 'SUPER_ADMIN' || state.currentUser.role === 'ADMIN' ? "/super-admin/dashboard" : "/dashboard"}
+              to={state.currentUser.role === 'SUPER_ADMIN' ? "/super-admin/dashboard" : "/dashboard"}
               className="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-cyan-600 rounded-xl text-sm font-bold hover:shadow-lg hover:shadow-purple-500/25 hover:scale-105 active:scale-95 transition-all"
             >
               Dashboard
@@ -196,7 +196,7 @@ export default function LandingPage() {
                   <div className="flex flex-col sm:flex-row gap-4">
                     {isLoggedIn ? (
                       <Link
-                        to={state.currentUser.role === 'SUPER_ADMIN' || state.currentUser.role === 'ADMIN' ? "/super-admin/dashboard" : "/dashboard"}
+                        to={state.currentUser.role === 'SUPER_ADMIN' ? "/super-admin/dashboard" : "/dashboard"}
                         className="group relative px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-purple-600 to-cyan-600 rounded-xl md:rounded-2xl text-sm md:text-base font-bold hover:shadow-2xl hover:shadow-purple-500/40 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2"
                       >
                         Buka Dashboard
@@ -439,7 +439,7 @@ export default function LandingPage() {
               Offline-first • Tanpa registrasi • Data 100% milik Anda
             </p>
             <Link
-              to="/dashboard"
+              to={isLoggedIn ? (state.currentUser.role === 'SUPER_ADMIN' ? "/super-admin/dashboard" : "/dashboard") : "/dashboard"}
               className="inline-flex items-center gap-2 px-10 py-4 bg-gradient-to-r from-purple-600 to-cyan-600 rounded-2xl text-lg font-bold hover:shadow-2xl hover:shadow-purple-500/30 hover:scale-105 active:scale-95 transition-all"
             >
               Buka Aplikasi

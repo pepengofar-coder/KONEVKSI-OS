@@ -54,20 +54,15 @@ function DomainRedirector({ children }) {
   const state = useAppState();
 
   useEffect(() => {
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    const isMockAdminDomain = new URLSearchParams(window.location.search).get('domain') === 'admin';
-    const isAdminDomain = isLocalhost && isMockAdminDomain;
-    
-    if (isAdminDomain) {
-      if (location.pathname === '/' || !location.pathname.startsWith('/super-admin')) {
-        navigate('/super-admin/dashboard');
-      }
-    }
-
-    // Redirect super-admins to their dashboard when accessing root or user login
-    if (state?.currentUser && state.currentUser.role === 'SUPER_ADMIN') {
-      if (location.pathname === '/' || location.pathname === '/login') {
-        navigate('/super-admin/dashboard');
+    // Redirect logged-in users when visiting public/login pages
+    if (state?.currentUser) {
+      const publicPaths = ['/', '/login', '/register', '/super-admin/login'];
+      if (publicPaths.includes(location.pathname)) {
+        if (state.currentUser.role === 'SUPER_ADMIN') {
+          navigate('/super-admin/dashboard');
+        } else {
+          navigate('/dashboard');
+        }
       }
     }
   }, [location.pathname, navigate, state?.currentUser]);

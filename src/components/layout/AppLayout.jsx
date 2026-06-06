@@ -23,11 +23,12 @@ export default function AppLayout() {
 
   // Auth Guard & Onboarding Redirect
   useEffect(() => {
-    if (!state.currentUser) {
-      navigate('/login');
-    } else if (state.currentUser.role === 'SUPER_ADMIN') {
-      navigate('/super-admin/dashboard');
-    } else if (!state.currentUser.categories || state.currentUser.categories.length === 0 || !state.currentUser.businessRole) {
+    const user = state.currentUser;
+    if (!user) return navigate("/login"); 
+    if (user.role === "SUPER_ADMIN") return navigate("/super-admin/dashboard");
+    
+    // Onboarding check for regular user
+    if (!user.categories || user.categories.length === 0 || !user.businessRole) {
       navigate('/onboarding');
     }
   }, [state.currentUser, navigate]);

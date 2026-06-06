@@ -15,10 +15,15 @@ export default function SuperAdminLogin() {
   const [errorField, setErrorField] = useState(''); // 'username' | 'password' | ''
   const [errorMessage, setErrorMessage] = useState('');
 
-  // Redirect if already logged in as super-admin/admin
+  // Redirect if already logged in
   useEffect(() => {
-    if (state.currentUser && (state.currentUser.role === 'SUPER_ADMIN' || state.currentUser.role === 'ADMIN')) {
-      navigate('/super-admin/dashboard');
+    const user = state.currentUser;
+    if (user) {
+      if (user.role === 'SUPER_ADMIN') {
+        navigate('/super-admin/dashboard');
+      } else {
+        navigate('/dashboard');
+      }
     }
   }, [state.currentUser, navigate]);
 
@@ -62,8 +67,8 @@ export default function SuperAdminLogin() {
       }
 
       // Step 3: Check role
-      if (user.role !== 'SUPER_ADMIN' && user.role !== 'ADMIN') {
-        showToast('Akses ditolak: Akun ini bukan administrator.', 'error');
+      if (user.role !== 'SUPER_ADMIN') {
+        showToast('Akses ditolak: Akun ini bukan Super Administrator.', 'error');
         setPassword('');
         setLoading(false);
         return;
