@@ -24,6 +24,7 @@ const Customers = lazy(() => import('./pages/Customers'));
 const Profile = lazy(() => import('./pages/Profile'));
 const Onboarding = lazy(() => import('./pages/Onboarding'));
 const TrackingPublic = lazy(() => import('./pages/TrackingPublic'));
+const Pricing = lazy(() => import('./pages/Pricing'));
 
 // Loading skeleton for lazy-loaded pages
 function PageLoader() {
@@ -61,6 +62,7 @@ export default function App() {
             <Route path="/invoice-pelanggan" element={<InvoicePelanggan />} />
             <Route path="/customers" element={<Customers />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/pricing" element={<Pricing />} />
           </Route>
 
           {/* 404 catch-all */}

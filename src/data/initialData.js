@@ -63,6 +63,8 @@ export const defaultUser = {
   email: 'admin@konveksios.com',
   password: 'admin', // simple default password
   role: 'Owner',
+  plan: 'PREMIUM',
+  planExpiresAt: null,
   categories: ['Kaos', 'Kemeja', 'Jaket'],
   businessProfile: {
     namaUsaha: 'Stitch & Sew',

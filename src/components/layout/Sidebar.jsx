@@ -95,7 +95,21 @@ export default function Sidebar() {
               {userInitial}
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-bold text-slate-100 leading-tight truncate">{userName}</p>
+              <div className="flex items-center gap-1.5 min-w-0">
+                <p className="text-xs font-bold text-slate-100 leading-tight truncate">{userName}</p>
+                <NavLink
+                  to="/pricing"
+                  className={`text-[8px] font-black tracking-widest px-1.5 py-0.5 rounded-full uppercase shrink-0 hover:scale-105 active:scale-95 transition-all ${
+                    (state.currentUser?.plan || 'FREE') === 'PREMIUM'
+                      ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                      : (state.currentUser?.plan || 'FREE') === 'BUSINESS'
+                      ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                      : 'bg-slate-500/20 text-slate-400 border border-slate-500/30'
+                  }`}
+                >
+                  {state.currentUser?.plan || 'FREE'}
+                </NavLink>
+              </div>
               <p className="text-[10px] text-slate-500 truncate mt-0.5">{userRoleLabel}</p>
             </div>
           </div>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAppState, useHelpers } from '../context/AppContext';
+import { useAppState, useHelpers, usePlan } from '../context/AppContext';
 import DistribusiForm from '../components/forms/DistribusiForm';
 import KelaranForm from '../components/forms/KelaranForm';
 import TrackingJobForm from '../components/forms/TrackingJobForm';
@@ -8,7 +8,8 @@ import EmptyState from '../components/ui/EmptyState';
 
 export default function OnProgress() {
   const { distribusi, trackingJobs } = useAppState();
-  const { getModel, getTaylor, getSisaDistribusi, formatRupiah } = useHelpers();
+  const { getModel, getTaylor, getSisaDistribusi, formatRupiah, showToast } = useHelpers();
+  const { isLimitExceeded, showUpgradeModal } = usePlan();
   
   const [showDistribusi, setShowDistribusi] = useState(false);
   const [showKelaran, setShowKelaran] = useState(false);
@@ -31,6 +32,12 @@ export default function OnProgress() {
   const taylorIds = Object.keys(taylorGroups);
 
   const handleOpenTracking = (d) => {
+    const trackJob = (trackingJobs || []).find(j => j.distribusiId === d.id);
+    if (!trackJob && isLimitExceeded('tracking')) {
+      showToast('Batas kuota tercapai! Upgrade ke Premium untuk mengaktifkan link tracking produksi.', 'error');
+      showUpgradeModal();
+      return;
+    }
     setSelectedDist(d);
     setShowTrackingModal(true);
   };

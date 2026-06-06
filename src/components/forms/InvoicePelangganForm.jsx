@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAppState, useAppDispatch, useHelpers } from '../../context/AppContext';
+import { useAppState, useAppDispatch, useHelpers, usePlan } from '../../context/AppContext';
 import Modal from '../ui/Modal';
 
 const formatCurrency = (val) => val ? parseInt(String(val).replace(/\./g, '').replace(/[^\d]/g, ''), 10).toLocaleString('id-ID') : '';
@@ -9,6 +9,7 @@ export default function InvoicePelangganForm({ isOpen, onClose, invoiceToEdit = 
   const state = useAppState();
   const dispatch = useAppDispatch();
   const { showToast } = useHelpers();
+  const { isLimitExceeded, showUpgradeModal } = usePlan();
 
   const customers = state.customers || [];
 
@@ -77,6 +78,13 @@ export default function InvoicePelangganForm({ isOpen, onClose, invoiceToEdit = 
     }
     if (!produk || !qty || !harga) {
       showToast('Lengkapi produk, jumlah, dan harga!', 'error');
+      return;
+    }
+
+    if (!invoiceToEdit && isLimitExceeded('invoices')) {
+      showToast('Batas kuota tercapai! Upgrade ke Premium untuk membuat invoice tagihan tak terbatas.', 'error');
+      showUpgradeModal();
+      onClose();
       return;
     }
 

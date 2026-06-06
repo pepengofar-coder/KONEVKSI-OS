@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useAppDispatch, useHelpers } from '../../context/AppContext';
+import { useAppDispatch, useHelpers, usePlan } from '../../context/AppContext';
 import Modal from '../ui/Modal';
 
 export default function CustomerForm({ isOpen, onClose, customerToEdit = null }) {
   const dispatch = useAppDispatch();
   const { showToast } = useHelpers();
+  const { isLimitExceeded, showUpgradeModal } = usePlan();
 
   const [nama, setNama] = useState('');
   const [phone, setPhone] = useState('');
@@ -26,6 +27,13 @@ export default function CustomerForm({ isOpen, onClose, customerToEdit = null })
     e.preventDefault();
     if (!nama) {
       showToast('Nama pelanggan harus diisi!', 'error');
+      return;
+    }
+
+    if (!customerToEdit && isLimitExceeded('customers')) {
+      showToast('Batas kuota tercapai! Upgrade ke Premium untuk menambah pelanggan tak terbatas.', 'error');
+      showUpgradeModal();
+      onClose();
       return;
     }
 

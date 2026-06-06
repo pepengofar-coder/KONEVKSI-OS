@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useAppState, useAppDispatch } from '../../context/AppContext';
+import { useAppState, useAppDispatch, usePlan, useHelpers } from '../../context/AppContext';
 import Modal from '../ui/Modal';
 
 const formatCurrency = (val) => val ? parseInt(String(val).replace(/\./g, '').replace(/[^\d]/g, ''), 10).toLocaleString('id-ID') : '';
@@ -8,6 +8,8 @@ const parseCurrency = (str) => parseInt(String(str).replace(/\./g, '').replace(/
 export default function BarangMasukForm({ isOpen, onClose, barangMasukToEdit = null }) {
   const { models } = useAppState();
   const dispatch = useAppDispatch();
+  const { isLimitExceeded, showUpgradeModal } = usePlan();
+  const { showToast } = useHelpers();
 
   const [modelId, setModelId] = useState('');
   const [jumlah, setJumlah] = useState('');
@@ -31,6 +33,13 @@ export default function BarangMasukForm({ isOpen, onClose, barangMasukToEdit = n
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!modelId || !jumlah) return;
+
+    if (!barangMasukToEdit && isLimitExceeded('orders')) {
+      showToast('Batas kuota tercapai! Upgrade ke Premium untuk input order tak terbatas.', 'error');
+      showUpgradeModal();
+      onClose();
+      return;
+    }
 
     const jumlahNum = parseInt(jumlah) || 0;
 

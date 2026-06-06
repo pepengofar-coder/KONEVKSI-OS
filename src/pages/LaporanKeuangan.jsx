@@ -1,11 +1,12 @@
 import { useState, useMemo } from 'react';
-import { useAppState, useHelpers } from '../context/AppContext';
+import { useAppState, useHelpers, usePlan } from '../context/AppContext';
 import EmptyState from '../components/ui/EmptyState';
 
 export default function LaporanKeuangan() {
   const state = useAppState();
   const { getModel, getTaylor, formatRupiah, showToast } = useHelpers();
-
+  const { isPremium, showUpgradeModal } = usePlan();
+  
   const [filterTimeframe, setFilterTimeframe] = useState('Bulanan'); // Harian, Mingguan, Bulanan, Tahunan
   const [search, setSearch] = useState('');
   const [ledgerFilter, setLedgerFilter] = useState('Semua'); // Semua, Pemasukan, Pengeluaran, Kasbon, Gaji
@@ -178,6 +179,11 @@ export default function LaporanKeuangan() {
 
   // CSV Exporter
   const handleExportCSV = () => {
+    if (!isPremium) {
+      showToast('Batas kuota tercapai! Rencana FREE tidak bisa mengekspor laporan.', 'error');
+      showUpgradeModal();
+      return;
+    }
     let csvContent = 'data:text/csv;charset=utf-8,';
     csvContent += 'Tanggal,Tipe,Kategori,Deskripsi,Nominal\r\n';
 
@@ -341,7 +347,7 @@ export default function LaporanKeuangan() {
   };
 
   return (
-    <div className="space-y-8 text-white">
+    <div className="space-y-8 text-white relative">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 no-print">
         <div>
@@ -357,7 +363,27 @@ export default function LaporanKeuangan() {
         </button>
       </div>
 
-      {/* Financial Overview Cards */}
+      {!isPremium ? (
+        <div className="bg-gradient-to-br from-white/[0.04] to-white/[0.01] border border-white/10 rounded-[2.5rem] p-8 md:p-12 backdrop-blur-xl flex flex-col items-center justify-center text-center space-y-6 min-h-[400px]">
+          <div className="w-16 h-16 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 flex items-center justify-center shadow-lg">
+            <span className="material-symbols-outlined text-3xl">lock</span>
+          </div>
+          <div className="max-w-md space-y-2">
+            <h2 className="text-xl font-extrabold tracking-tight text-slate-100 font-display">Modul Analitik & Laporan Terkunci</h2>
+            <p className="text-xs leading-relaxed text-slate-400">
+              Rencana <span className="text-cyan-300 font-bold">FREE</span> memiliki batas akses. Upgrade akun Anda ke Premium untuk membuka buku besar transaksi, AI insight finansial, grafik tren interaktif, dan ekspor CSV.
+            </p>
+          </div>
+          <button
+            onClick={showUpgradeModal}
+            className="px-8 py-4 bg-gradient-to-r from-purple-600 to-cyan-600 hover:shadow-purple-500/25 shadow-lg text-white rounded-2xl font-bold text-xs hover:scale-[1.02] active:scale-[0.98] transition-all"
+          >
+            Upgrade ke Premium Suite
+          </button>
+        </div>
+      ) : (
+        <>
+          {/* Financial Overview Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Laba Bersih */}
         <div className="bg-gradient-to-br from-purple-500/10 to-cyan-500/5 border border-purple-500/25 rounded-2xl p-5 relative overflow-hidden backdrop-blur-xl lg:col-span-1">
@@ -734,6 +760,8 @@ export default function LaporanKeuangan() {
           </div>
         )}
       </div>
+        </>
+      )}
     </div>
   );
 }

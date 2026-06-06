@@ -5,11 +5,12 @@ import Sidebar from './Sidebar';
 import BottomNav from './BottomNav';
 import TopBar from './TopBar';
 import MobileDrawer from './MobileDrawer';
+import UpgradeModal from '../ui/UpgradeModal';
 
 export const ROLE_ROUTES = {
-  'Owner': ['/dashboard', '/barang-masuk', '/on-progress', '/kelaran', '/kasbon', '/invoice', '/cost-harian', '/laporan', '/invoice-pelanggan', '/customers', '/profile'],
-  'Admin Keuangan': ['/dashboard', '/kasbon', '/invoice', '/cost-harian', '/laporan', '/invoice-pelanggan', '/profile'],
-  'Staff Administrasi': ['/dashboard', '/barang-masuk', '/on-progress', '/kelaran', '/customers', '/profile']
+  'Owner': ['/dashboard', '/barang-masuk', '/on-progress', '/kelaran', '/kasbon', '/invoice', '/cost-harian', '/laporan', '/invoice-pelanggan', '/customers', '/profile', '/pricing'],
+  'Admin Keuangan': ['/dashboard', '/kasbon', '/invoice', '/cost-harian', '/laporan', '/invoice-pelanggan', '/profile', '/pricing'],
+  'Staff Administrasi': ['/dashboard', '/barang-masuk', '/on-progress', '/kelaran', '/customers', '/profile', '/pricing']
 };
 
 export default function AppLayout() {
@@ -56,6 +57,8 @@ export default function AppLayout() {
       <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] max-w-[600px] bg-purple-600/10 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] max-w-[600px] bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute top-[30%] right-[10%] w-[40vw] h-[40vw] max-w-[500px] bg-pink-500/5 rounded-full blur-[150px] pointer-events-none" />
+      
+      <UpgradeModal />
       
       {/* Toast Notification Container — z-[60] sits above modals (z-50) */}
       <div className="fixed top-4 right-4 z-[60] flex flex-col gap-2 max-w-sm w-full pointer-events-none">

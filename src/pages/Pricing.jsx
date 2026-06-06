@@ -1,0 +1,558 @@
+import { useState, useEffect } from 'react';
+import { useAppState, useAppDispatch, useHelpers } from '../context/AppContext';
+import Badge from '../components/ui/Badge';
+
+export default function Pricing() {
+  const state = useAppState();
+  const dispatch = useAppDispatch();
+  const { formatRupiah, showToast } = useHelpers();
+
+  const currentPlan = state.currentUser?.plan || 'FREE';
+  const planExpiresAt = state.currentUser?.planExpiresAt || null;
+  const currentUserId = state.currentUser?.id;
+
+  const [isYearly, setIsYearly] = useState(false);
+  const [checkoutPlan, setCheckoutPlan] = useState(null); // 'PREMIUM' or 'BUSINESS'
+  const [paymentGateway, setPaymentGateway] = useState('midtrans'); // 'midtrans', 'stripe', 'paypal'
+  const [paymentMethod, setPaymentMethod] = useState('gopay'); // 'gopay', 'va', 'cc'
+  const [ccNumber, setCcNumber] = useState('');
+  const [ccExpiry, setCcExpiry] = useState('');
+  const [ccCvc, setCcCvc] = useState('');
+  const [isPaying, setIsPaying] = useState(false);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [receiptInvoice, setReceiptInvoice] = useState(null);
+  const [billingHistory, setBillingHistory] = useState([]);
+
+  // Fetch billing history for this user
+  useEffect(() => {
+    if (currentUserId) {
+      const saved = localStorage.getItem(`konveksi-os-billing-${currentUserId}`);
+      if (saved) {
+        setBillingHistory(JSON.parse(saved));
+      } else {
+        setBillingHistory([]);
+      }
+    }
+  }, [currentUserId]);
+
+  const saveBillingHistory = (newHistory) => {
+    setBillingHistory(newHistory);
+    localStorage.setItem(`konveksi-os-billing-${currentUserId}`, JSON.stringify(newHistory));
+  };
+
+  const handleOpenCheckout = (plan) => {
+    if (plan === currentPlan) {
+      showToast(`Anda sudah menggunakan rencana ${plan}!`, 'info');
+      return;
+    }
+    setCheckoutPlan(plan);
+    setPaymentSuccess(false);
+    setIsPaying(false);
+  };
+
+  const handleSimulatePayment = () => {
+    setIsPaying(true);
+    setTimeout(() => {
+      setIsPaying(false);
+      setPaymentSuccess(true);
+
+      const price = checkoutPlan === 'PREMIUM'
+        ? (isYearly ? 99000 * 12 * 0.8 : 99000)
+        : (isYearly ? 249000 * 12 * 0.8 : 249000);
+
+      const expDate = new Date();
+      if (isYearly) {
+        expDate.setFullYear(expDate.getFullYear() + 1);
+      } else {
+        expDate.setMonth(expDate.getMonth() + 1);
+      }
+
+      const invNum = `SUB-${Date.now().toString(36).toUpperCase()}`;
+      const newInvoice = {
+        invoiceNumber: invNum,
+        plan: checkoutPlan,
+        nominal: price,
+        tanggal: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }),
+        expiredAt: expDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }),
+        billingCycle: isYearly ? 'Tahunan' : 'Bulanan',
+        gateway: paymentGateway.toUpperCase(),
+        status: 'SUKSES'
+      };
+
+      // Update state
+      dispatch({
+        type: 'UPGRADE_PLAN',
+        payload: {
+          plan: checkoutPlan,
+          planExpiresAt: expDate.toISOString().split('T')[0]
+        }
+      });
+
+      // Save to billing history
+      saveBillingHistory([newInvoice, ...billingHistory]);
+      setReceiptInvoice(newInvoice);
+      showToast(`Upgrade ke rencana ${checkoutPlan} berhasil!`, 'success');
+    }, 2000);
+  };
+
+  const handleDowngradeToFree = () => {
+    if (window.confirm('Apakah Anda yakin ingin membatalkan subscription dan kembali ke FREE plan?')) {
+      dispatch({
+        type: 'UPGRADE_PLAN',
+        payload: {
+          plan: 'FREE',
+          planExpiresAt: null
+        }
+      });
+      showToast('Rencana subscription dibatalkan.', 'info');
+    }
+  };
+
+  return (
+    <div className="space-y-8 text-white animate-fade-in-up">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl md:text-3xl font-black font-display bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">Subscription & Rencana</h1>
+        <p className="text-xs text-slate-400 mt-1">Buka seluruh kapabilitas Konveksi OS untuk performa bisnis terbaik Anda.</p>
+      </div>
+
+      {/* Plan Info Bar */}
+      <div className="bg-white/[0.02] border border-white/[0.06] rounded-3xl p-5 md:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 backdrop-blur-xl">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center shadow-lg shrink-0">
+            <span className="material-symbols-outlined text-white text-[24px]">verified</span>
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Rencana Aktif Anda</span>
+              <Badge variant={currentPlan === 'FREE' ? 'default' : currentPlan === 'PREMIUM' ? 'primary' : 'success'}>
+                {currentPlan}
+              </Badge>
+            </div>
+            <p className="text-xs text-slate-300 font-medium mt-1">
+              {currentPlan === 'FREE'
+                ? 'Gunakan Rencana Premium untuk menikmati fitur tanpa batas.'
+                : `Berlaku sampai: ${planExpiresAt ? new Date(planExpiresAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Selamanya'}`}
+            </p>
+          </div>
+        </div>
+
+        {currentPlan !== 'FREE' && (
+          <button
+            onClick={handleDowngradeToFree}
+            className="w-full sm:w-auto px-5 py-2.5 bg-red-500/10 border border-red-500/20 text-red-300 hover:bg-red-500/20 text-xs font-bold rounded-xl transition-all"
+          >
+            Batalkan Subscription
+          </button>
+        )}
+      </div>
+
+      {/* Billing Cycle Toggle */}
+      <div className="flex justify-center">
+        <div className="bg-slate-950/40 border border-white/[0.06] rounded-2xl p-1.5 flex items-center gap-1">
+          <button
+            onClick={() => setIsYearly(false)}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${!isYearly ? 'bg-cyan-500/20 text-cyan-300' : 'text-slate-500 hover:text-slate-300'}`}
+          >
+            Bulanan
+          </button>
+          <button
+            onClick={() => setIsYearly(true)}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${isYearly ? 'bg-cyan-500/20 text-cyan-300' : 'text-slate-500 hover:text-slate-300'}`}
+          >
+            Tahunan
+            <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[8px] font-black uppercase tracking-wider">Hemat 20%</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Pricing Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* FREE CARD */}
+        <div className="bg-gradient-to-br from-white/[0.04] to-white/[0.01] border border-white/[0.06] rounded-[2rem] p-6 md:p-8 backdrop-blur-xl flex flex-col justify-between hover:border-white/[0.12] transition-all duration-300">
+          <div>
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Rencana Dasar</span>
+            <h2 className="text-xl font-extrabold text-slate-200 mt-2">FREE</h2>
+            <div className="mt-4 flex items-baseline gap-1">
+              <span className="text-3xl font-black text-slate-100">Rp 0</span>
+              <span className="text-xs text-slate-500">/ selamanya</span>
+            </div>
+            <p className="text-xs text-slate-400 mt-4 leading-relaxed">Sempurna untuk konveksi rumahan kecil atau untuk mencoba fitur awal.</p>
+            
+            <div className="border-t border-white/[0.06] my-6 pt-6 space-y-3">
+              {[
+                { active: true, text: 'Maks. 5 Order Bahan Masuk' },
+                { active: true, text: 'Maks. 5 Profil Pelanggan' },
+                { active: true, text: 'Maks. 5 Invoice Tagihan' },
+                { active: false, text: 'Ekspor PDF & Excel (CSV)' },
+                { active: false, text: 'Live Tracking Pekerjaan' },
+                { active: false, text: 'AI Insight & Chart Analitik' }
+              ].map((feature, i) => (
+                <div key={i} className="flex items-center gap-2.5">
+                  <span className={`material-symbols-outlined text-[16px] ${feature.active ? 'text-cyan-400' : 'text-slate-600'}`}>
+                    {feature.active ? 'check_circle' : 'cancel'}
+                  </span>
+                  <span className={`text-xs font-semibold ${feature.active ? 'text-slate-300' : 'text-slate-500 line-through'}`}>{feature.text}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <button
+            disabled={currentPlan === 'FREE'}
+            onClick={() => handleOpenCheckout('FREE')}
+            className={`w-full py-3.5 rounded-2xl text-xs font-bold transition-all ${currentPlan === 'FREE' ? 'bg-cyan-500/10 border border-cyan-500/20 text-cyan-300' : 'bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] text-slate-300'}`}
+          >
+            {currentPlan === 'FREE' ? 'Rencana Aktif' : 'Pilih FREE'}
+          </button>
+        </div>
+
+        {/* PREMIUM CARD */}
+        <div className="bg-gradient-to-br from-purple-950/20 via-slate-900/60 to-cyan-950/20 border border-purple-500/30 rounded-[2rem] p-6 md:p-8 backdrop-blur-xl flex flex-col justify-between hover:border-purple-500/50 hover:shadow-2xl hover:shadow-purple-500/10 transition-all duration-300 relative scale-105">
+          <div className="absolute top-4 right-4 bg-gradient-to-r from-purple-500 to-cyan-500 px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-wider shadow-lg">POPULER</div>
+          <div>
+            <span className="text-[10px] font-black uppercase tracking-widest text-cyan-400">Rencana Terlaris</span>
+            <h2 className="text-xl font-extrabold bg-gradient-to-r from-purple-300 to-cyan-300 bg-clip-text text-transparent mt-2">PREMIUM</h2>
+            <div className="mt-4 flex items-baseline gap-1">
+              <span className="text-3xl font-black text-slate-100">
+                {isYearly ? formatRupiah(99000 * 12 * 0.8) : formatRupiah(99000)}
+              </span>
+              <span className="text-xs text-slate-500">/ {isYearly ? 'tahun' : 'bulan'}</span>
+            </div>
+            <p className="text-xs text-slate-400 mt-4 leading-relaxed">Cocok untuk owner konveksi profesional untuk melacak produksi harian tanpa hambatan.</p>
+            
+            <div className="border-t border-white/[0.06] my-6 pt-6 space-y-3">
+              {[
+                { active: true, text: 'Unlimited Input Bahan Masuk' },
+                { active: true, text: 'Unlimited Profil Pelanggan' },
+                { active: true, text: 'Unlimited Invoice & Tagihan' },
+                { active: true, text: 'Ekspor Excel & CSV Laporan' },
+                { active: true, text: 'Live Tracking Pekerjaan (Maks 3)' },
+                { active: true, text: 'AI Insight Rekomendasi Finansial' }
+              ].map((feature, i) => (
+                <div key={i} className="flex items-center gap-2.5">
+                  <span className="material-symbols-outlined text-cyan-400 text-[16px]">check_circle</span>
+                  <span className="text-xs font-semibold text-slate-300">{feature.text}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <button
+            onClick={() => handleOpenCheckout('PREMIUM')}
+            className={`w-full py-4 rounded-2xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-[0.98] ${currentPlan === 'PREMIUM' ? 'bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 cursor-default shadow-md shadow-cyan-500/10' : 'bg-gradient-to-r from-purple-600 to-cyan-600 hover:shadow-purple-500/25 shadow-lg text-white'}`}
+          >
+            {currentPlan === 'PREMIUM' ? 'Rencana Aktif' : 'Mulai PREMIUM'}
+          </button>
+        </div>
+
+        {/* BUSINESS CARD */}
+        <div className="bg-gradient-to-br from-white/[0.04] to-white/[0.01] border border-white/[0.06] rounded-[2rem] p-6 md:p-8 backdrop-blur-xl flex flex-col justify-between hover:border-white/[0.12] transition-all duration-300">
+          <div>
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Skala Besar</span>
+            <h2 className="text-xl font-extrabold text-slate-200 mt-2">BUSINESS</h2>
+            <div className="mt-4 flex items-baseline gap-1">
+              <span className="text-3xl font-black text-slate-100">
+                {isYearly ? formatRupiah(249000 * 12 * 0.8) : formatRupiah(249000)}
+              </span>
+              <span className="text-xs text-slate-500">/ {isYearly ? 'tahun' : 'bulan'}</span>
+            </div>
+            <p className="text-xs text-slate-400 mt-4 leading-relaxed">Untuk pemilik bisnis skala menengah ke atas dengan banyak karyawan dan fitur enterprise.</p>
+            
+            <div className="border-t border-white/[0.06] my-6 pt-6 space-y-3">
+              {[
+                { active: true, text: 'Seluruh Fitur PREMIUM' },
+                { active: true, text: 'Multi-User Staff & Role Guard' },
+                { active: true, text: 'Live Tracking Pekerjaan Unlimited' },
+                { active: true, text: 'Backup Otomatis Ke Cloud' },
+                { active: true, text: 'Laporan Finansial Multi-Branch' },
+                { active: true, text: 'Prioritas CS WhatsApp 24/7' }
+              ].map((feature, i) => (
+                <div key={i} className="flex items-center gap-2.5">
+                  <span className="material-symbols-outlined text-purple-400 text-[16px]">check_circle</span>
+                  <span className="text-xs font-semibold text-slate-300">{feature.text}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <button
+            onClick={() => handleOpenCheckout('BUSINESS')}
+            className={`w-full py-3.5 rounded-2xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-[0.98] ${currentPlan === 'BUSINESS' ? 'bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 cursor-default shadow-md shadow-cyan-500/10' : 'bg-white/[0.06] border border-white/10 hover:bg-white/[0.12] text-slate-100'}`}
+          >
+            {currentPlan === 'BUSINESS' ? 'Rencana Aktif' : 'Mulai BUSINESS'}
+          </button>
+        </div>
+      </div>
+
+      {/* Checkout Simulator Modal */}
+      {checkoutPlan && !paymentSuccess && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+          <div className="bg-slate-900/95 border border-white/[0.08] backdrop-blur-2xl rounded-3xl p-6 md:p-8 max-w-lg w-full shadow-2xl animate-scale-in text-white relative">
+            <button
+              onClick={() => setCheckoutPlan(null)}
+              className="absolute top-4 right-4 p-1.5 rounded-xl hover:bg-white/[0.06] text-slate-400 hover:text-white"
+            >
+              <span className="material-symbols-outlined text-[20px]">close</span>
+            </button>
+
+            <span className="text-[10px] font-black uppercase tracking-widest text-cyan-400">Checkout Sandbox</span>
+            <h2 className="text-lg md:text-xl font-extrabold text-slate-100 tracking-tight mt-1 mb-5">
+              Upgrade ke Rencana {checkoutPlan}
+            </h2>
+
+            {/* Price Detail */}
+            <div className="p-4 bg-white/[0.02] border border-white/[0.06] rounded-2xl space-y-2 mb-6">
+              <div className="flex justify-between text-xs text-slate-400 font-semibold">
+                <span>Rencana Pilihan:</span>
+                <span className="text-slate-200">{checkoutPlan} ({isYearly ? 'Tahunan' : 'Bulanan'})</span>
+              </div>
+              <div className="flex justify-between text-sm font-bold border-t border-white/[0.06] pt-2 mt-2">
+                <span>Total Tagihan:</span>
+                <span className="text-cyan-400">
+                  {checkoutPlan === 'PREMIUM'
+                    ? (isYearly ? formatRupiah(99000 * 12 * 0.8) : formatRupiah(99000))
+                    : (isYearly ? formatRupiah(249000 * 12 * 0.8) : formatRupiah(249000))}
+                </span>
+              </div>
+            </div>
+
+            {/* Gateway Tabs */}
+            <div className="flex border-b border-white/[0.06] mb-6">
+              {[
+                { id: 'midtrans', label: 'Midtrans' },
+                { id: 'stripe', label: 'Stripe' },
+                { id: 'paypal', label: 'PayPal' }
+              ].map(gw => (
+                <button
+                  key={gw.id}
+                  onClick={() => { setPaymentGateway(gw.id); setPaymentMethod(gw.id === 'midtrans' ? 'gopay' : 'cc'); }}
+                  className={`flex-1 pb-3 text-xs font-bold text-center border-b-2 transition-all ${paymentGateway === gw.id ? 'border-cyan-500 text-cyan-300' : 'border-transparent text-slate-500 hover:text-slate-300'}`}
+                >
+                  {gw.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Payment Fields according to Gateways */}
+            {paymentGateway === 'midtrans' && (
+              <div className="space-y-4">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setPaymentMethod('gopay')}
+                    className={`flex-1 p-3 rounded-xl border text-xs font-bold flex flex-col items-center justify-center gap-1.5 transition-all ${paymentMethod === 'gopay' ? 'bg-cyan-500/10 border-cyan-500/40 text-cyan-300' : 'bg-slate-950/40 border-white/[0.06] text-slate-400 hover:bg-white/[0.02]'}`}
+                  >
+                    <span className="material-symbols-outlined text-[20px]">qr_code_2</span>
+                    GoPay QR
+                  </button>
+                  <button
+                    onClick={() => setPaymentMethod('va')}
+                    className={`flex-1 p-3 rounded-xl border text-xs font-bold flex flex-col items-center justify-center gap-1.5 transition-all ${paymentMethod === 'va' ? 'bg-cyan-500/10 border-cyan-500/40 text-cyan-300' : 'bg-slate-950/40 border-white/[0.06] text-slate-400 hover:bg-white/[0.02]'}`}
+                  >
+                    <span className="material-symbols-outlined text-[20px]">account_balance</span>
+                    Virtual Account
+                  </button>
+                </div>
+
+                {paymentMethod === 'gopay' ? (
+                  <div className="flex flex-col items-center justify-center p-6 bg-slate-950/60 border border-white/[0.06] rounded-2xl space-y-3">
+                    <div className="w-28 h-28 bg-white p-2 rounded-xl flex items-center justify-center">
+                      {/* GoPay Mock QR Code */}
+                      <span className="material-symbols-outlined text-slate-900 text-8xl">qr_code_2</span>
+                    </div>
+                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Pindai QR dengan GoPay / e-Wallet</p>
+                  </div>
+                ) : (
+                  <div className="p-4 bg-slate-950/60 border border-white/[0.06] rounded-2xl text-xs space-y-2">
+                    <p className="text-slate-400 font-bold">Instruksi Pembayaran VA:</p>
+                    <div className="flex justify-between items-center bg-slate-900 p-2.5 rounded-xl border border-white/[0.04]">
+                      <span className="font-mono text-cyan-400 text-sm font-black">987019283748293</span>
+                      <span className="text-[9px] font-bold bg-white/[0.06] px-2 py-1 rounded text-slate-300">SALIN VA</span>
+                    </div>
+                    <p className="text-[9px] text-slate-500">Gunakan Virtual Account di atas melalui M-Banking atau ATM Bank Mandiri, BNI, BRI, atau BCA.</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {paymentGateway === 'stripe' && (
+              <div className="space-y-4">
+                <div className="space-y-3 p-4 bg-slate-950/60 border border-white/[0.06] rounded-2xl">
+                  <div>
+                    <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Nomor Kartu Kredit / Debit</label>
+                    <input
+                      type="text"
+                      maxLength="19"
+                      value={ccNumber}
+                      onChange={(e) => setCcNumber(e.target.value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim())}
+                      placeholder="4111 2222 3333 4444"
+                      className="input-base text-xs py-2"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">Masa Berlaku</label>
+                      <input
+                        type="text"
+                        maxLength="5"
+                        value={ccExpiry}
+                        onChange={(e) => setCcExpiry(e.target.value.replace(/\D/g, '').replace(/(.{2})/, '$1/').trim())}
+                        placeholder="MM/YY"
+                        className="input-base text-xs py-2"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1">CVC / CVV</label>
+                      <input
+                        type="text"
+                        maxLength="3"
+                        value={ccCvc}
+                        onChange={(e) => setCcCvc(e.target.value.replace(/\D/g, '').trim())}
+                        placeholder="123"
+                        className="input-base text-xs py-2"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {paymentGateway === 'paypal' && (
+              <div className="space-y-4 flex flex-col items-center justify-center p-6 bg-slate-950/60 border border-white/[0.06] rounded-2xl">
+                <span className="material-symbols-outlined text-indigo-400 text-5xl">payments</span>
+                <p className="text-xs text-slate-300 font-semibold mt-2">Membayar dengan Akun PayPal Sandbox</p>
+                <p className="text-[10px] text-slate-500 text-center leading-relaxed mt-1">Anda akan diarahkan ke halaman login simulasi PayPal untuk meninjau detail saldo/kartu.</p>
+              </div>
+            )}
+
+            <div className="flex gap-3 mt-6 pt-4 border-t border-white/[0.06]">
+              <button
+                onClick={() => setCheckoutPlan(null)}
+                className="flex-1 py-3 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] text-slate-400 hover:text-slate-200 rounded-2xl font-bold text-xs transition-all text-center"
+              >
+                Kembali
+              </button>
+              <button
+                onClick={handleSimulatePayment}
+                disabled={isPaying}
+                className="flex-2 py-3 bg-gradient-to-r from-purple-600 to-cyan-600 text-white font-bold text-xs rounded-2xl shadow-lg hover:shadow-purple-500/20 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 transition-all text-center"
+              >
+                {isPaying ? 'Memproses Pembayaran...' : 'Simulasikan Pembayaran Sukses'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Success Invoice Receipt */}
+      {paymentSuccess && receiptInvoice && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in no-print">
+          <div className="bg-slate-900 border border-white/10 backdrop-blur-2xl rounded-[2.5rem] p-6 md:p-8 max-w-lg w-full shadow-2xl animate-scale-in text-white relative">
+            <div className="flex flex-col items-center justify-center space-y-3 mb-6">
+              <div className="w-14 h-14 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center">
+                <span className="material-symbols-outlined text-4xl">check_circle</span>
+              </div>
+              <h2 className="text-xl font-extrabold text-slate-100 tracking-tight">Pembayaran Berhasil!</h2>
+              <p className="text-xs text-slate-400">Subscription Rencana {receiptInvoice.plan} Anda telah aktif.</p>
+            </div>
+
+            {/* Printable Receipt area */}
+            <div className="p-5 bg-slate-950/60 border border-white/[0.06] rounded-2xl space-y-4 text-xs font-semibold text-slate-300">
+              <div className="flex justify-between pb-2 border-b border-white/[0.04]">
+                <span className="text-slate-500">ID Invoice:</span>
+                <span className="font-mono text-slate-200">{receiptInvoice.invoiceNumber}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Paket Upgrade:</span>
+                <span className="text-slate-200">{receiptInvoice.plan} ({receiptInvoice.billingCycle})</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Nominal Dibayar:</span>
+                <span className="text-cyan-400">{formatRupiah(receiptInvoice.nominal)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Tanggal Bayar:</span>
+                <span className="text-slate-200">{receiptInvoice.tanggal}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Aktif s/d:</span>
+                <span className="text-slate-200">{receiptInvoice.expiredAt}</span>
+              </div>
+              <div className="flex justify-between pt-2 border-t border-white/[0.04]">
+                <span className="text-slate-500">Metode Sandbox:</span>
+                <span className="text-slate-200">{receiptInvoice.gateway} ({paymentMethod.toUpperCase()})</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Status Pembayaran:</span>
+                <span className="text-emerald-400 uppercase tracking-widest font-black text-[10px]">LUNAS / BERHASIL</span>
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6 pt-4 border-t border-white/10">
+              <button
+                onClick={() => window.print()}
+                className="flex-1 py-3 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] text-slate-300 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5"
+              >
+                <span className="material-symbols-outlined text-[16px]">print</span>
+                Cetak Kuitansi
+              </button>
+              <button
+                onClick={() => { setPaymentSuccess(false); setCheckoutPlan(null); }}
+                className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-cyan-600 text-white font-bold text-xs rounded-xl shadow-lg hover:scale-[1.01] transition-all text-center"
+              >
+                Selesai
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Subscription Ledger Billing History */}
+      <div className="bg-white/[0.02] border border-white/[0.06] rounded-3xl p-6 backdrop-blur-xl space-y-6">
+        <h3 className="text-sm font-black uppercase tracking-wider text-slate-300 flex items-center gap-2">
+          <span className="material-symbols-outlined text-purple-400 text-lg">history</span>
+          Riwayat Transaksi Subscription
+        </h3>
+
+        {billingHistory.length === 0 ? (
+          <div className="p-8 text-center text-xs text-slate-500 font-semibold bg-slate-950/20 border border-white/[0.04] rounded-2xl">
+            Belum ada transaksi pembayaran subscription.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-white/[0.06] text-slate-500 font-bold">
+                  <th className="py-3 px-4">Invoice</th>
+                  <th className="py-3 px-4">Tanggal</th>
+                  <th className="py-3 px-4">Rencana Paket</th>
+                  <th className="py-3 px-4">Siklus</th>
+                  <th className="py-3 px-4 text-right">Nominal</th>
+                  <th className="py-3 px-4 text-right">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {billingHistory.map((item, index) => (
+                  <tr
+                    key={index}
+                    className="border-b border-white/[0.04] text-slate-300 hover:bg-white/[0.01] transition-all font-semibold"
+                  >
+                    <td className="py-3 px-4 text-slate-500 font-bold font-mono">{item.invoiceNumber}</td>
+                    <td className="py-3 px-4">{item.tanggal}</td>
+                    <td className="py-3 px-4">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                        {item.plan}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-slate-400">{item.billingCycle}</td>
+                    <td className="py-3 px-4 text-right font-black text-cyan-400">{formatRupiah(item.nominal)}</td>
+                    <td className="py-3 px-4 text-right">
+                      <span className="text-[10px] font-black uppercase text-emerald-400">{item.status}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

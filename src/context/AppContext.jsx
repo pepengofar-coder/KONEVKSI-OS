@@ -47,13 +47,33 @@ function loadState() {
     if (!state.trackingJobs) state.trackingJobs = [];
     if (!state.toasts) state.toasts = [];
 
-    // Ensure users in database are encrypted
+    // Ensure users in database are encrypted and have default plan properties
     state.users = state.users.map(u => {
       if (!u.password.startsWith('pbkdf2_sha256$')) {
         u.password = encryptPassword(u.password);
       }
+      if (!u.plan) {
+        u.plan = u.username === 'admin' ? 'PREMIUM' : 'FREE';
+      }
+      if (u.planExpiresAt === undefined) {
+        u.planExpiresAt = null;
+      }
       return u;
     });
+
+    if (state.currentUser) {
+      const fullUser = state.users.find(u => u.id === state.currentUser.id);
+      if (fullUser) {
+        state.currentUser = fullUser;
+      } else {
+        if (!state.currentUser.plan) state.currentUser.plan = 'FREE';
+        if (state.currentUser.planExpiresAt === undefined) state.currentUser.planExpiresAt = null;
+      }
+    }
+
+    if (state.upgradeModalOpen === undefined) {
+      state.upgradeModalOpen = false;
+    }
 
     return state;
   } catch (e) {
@@ -79,6 +99,8 @@ function appReducer(state, action) {
         email: action.payload.email.toLowerCase(),
         password: encryptPassword(action.payload.password),
         role: '', // Selected in Onboarding Step 2
+        plan: 'FREE',
+        planExpiresAt: null,
         categories: [],
         businessProfile: {
           namaUsaha: action.payload.namaUsaha || (action.payload.nama + ' Convection'),
@@ -134,6 +156,31 @@ function appReducer(state, action) {
         ...state,
         currentUser: updatedUser,
         users: updatedUsers
+      };
+    }
+    case 'UPGRADE_PLAN': {
+      const { plan, planExpiresAt } = action.payload;
+      const updatedUser = {
+        ...state.currentUser,
+        plan,
+        planExpiresAt
+      };
+      const updatedUsers = state.users.map(u => u.id === updatedUser.id ? updatedUser : u);
+      
+      if (!state.rememberMe) {
+        sessionStorage.setItem('konveksi-os-session-user', JSON.stringify(updatedUser));
+      }
+      
+      return {
+        ...state,
+        currentUser: updatedUser,
+        users: updatedUsers
+      };
+    }
+    case 'TOGGLE_UPGRADE_MODAL': {
+      return {
+        ...state,
+        upgradeModalOpen: action.payload
       };
     }
 
@@ -486,9 +533,55 @@ export function useAppState() {
 }
 
 export function useAppDispatch() {
-  const context = useContext(AppDispatchContext);
-  if (!context) throw new Error('useAppDispatch must be used within AppProvider');
-  return context;
+  const dispatch = useContext(AppDispatchContext);
+  if (!dispatch) throw new Error('useAppDispatch must be used within AppProvider');
+  return dispatch;
+}
+
+export function usePlan() {
+  const state = useAppState();
+  const dispatch = useAppDispatch();
+
+  const currentUser = state?.currentUser;
+  const plan = currentUser?.plan || 'FREE';
+  const planExpiresAt = currentUser?.planExpiresAt || null;
+  const isPremium = plan === 'PREMIUM' || plan === 'BUSINESS';
+  const isBusiness = plan === 'BUSINESS';
+
+  const isLimitExceeded = (type) => {
+    if (plan === 'PREMIUM' || plan === 'BUSINESS') return false;
+
+    // FREE plan limits
+    if (type === 'orders') {
+      return (state.barangMasuk || []).length >= 5;
+    }
+    if (type === 'customers') {
+      return (state.customers || []).length >= 5;
+    }
+    if (type === 'invoices') {
+      return (state.invoices || []).length >= 5;
+    }
+    if (type === 'export') {
+      return true;
+    }
+    if (type === 'tracking') {
+      return true;
+    }
+    return false;
+  };
+
+  const showUpgradeModal = () => {
+    dispatch({ type: 'TOGGLE_UPGRADE_MODAL', payload: true });
+  };
+
+  return {
+    plan,
+    planExpiresAt,
+    isPremium,
+    isBusiness,
+    isLimitExceeded,
+    showUpgradeModal,
+  };
 }
 
 // Global helper hooks for easy frontend implementation
