@@ -136,64 +136,107 @@ export default function SuperAdminSettings() {
         <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-6 backdrop-blur-xl space-y-5">
           <h3 className="text-sm font-black uppercase tracking-wider text-slate-300 flex items-center gap-2">
             <span className="material-symbols-outlined text-cyan-400 text-lg">account_balance</span>
-            Rekening Bank Tujuan Transfer
+            Rekening Bank & E-Wallet Tujuan Transfer
           </h3>
           <p className="text-[10px] text-slate-500">
-            Rekening ini ditampilkan kepada pengguna saat melakukan pembayaran upgrade plan.
+            Pilih metode pembayaran yang aktif dan atur detail rekening/e-wallet yang akan ditampilkan kepada pengguna saat melakukan pembayaran upgrade plan.
           </p>
 
+          {/* Active Payment Option Selector */}
+          <div className="p-4 bg-white/[0.01] border border-white/[0.04] rounded-xl space-y-3">
+            <label className="block text-xs font-bold text-slate-300">Metode Pembayaran Utama (Aktif)</label>
+            <p className="text-[10px] text-slate-500">Pilih opsi pembayaran yang akan ditampilkan kepada pengguna saat checkout.</p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              {[
+                { id: 'seabank', label: 'Bank SeaBank', icon: 'account_balance' },
+                { id: 'jago', label: 'Bank Jago', icon: 'account_balance' },
+                { id: 'gopay', label: 'E-Wallet GoPay', icon: 'qr_code_2' }
+              ].map(opt => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => update('activePaymentOption', opt.id)}
+                  disabled={!isSuperAdmin}
+                  className={`flex-1 py-3 px-4 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+                    settings.activePaymentOption === opt.id
+                      ? 'bg-cyan-500/15 border-cyan-500/40 text-cyan-300 shadow-md'
+                      : 'bg-slate-950/40 border-white/[0.06] text-slate-400 hover:bg-white/[0.02]'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[16px]">{opt.icon}</span>
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {/* Mandiri */}
-            <div className="space-y-3 p-4 bg-white/[0.01] border border-white/[0.04] rounded-xl">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-                  <span className="text-[10px] font-black text-blue-300">MDR</span>
+            {/* SeaBank */}
+            <div className={`space-y-3 p-4 rounded-xl border transition-all ${settings.activePaymentOption === 'seabank' ? 'bg-cyan-500/[0.02] border-cyan-500/20 shadow-md' : 'bg-white/[0.01] border-white/[0.04]'}`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center">
+                    <span className="text-[10px] font-black text-cyan-300">SB</span>
+                  </div>
+                  <span className="text-xs font-bold text-slate-200">Bank SeaBank</span>
                 </div>
-                <span className="text-xs font-bold text-slate-200">Bank Mandiri</span>
+                {settings.activePaymentOption === 'seabank' && (
+                  <span className="px-2 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20 text-[8px] font-black uppercase text-cyan-300">AKTIF</span>
+                )}
               </div>
               <div>
                 <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-1.5">Nomor Rekening</label>
-                <input type="text" value={settings.bankMandiri} onChange={(e) => update('bankMandiri', e.target.value)} disabled={!isSuperAdmin} className="input-base disabled:opacity-50" />
+                <input type="text" value={settings.seabankNumber} onChange={(e) => update('seabankNumber', e.target.value)} disabled={!isSuperAdmin} className="input-base disabled:opacity-50" />
               </div>
               <div>
                 <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-1.5">Atas Nama</label>
-                <input type="text" value={settings.bankMandiriName} onChange={(e) => update('bankMandiriName', e.target.value)} disabled={!isSuperAdmin} className="input-base disabled:opacity-50" />
+                <input type="text" value={settings.seabankName} onChange={(e) => update('seabankName', e.target.value)} disabled={!isSuperAdmin} className="input-base disabled:opacity-50" />
               </div>
             </div>
 
-            {/* BCA */}
-            <div className="space-y-3 p-4 bg-white/[0.01] border border-white/[0.04] rounded-xl">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-                  <span className="text-[10px] font-black text-blue-300">BCA</span>
+            {/* Bank Jago */}
+            <div className={`space-y-3 p-4 rounded-xl border transition-all ${settings.activePaymentOption === 'jago' ? 'bg-cyan-500/[0.02] border-cyan-500/20 shadow-md' : 'bg-white/[0.01] border-white/[0.04]'}`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
+                    <span className="text-[10px] font-black text-orange-300">JAG</span>
+                  </div>
+                  <span className="text-xs font-bold text-slate-200">Bank Jago</span>
                 </div>
-                <span className="text-xs font-bold text-slate-200">Bank BCA</span>
+                {settings.activePaymentOption === 'jago' && (
+                  <span className="px-2 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20 text-[8px] font-black uppercase text-cyan-300">AKTIF</span>
+                )}
               </div>
               <div>
                 <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-1.5">Nomor Rekening</label>
-                <input type="text" value={settings.bankBca} onChange={(e) => update('bankBca', e.target.value)} disabled={!isSuperAdmin} className="input-base disabled:opacity-50" />
+                <input type="text" value={settings.jagoNumber} onChange={(e) => update('jagoNumber', e.target.value)} disabled={!isSuperAdmin} className="input-base disabled:opacity-50" />
               </div>
               <div>
                 <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-1.5">Atas Nama</label>
-                <input type="text" value={settings.bankBcaName} onChange={(e) => update('bankBcaName', e.target.value)} disabled={!isSuperAdmin} className="input-base disabled:opacity-50" />
+                <input type="text" value={settings.jagoName} onChange={(e) => update('jagoName', e.target.value)} disabled={!isSuperAdmin} className="input-base disabled:opacity-50" />
               </div>
             </div>
 
-            {/* BSI */}
-            <div className="space-y-3 p-4 bg-white/[0.01] border border-white/[0.04] rounded-xl">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-                  <span className="text-[10px] font-black text-emerald-300">BSI</span>
+            {/* GoPay */}
+            <div className={`space-y-3 p-4 rounded-xl border transition-all ${settings.activePaymentOption === 'gopay' ? 'bg-cyan-500/[0.02] border-cyan-500/20 shadow-md' : 'bg-white/[0.01] border-white/[0.04]'}`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
+                    <span className="text-[10px] font-black text-indigo-300">GP</span>
+                  </div>
+                  <span className="text-xs font-bold text-slate-200">E-Wallet GoPay</span>
                 </div>
-                <span className="text-xs font-bold text-slate-200">Bank Syariah Indonesia</span>
+                {settings.activePaymentOption === 'gopay' && (
+                  <span className="px-2 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20 text-[8px] font-black uppercase text-cyan-300">AKTIF</span>
+                )}
               </div>
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-1.5">Nomor Rekening</label>
-                <input type="text" value={settings.bankBsi} onChange={(e) => update('bankBsi', e.target.value)} disabled={!isSuperAdmin} className="input-base disabled:opacity-50" placeholder="Kosongkan jika tidak ada" />
+                <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-1.5">Nomor HP / GoPay</label>
+                <input type="text" value={settings.gopayNumber} onChange={(e) => update('gopayNumber', e.target.value)} disabled={!isSuperAdmin} className="input-base disabled:opacity-50" />
               </div>
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-1.5">Atas Nama</label>
-                <input type="text" value={settings.bankBsiName} onChange={(e) => update('bankBsiName', e.target.value)} disabled={!isSuperAdmin} className="input-base disabled:opacity-50" placeholder="Kosongkan jika tidak ada" />
+                <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-1.5">Nama Akun</label>
+                <input type="text" value={settings.gopayName} onChange={(e) => update('gopayName', e.target.value)} disabled={!isSuperAdmin} className="input-base disabled:opacity-50" />
               </div>
             </div>
           </div>
@@ -345,15 +388,17 @@ export default function SuperAdminSettings() {
 
             <div className="space-y-2 text-xs">
               {[
-                { label: 'Mandiri', value: settings.bankMandiri || 'Belum diatur', name: settings.bankMandiriName },
-                { label: 'BCA', value: settings.bankBca || 'Belum diatur', name: settings.bankBcaName },
-                { label: 'BSI', value: settings.bankBsi || 'Tidak tersedia', name: settings.bankBsiName },
+                { id: 'seabank', label: 'SeaBank', value: settings.seabankNumber || 'Belum diatur', name: settings.seabankName },
+                { id: 'jago', label: 'Bank Jago', value: settings.jagoNumber || 'Belum diatur', name: settings.jagoName },
+                { id: 'gopay', label: 'GoPay', value: settings.gopayNumber || 'Belum diatur', name: settings.gopayName },
               ].map((bank) => (
-                <div key={bank.label} className="flex justify-between p-2.5 bg-white/[0.01] border border-white/[0.04] rounded-lg">
-                  <span className="text-slate-500 font-medium">{bank.label}</span>
+                <div key={bank.id} className={`flex justify-between p-2.5 rounded-lg border transition-all ${settings.activePaymentOption === bank.id ? 'bg-cyan-500/10 border-cyan-500/20 text-cyan-300' : 'bg-white/[0.01] border-white/[0.04]'}`}>
+                  <span className={`${settings.activePaymentOption === bank.id ? 'text-cyan-300 font-bold' : 'text-slate-500'} font-medium`}>
+                    {bank.label} {settings.activePaymentOption === bank.id && ' (Aktif)'}
+                  </span>
                   <div className="text-right">
-                    <span className="text-slate-200 font-bold">{bank.value}</span>
-                    {bank.name && <span className="text-slate-500 block text-[10px]">{bank.name}</span>}
+                    <span className={`font-bold ${settings.activePaymentOption === bank.id ? 'text-cyan-200' : 'text-slate-200'}`}>{bank.value}</span>
+                    {bank.name && <span className={`${settings.activePaymentOption === bank.id ? 'text-cyan-400/80' : 'text-slate-500'} block text-[10px]`}>{bank.name}</span>}
                   </div>
                 </div>
               ))}
