@@ -4,12 +4,13 @@ import { useAppState, useAppDispatch, useHelpers } from '../../context/AppContex
 const SETTINGS_KEY = 'konveksi-os-saas-settings';
 
 const defaultSettings = {
-  bankMandiri: '131-00-153482-9',
-  bankMandiriName: 'a.n. Zenirastrore Convection',
-  bankBca: '781-0539-281',
-  bankBcaName: 'a.n. Zenirastrore Convection',
-  bankBsi: '',
-  bankBsiName: '',
+  activePaymentOption: 'seabank',
+  seabankNumber: '131-00-153482-9',
+  seabankName: 'a.n. Zenirastrore Convection',
+  jagoNumber: '781-0539-281',
+  jagoName: 'a.n. Zenirastrore Convection',
+  gopayNumber: '081234567890',
+  gopayName: 'a.n. Zenirastrore Convection',
   premiumPrice: '99000',
   businessPrice: '199000',
   premiumActive: true,

@@ -59,13 +59,14 @@ function loadState() {
     if (!state.saasSettings) {
       try {
         const savedSettings = localStorage.getItem('konveksi-os-saas-settings');
-        state.saasSettings = savedSettings ? JSON.parse(savedSettings) : {
-          bank SeaBank: '131-00-153482-9',
-          bank SeaBankName: 'a.n. Zenirastrore Convection',
-          bankJago: '781-0539-281',
-          bankJagoName: 'a.n. Zenirastrore Convection',
-          bankBsi: '',
-          bankBsiName: '',
+        const defaultSettings = {
+          activePaymentOption: 'seabank',
+          seabankNumber: '131-00-153482-9',
+          seabankName: 'a.n. Zenirastrore Convection',
+          jagoNumber: '781-0539-281',
+          jagoName: 'a.n. Zenirastrore Convection',
+          gopayNumber: '081234567890',
+          gopayName: 'a.n. Zenirastrore Convection',
           premiumPrice: '99000',
           businessPrice: '199000',
           premiumActive: true,
@@ -75,14 +76,16 @@ function loadState() {
           trialDays: '7',
           gracePeriodDays: '3',
         };
+        state.saasSettings = savedSettings ? { ...defaultSettings, ...JSON.parse(savedSettings) } : defaultSettings;
       } catch {
         state.saasSettings = {
-          bankMandiri: '131-00-153482-9',
-          bankMandiriName: 'a.n. Zenirastrore Convection',
-          bankBca: '781-0539-281',
-          bankBcaName: 'a.n. Zenirastrore Convection',
-          bankBsi: '',
-          bankBsiName: '',
+          activePaymentOption: 'seabank',
+          seabankNumber: '131-00-153482-9',
+          seabankName: 'a.n. Zenirastrore Convection',
+          jagoNumber: '781-0539-281',
+          jagoName: 'a.n. Zenirastrore Convection',
+          gopayNumber: '081234567890',
+          gopayName: 'a.n. Zenirastrore Convection',
           premiumPrice: '99000',
           businessPrice: '199000',
           premiumActive: true,
@@ -93,6 +96,26 @@ function loadState() {
           gracePeriodDays: '3',
         };
       }
+    } else {
+      // Ensure all settings keys are present and clean
+      state.saasSettings = {
+        activePaymentOption: 'seabank',
+        seabankNumber: '131-00-153482-9',
+        seabankName: 'a.n. Zenirastrore Convection',
+        jagoNumber: '781-0539-281',
+        jagoName: 'a.n. Zenirastrore Convection',
+        gopayNumber: '081234567890',
+        gopayName: 'a.n. Zenirastrore Convection',
+        premiumPrice: '99000',
+        businessPrice: '199000',
+        premiumActive: true,
+        businessActive: true,
+        freeActive: true,
+        autoApprove: false,
+        trialDays: '7',
+        gracePeriodDays: '3',
+        ...state.saasSettings
+      };
     }
 
     // Ensure zenirastrore admin exists in state.users (seed only if missing)
