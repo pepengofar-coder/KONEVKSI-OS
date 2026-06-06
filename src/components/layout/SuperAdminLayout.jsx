@@ -13,7 +13,7 @@ export default function SuperAdminLayout() {
   // Guard: Redirect if not logged in or not super admin
   useEffect(() => {
     const user = state.currentUser;
-    if (!user) return navigate("/login"); 
+    if (!user) return navigate("/super-admin/login"); 
     if (user.role === "SUPER_ADMIN") return; // Allow access
     showToast('Akses Ditolak: Halaman ini hanya untuk Super Administrator.', 'error');
     return navigate("/dashboard");
@@ -25,7 +25,7 @@ export default function SuperAdminLayout() {
 
   const handleLogout = () => {
     dispatch({ type: 'LOGOUT' });
-    navigate('/');
+    navigate('/super-admin/login');
   };
 
   const adminName = state.currentUser.nama || state.currentUser.name || 'Admin';

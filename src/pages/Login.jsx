@@ -66,11 +66,21 @@ export default function Login() {
         return;
       }
 
-      // Step 3: Login success — set current user
+      // Step 3: Block SUPER_ADMIN — they must use /super-admin/login
+      if (user.role === 'SUPER_ADMIN') {
+        setErrorField('identifier');
+        setErrorMessage('Akun Super Admin tidak dapat login di sini. Silakan gunakan Portal Super Admin.');
+        showToast('Silakan gunakan halaman login Super Admin.', 'error');
+        setPassword('');
+        setLoading(false);
+        return;
+      }
+
+      // Step 4: Login success — set current user
       dispatch({ type: 'SET_CURRENT_USER', payload: { user, rememberMe } });
       showToast(`Selamat datang kembali, ${user.nama || user.name}!`, 'success');
 
-      // Step 4: Lazy password migration — upgrade legacy hash to PBKDF2
+      // Step 5: Lazy password migration — upgrade legacy hash to PBKDF2
       if (needsMigration(user.password)) {
         try {
           const newHash = await hashPassword(password);
@@ -81,10 +91,8 @@ export default function Login() {
         }
       }
 
-      // Step 5: Redirect
-      if (user.role === 'SUPER_ADMIN') {
-        navigate('/super-admin/dashboard');
-      } else if (!user.categories || user.categories.length === 0 || !user.businessRole) {
+      // Step 6: Redirect
+      if (!user.categories || user.categories.length === 0 || !user.businessRole) {
         navigate('/onboarding');
       } else {
         navigate('/dashboard');

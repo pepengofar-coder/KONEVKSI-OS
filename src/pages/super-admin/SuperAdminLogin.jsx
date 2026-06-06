@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAppState, useAppDispatch, useHelpers, verifyPassword, needsMigration, hashPassword } from '../../context/AppContext';
 
 export default function SuperAdminLogin() {
@@ -37,15 +37,17 @@ export default function SuperAdminLogin() {
     setLoading(true);
 
     try {
-      // Step 1: Find user by username
+      // Step 1: Find user by username or email
       const user = state.users.find(
-        (u) => u.username.toLowerCase() === username.toLowerCase()
+        (u) =>
+          u.username.toLowerCase() === username.toLowerCase() ||
+          u.email.toLowerCase() === username.toLowerCase()
       );
 
       if (!user) {
         setErrorField('username');
-        setErrorMessage('Username tidak ditemukan.');
-        showToast('Username tidak ditemukan.', 'error');
+        setErrorMessage('Username atau email tidak ditemukan.');
+        showToast('Username atau email tidak ditemukan.', 'error');
         setPassword('');
         setLoading(false);
         return;
@@ -63,9 +65,11 @@ export default function SuperAdminLogin() {
         return;
       }
 
-      // Step 3: Check role
+      // Step 3: Check role — only SUPER_ADMIN allowed
       if (user.role !== 'SUPER_ADMIN') {
-        showToast('Akses ditolak: Akun ini bukan Super Administrator.', 'error');
+        setErrorField('username');
+        setErrorMessage('Akun ini bukan Super Administrator. Silakan gunakan halaman login biasa.');
+        showToast('Akses ditolak: Silakan gunakan halaman login biasa di /login.', 'error');
         setPassword('');
         setLoading(false);
         return;
@@ -184,6 +188,13 @@ export default function SuperAdminLogin() {
               )}
             </button>
           </form>
+
+          <div className="mt-8 pt-6 border-t border-white/[0.06] text-center">
+            <Link to="/login" className="text-xs text-slate-500 hover:text-slate-400 transition-colors font-bold">
+              <span className="material-symbols-outlined text-[14px] align-middle mr-1">arrow_back</span>
+              Kembali ke Login Pengguna
+            </Link>
+          </div>
         </div>
       </div>
     </div>
