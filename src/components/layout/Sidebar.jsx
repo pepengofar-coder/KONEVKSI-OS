@@ -10,7 +10,7 @@ export default function Sidebar() {
 
   const handleLogout = () => {
     dispatch({ type: 'LOGOUT' });
-    navigate('/login');
+    navigate('/');
   };
 
   const userInitial = state.currentUser ? state.currentUser.nama.charAt(0).toUpperCase() : 'A';

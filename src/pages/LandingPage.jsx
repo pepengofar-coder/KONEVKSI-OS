@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { useAppState } from '../context/AppContext';
 
 // Animated particles component
 function Particles() {
@@ -92,6 +93,8 @@ const steps = [
 ];
 
 export default function LandingPage() {
+  const state = useAppState();
+  const isLoggedIn = !!state?.currentUser;
   const [scrollY, setScrollY] = useState(0);
 
   useEffect(() => {
@@ -118,12 +121,29 @@ export default function LandingPage() {
             <a href="#how-it-works" className="text-slate-400 hover:text-white transition-colors font-medium">Cara Kerja</a>
             <a href="#pricing" className="text-slate-400 hover:text-white transition-colors font-medium">Harga</a>
           </div>
-          <Link
-            to="/dashboard"
-            className="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-cyan-600 rounded-xl text-sm font-bold hover:shadow-lg hover:shadow-purple-500/25 hover:scale-105 active:scale-95 transition-all"
-          >
-            Buka Aplikasi
-          </Link>
+          {isLoggedIn ? (
+            <Link
+              to={state.currentUser.role === 'SUPER_ADMIN' || state.currentUser.role === 'ADMIN' ? "/super-admin/dashboard" : "/dashboard"}
+              className="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-cyan-600 rounded-xl text-sm font-bold hover:shadow-lg hover:shadow-purple-500/25 hover:scale-105 active:scale-95 transition-all"
+            >
+              Dashboard
+            </Link>
+          ) : (
+            <div className="flex items-center gap-3">
+              <Link
+                to="/login"
+                className="px-4 py-2 border border-white/20 hover:bg-white/10 hover:border-white/30 rounded-xl text-sm font-bold transition-all"
+              >
+                Login
+              </Link>
+              <Link
+                to="/register"
+                className="px-4 py-2 bg-gradient-to-r from-purple-600 to-cyan-600 rounded-xl text-sm font-bold hover:shadow-lg hover:shadow-purple-500/25 transition-all"
+              >
+                Register
+              </Link>
+            </div>
+          )}
         </div>
       </nav>
 
@@ -174,20 +194,31 @@ export default function LandingPage() {
 
                   {/* CTAs */}
                   <div className="flex flex-col sm:flex-row gap-4">
-                    <Link
-                      to="/dashboard"
-                      className="group relative px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-purple-600 to-cyan-600 rounded-xl md:rounded-2xl text-sm md:text-base font-bold hover:shadow-2xl hover:shadow-purple-500/40 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2"
-                    >
-                      Mulai Sekarang — Gratis
-                      <span className="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">arrow_forward</span>
-                    </Link>
-                    <a
-                      href="#features"
-                      className="px-6 md:px-8 py-3 md:py-4 rounded-xl md:rounded-2xl text-sm md:text-base font-semibold text-slate-300 border border-white/20 hover:bg-white/10 hover:border-white/30 transition-all flex items-center justify-center gap-2"
-                    >
-                      <span className="material-symbols-outlined text-lg">arrow_downward</span>
-                      Lihat Fitur
-                    </a>
+                    {isLoggedIn ? (
+                      <Link
+                        to={state.currentUser.role === 'SUPER_ADMIN' || state.currentUser.role === 'ADMIN' ? "/super-admin/dashboard" : "/dashboard"}
+                        className="group relative px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-purple-600 to-cyan-600 rounded-xl md:rounded-2xl text-sm md:text-base font-bold hover:shadow-2xl hover:shadow-purple-500/40 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2"
+                      >
+                        Buka Dashboard
+                        <span className="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                      </Link>
+                    ) : (
+                      <>
+                        <Link
+                          to="/login"
+                          className="group relative px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-purple-600 to-cyan-600 rounded-xl md:rounded-2xl text-sm md:text-base font-bold hover:shadow-2xl hover:shadow-purple-500/40 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2"
+                        >
+                          Login Sekarang
+                          <span className="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                        </Link>
+                        <Link
+                          to="/register"
+                          className="px-6 md:px-8 py-3 md:py-4 rounded-xl md:rounded-2xl text-sm md:text-base font-semibold text-slate-300 border border-white/20 hover:bg-white/10 hover:border-white/30 transition-all flex items-center justify-center gap-2"
+                        >
+                          Daftar Akun Baru
+                        </Link>
+                      </>
+                    )}
                   </div>
                 </div>
 

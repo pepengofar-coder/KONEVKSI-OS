@@ -61,7 +61,7 @@ export default function MobileDrawer({ isOpen, onClose }) {
 
   const handleLogout = () => {
     dispatch({ type: 'LOGOUT' });
-    navigate('/login');
+    navigate('/');
     onClose();
   };
 
