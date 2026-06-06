@@ -64,8 +64,8 @@ function DomainRedirector({ children }) {
       }
     }
 
-    // Redirect admins/super-admins to their dashboard when accessing root or user login
-    if (state?.currentUser && (state.currentUser.role === 'SUPER_ADMIN' || state.currentUser.role === 'ADMIN')) {
+    // Redirect super-admins to their dashboard when accessing root or user login
+    if (state?.currentUser && state.currentUser.role === 'SUPER_ADMIN') {
       if (location.pathname === '/' || location.pathname === '/login') {
         navigate('/super-admin/dashboard');
       }

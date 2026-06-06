@@ -19,7 +19,7 @@ export default function Login() {
   // Redirect if already logged in
   useEffect(() => {
     if (state.currentUser) {
-      if (state.currentUser.role === 'ADMIN' || state.currentUser.role === 'SUPER_ADMIN') {
+      if (state.currentUser.role === 'SUPER_ADMIN') {
         navigate('/super-admin/dashboard');
       } else if (!state.currentUser.categories || state.currentUser.categories.length === 0 || !state.currentUser.businessRole) {
         navigate('/onboarding');
@@ -86,7 +86,7 @@ export default function Login() {
       }
 
       // Step 5: Redirect
-      if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
+      if (user.role === 'SUPER_ADMIN') {
         navigate('/super-admin/dashboard');
       } else if (!user.categories || user.categories.length === 0 || !user.businessRole) {
         navigate('/onboarding');

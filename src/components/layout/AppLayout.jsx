@@ -25,7 +25,7 @@ export default function AppLayout() {
   useEffect(() => {
     if (!state.currentUser) {
       navigate('/login');
-    } else if (state.currentUser.role === 'ADMIN' || state.currentUser.role === 'SUPER_ADMIN') {
+    } else if (state.currentUser.role === 'SUPER_ADMIN') {
       navigate('/super-admin/dashboard');
     } else if (!state.currentUser.categories || state.currentUser.categories.length === 0 || !state.currentUser.businessRole) {
       navigate('/onboarding');
