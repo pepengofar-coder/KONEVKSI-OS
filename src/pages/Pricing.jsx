@@ -573,33 +573,33 @@ export default function Pricing() {
                   <p className="text-slate-300 font-bold">Silakan transfer sesuai nominal tagihan ke salah satu rekening berikut:</p>
                   
                   <div className="space-y-2">
-                    {bankSettings.bankMandiri && (
-                      <div className="flex justify-between items-center bg-slate-900 p-2.5 rounded-xl border border-white/[0.04]">
+                    {bankSettings.activePaymentOption === 'seabank' && (
+                      <div className="flex justify-between items-center bg-slate-900 p-2.5 rounded-xl border border-white/[0.04] hover:bg-white/[0.02] transition-all">
                         <div>
-                          <span className="block text-[8px] font-black uppercase text-slate-500">BANK MANDIRI</span>
-                          <span className="font-mono text-cyan-400 text-xs font-black">{bankSettings.bankMandiri}</span>
+                          <span className="block text-[8px] font-black uppercase text-slate-500">BANK SEABANK (AKTIF)</span>
+                          <span className="font-mono text-cyan-400 text-xs font-black">{bankSettings.seabankNumber}</span>
                         </div>
-                        <span className="text-[10px] text-slate-400 font-bold">{bankSettings.bankMandiriName || 'a.n. Konveksi OS'}</span>
+                        <span className="text-[10px] text-slate-400 font-bold">{bankSettings.seabankName || 'a.n. Konveksi OS'}</span>
                       </div>
                     )}
 
-                    {bankSettings.bankBca && (
-                      <div className="flex justify-between items-center bg-slate-900 p-2.5 rounded-xl border border-white/[0.04]">
+                    {bankSettings.activePaymentOption === 'jago' && (
+                      <div className="flex justify-between items-center bg-slate-900 p-2.5 rounded-xl border border-white/[0.04] hover:bg-white/[0.02] transition-all">
                         <div>
-                          <span className="block text-[8px] font-black uppercase text-slate-500">BANK BCA</span>
-                          <span className="font-mono text-cyan-400 text-xs font-black">{bankSettings.bankBca}</span>
+                          <span className="block text-[8px] font-black uppercase text-slate-500">BANK JAGO (AKTIF)</span>
+                          <span className="font-mono text-cyan-400 text-xs font-black">{bankSettings.jagoNumber}</span>
                         </div>
-                        <span className="text-[10px] text-slate-400 font-bold">{bankSettings.bankBcaName || 'a.n. Konveksi OS'}</span>
+                        <span className="text-[10px] text-slate-400 font-bold">{bankSettings.jagoName || 'a.n. Konveksi OS'}</span>
                       </div>
                     )}
 
-                    {bankSettings.bankBsi && (
-                      <div className="flex justify-between items-center bg-slate-900 p-2.5 rounded-xl border border-white/[0.04]">
+                    {bankSettings.activePaymentOption === 'gopay' && (
+                      <div className="flex justify-between items-center bg-slate-900 p-2.5 rounded-xl border border-white/[0.04] hover:bg-white/[0.02] transition-all">
                         <div>
-                          <span className="block text-[8px] font-black uppercase text-slate-500">BANK BSI</span>
-                          <span className="font-mono text-cyan-400 text-xs font-black">{bankSettings.bankBsi}</span>
+                          <span className="block text-[8px] font-black uppercase text-slate-500">E-WALLET GOPAY (AKTIF)</span>
+                          <span className="font-mono text-cyan-400 text-xs font-black">{bankSettings.gopayNumber}</span>
                         </div>
-                        <span className="text-[10px] text-slate-400 font-bold">{bankSettings.bankBsiName || 'a.n. Konveksi OS'}</span>
+                        <span className="text-[10px] text-slate-400 font-bold">{bankSettings.gopayName || 'a.n. Konveksi OS'}</span>
                       </div>
                     )}
                   </div>
