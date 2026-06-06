@@ -125,8 +125,9 @@ export default function SuperAdminUsers() {
               <tr className="border-b border-white/[0.06] bg-white/[0.01] text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
                 <th className="py-4 px-6">Pengguna & Usaha</th>
                 <th className="py-4 px-6">Lisensi & Role</th>
-                <th className="py-4 px-6 text-center">Penggunaan</th>
+                <th className="py-4 px-6">Durasi Langganan</th>
                 <th className="py-4 px-6 text-center">Transaksi</th>
+                <th className="py-4 px-6 text-center">Penggunaan</th>
                 <th className="py-4 px-6">Terdaftar</th>
                 <th className="py-4 px-6 text-right">Aksi</th>
               </tr>
@@ -158,6 +159,9 @@ export default function SuperAdminUsers() {
                           </p>
                           <p className="text-[10px] text-cyan-400 font-semibold mt-0.5">
                             {user.businessName || 'Belum Mengatur Profil Usaha'}
+                          </p>
+                          <p className="text-[9px] text-slate-400 mt-0.5">
+                            Login Terakhir: <span className="text-slate-300 font-medium">{user.lastLogin ? new Date(user.lastLogin).toLocaleString('id-ID') : 'Belum Pernah'}</span>
                           </p>
                         </div>
                       </div>
@@ -192,11 +196,28 @@ export default function SuperAdminUsers() {
                             <> · <span className="text-slate-400">{user.businessRole}</span></>
                           )}
                         </p>
-                        {user.planExpiresAt && (
-                          <p className="text-[9px] text-slate-500">
-                            Exp: <span className="text-slate-400 font-medium">{new Date(user.planExpiresAt).toLocaleDateString('id-ID')}</span>
-                          </p>
-                        )}
+                      </div>
+                    </td>
+
+                    {/* Durasi Langganan */}
+                    <td className="py-4 px-6 text-slate-400">
+                      <div className="space-y-0.5 text-[10px]">
+                        <div>
+                          <span className="text-slate-500">Mulai: </span>
+                          <span className="text-slate-300 font-medium">{user.planStartedAt ? new Date(user.planStartedAt).toLocaleDateString('id-ID') : '-'}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-500">Selesai: </span>
+                          <span className="text-slate-300 font-medium">{user.planExpiresAt ? new Date(user.planExpiresAt).toLocaleDateString('id-ID') : '∞'}</span>
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* Transaksi */}
+                    <td className="py-4 px-6 text-center">
+                      <div className="inline-block text-left">
+                        <p className="font-bold text-slate-200 text-xs">{paymentCount}x Transaksi</p>
+                        <p className="text-[10px] text-emerald-400 font-extrabold">{formatRupiah(totalPaid)}</p>
                       </div>
                     </td>
 
@@ -222,14 +243,6 @@ export default function SuperAdminUsers() {
                           <span className="block text-slate-200 font-bold text-xs">{stats.taylors}</span>
                           <span className="text-[8px] uppercase font-bold text-slate-500">Penjahit</span>
                         </div>
-                      </div>
-                    </td>
-
-                    {/* Transaksi */}
-                    <td className="py-4 px-6 text-center">
-                      <div className="inline-block text-left">
-                        <p className="font-bold text-slate-200 text-xs">{paymentCount}x Transaksi</p>
-                        <p className="text-[10px] text-emerald-400 font-extrabold">{formatRupiah(totalPaid)}</p>
                       </div>
                     </td>
 

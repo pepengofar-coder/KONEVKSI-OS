@@ -173,14 +173,27 @@ export default function SuperAdminLayout() {
               <p className="text-[8px] text-slate-400 uppercase tracking-[0.2em] font-extrabold leading-none mt-0.5">SUPER ADMIN PORTAL</p>
             </div>
           </div>
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="w-10 h-10 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-center text-slate-300 hover:text-white"
-          >
-            <span className="material-symbols-outlined">
-              {mobileMenuOpen ? 'close' : 'menu'}
-            </span>
-          </button>
+          <div className="flex items-center gap-2">
+            {pendingPaymentsCount > 0 && (
+              <button
+                onClick={() => navigate('/super-admin/payments')}
+                className="relative w-10 h-10 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-center text-slate-300 hover:text-white"
+              >
+                <span className="material-symbols-outlined text-[20px]">notifications</span>
+                <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-rose-500 text-white text-[9px] font-black flex items-center justify-center shadow-lg shadow-rose-500/40 animate-pulse">
+                  {pendingPaymentsCount}
+                </span>
+              </button>
+            )}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="w-10 h-10 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-center text-slate-300 hover:text-white"
+            >
+              <span className="material-symbols-outlined">
+                {mobileMenuOpen ? 'close' : 'menu'}
+              </span>
+            </button>
+          </div>
         </header>
 
         {/* Mobile Drawer */}

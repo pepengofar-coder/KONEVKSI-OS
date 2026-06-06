@@ -225,14 +225,23 @@ function appReducer(state, action) {
     }
     case 'SET_CURRENT_USER': {
       const { user, rememberMe } = action.payload;
+      const updatedUser = {
+        ...user,
+        lastLogin: Date.now(),
+        updatedAt: Date.now()
+      };
+      
+      const updatedUsers = state.users.map(u => u.id === user.id ? updatedUser : u);
+
       if (rememberMe) {
         sessionStorage.removeItem('konveksi-os-session-user');
       } else {
-        sessionStorage.setItem('konveksi-os-session-user', JSON.stringify(user));
+        sessionStorage.setItem('konveksi-os-session-user', JSON.stringify(updatedUser));
       }
       return { 
         ...state, 
-        currentUser: user,
+        users: updatedUsers,
+        currentUser: updatedUser,
         rememberMe: rememberMe
       };
     }
@@ -880,6 +889,22 @@ function appReducer(state, action) {
     case 'RESET_DATA': {
       const fresh = getInitialState();
       return { ...fresh, currentUser: state.currentUser, users: state.users };
+    }
+
+    // Generic Admin Log
+    case 'ADD_ADMIN_LOG': {
+      const newLog = {
+        id: generateId('log'),
+        timestamp: Date.now(),
+        adminUsername: state.currentUser ? state.currentUser.username : 'system',
+        action: action.payload.action,
+        details: action.payload.details,
+        note: action.payload.note || ''
+      };
+      return {
+        ...state,
+        adminLogs: [newLog, ...(state.adminLogs || [])]
+      };
     }
 
     default:
