@@ -60,10 +60,10 @@ function loadState() {
       try {
         const savedSettings = localStorage.getItem('konveksi-os-saas-settings');
         state.saasSettings = savedSettings ? JSON.parse(savedSettings) : {
-          bankMandiri: '131-00-153482-9',
-          bankMandiriName: 'a.n. Zenirastrore Convection',
-          bankBca: '781-0539-281',
-          bankBcaName: 'a.n. Zenirastrore Convection',
+          bank SeaBank: '131-00-153482-9',
+          bank SeaBankName: 'a.n. Zenirastrore Convection',
+          bankJago: '781-0539-281',
+          bankJagoName: 'a.n. Zenirastrore Convection',
           bankBsi: '',
           bankBsiName: '',
           premiumPrice: '99000',
@@ -270,7 +270,7 @@ function appReducer(state, action) {
         lastLogin: Date.now(),
         updatedAt: Date.now()
       };
-      
+
       const updatedUsers = state.users.map(u => u.id === user.id ? updatedUser : u);
 
       if (rememberMe) {
@@ -278,8 +278,8 @@ function appReducer(state, action) {
       } else {
         sessionStorage.setItem('konveksi-os-session-user', JSON.stringify(updatedUser));
       }
-      return { 
-        ...state, 
+      return {
+        ...state,
         users: updatedUsers,
         currentUser: updatedUser,
         rememberMe: rememberMe
@@ -314,11 +314,11 @@ function appReducer(state, action) {
         nama: action.payload.nama !== undefined ? action.payload.nama : state.currentUser.nama,
         name: action.payload.nama !== undefined ? action.payload.nama : state.currentUser.nama,
         email: action.payload.email !== undefined ? action.payload.email : state.currentUser.email,
-        role: isBusinessRole 
-          ? (state.currentUser.role || 'USER') 
+        role: isBusinessRole
+          ? (state.currentUser.role || 'USER')
           : (action.payload.role !== undefined ? action.payload.role : state.currentUser.role),
-        businessRole: isBusinessRole 
-          ? action.payload.role 
+        businessRole: isBusinessRole
+          ? action.payload.role
           : (action.payload.businessRole !== undefined ? action.payload.businessRole : state.currentUser.businessRole),
         categories: action.payload.categories || state.currentUser.categories,
         businessProfile: action.payload.businessProfile || state.currentUser.businessProfile,
@@ -328,11 +328,11 @@ function appReducer(state, action) {
         updatedUser.password = legacyEncryptPassword(action.payload.password);
       }
       const updatedUsers = state.users.map(u => u.id === updatedUser.id ? updatedUser : u);
-      
+
       if (!state.rememberMe) {
         sessionStorage.setItem('konveksi-os-session-user', JSON.stringify(updatedUser));
       }
-      
+
       return {
         ...state,
         currentUser: updatedUser,
@@ -347,11 +347,11 @@ function appReducer(state, action) {
         planExpiresAt
       };
       const updatedUsers = state.users.map(u => u.id === updatedUser.id ? updatedUser : u);
-      
+
       if (!state.rememberMe) {
         sessionStorage.setItem('konveksi-os-session-user', JSON.stringify(updatedUser));
       }
-      
+
       return {
         ...state,
         currentUser: updatedUser,
@@ -379,14 +379,14 @@ function appReducer(state, action) {
         adminNote: '',
         updatedAt: Date.now(),
       };
-      
+
       const updatedUser = {
         ...state.currentUser,
         planStatus: 'PENDING',
         updatedAt: Date.now()
       };
       const updatedUsers = state.users.map(u => u.id === updatedUser.id ? updatedUser : u);
-      
+
       if (!state.rememberMe) {
         sessionStorage.setItem('konveksi-os-session-user', JSON.stringify(updatedUser));
       }
@@ -981,7 +981,7 @@ export function AppProvider({ children }) {
       try {
         if (!newRawVal) return;
         const parsed = JSON.parse(newRawVal);
-        
+
         // Check if users, paymentOrders or saasSettings changed
         const currentUsersStr = JSON.stringify(state?.users || []);
         const nextUsersStr = JSON.stringify(parsed?.users || []);
@@ -989,10 +989,10 @@ export function AppProvider({ children }) {
         const nextOrdersStr = JSON.stringify(parsed?.paymentOrders || []);
         const currentSettingsStr = JSON.stringify(state?.saasSettings || {});
         const nextSettingsStr = JSON.stringify(parsed?.saasSettings || {});
-        
+
         if (
-          currentUsersStr !== nextUsersStr || 
-          currentOrdersStr !== nextOrdersStr || 
+          currentUsersStr !== nextUsersStr ||
+          currentOrdersStr !== nextOrdersStr ||
           currentSettingsStr !== nextSettingsStr
         ) {
           dispatch({ type: 'SYNC_STATE' });
