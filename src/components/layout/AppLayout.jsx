@@ -25,17 +25,19 @@ export default function AppLayout() {
   useEffect(() => {
     if (!state.currentUser) {
       navigate('/login');
-    } else if (!state.currentUser.categories || state.currentUser.categories.length === 0 || !state.currentUser.role) {
+    } else if (state.currentUser.role === 'ADMIN' || state.currentUser.role === 'SUPER_ADMIN') {
+      navigate('/admin/dashboard');
+    } else if (!state.currentUser.categories || state.currentUser.categories.length === 0 || !state.currentUser.businessRole) {
       navigate('/onboarding');
     }
   }, [state.currentUser, navigate]);
 
   // Role Security Route Guard
   useEffect(() => {
-    if (state.currentUser && state.currentUser.role) {
-      const role = state.currentUser.role;
+    if (state.currentUser && state.currentUser.role !== 'ADMIN' && state.currentUser.role !== 'SUPER_ADMIN') {
+      const businessRole = state.currentUser.businessRole;
       const path = location.pathname;
-      const allowed = ROLE_ROUTES[role] || [];
+      const allowed = ROLE_ROUTES[businessRole] || [];
       
       const isAllowed = allowed.includes(path);
       if (!isAllowed && path !== '/onboarding') {

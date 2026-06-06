@@ -45,15 +45,71 @@ function loadState() {
     if (!state.customers) state.customers = [];
     if (!state.invoices) state.invoices = [];
     if (!state.trackingJobs) state.trackingJobs = [];
+    if (!state.paymentOrders) state.paymentOrders = [];
+    if (!state.adminLogs) state.adminLogs = [];
     if (!state.toasts) state.toasts = [];
+
+    // Ensure zenirastrore admin exists in state.users
+    const adminExists = state.users.some(u => u.username === 'zenirastrore');
+    if (!adminExists) {
+      const defaultAdmin = {
+        id: 'u_admin',
+        nama: 'Admin Zenirastrore',
+        name: 'Admin Zenirastrore',
+        username: 'zenirastrore',
+        email: 'zenirastrore@konveksios.com',
+        password: encryptPassword('abu_ziyadh280292'),
+        role: 'SUPER_ADMIN',
+        businessRole: 'Owner',
+        plan: 'BUSINESS',
+        planStatus: 'ACTIVE',
+        planStartedAt: Date.now(),
+        planExpiresAt: null,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        categories: ['Kaos', 'Kemeja', 'Jaket'],
+        businessProfile: {
+          namaUsaha: 'Zenirastrore Convection',
+          telepon: '08123456789',
+          email: 'info@zenirastrore.com',
+          alamat: 'Jl. Admin No. 1'
+        },
+        businessName: 'Zenirastrore Convection'
+      };
+      state.users.push(defaultAdmin);
+    }
 
     // Ensure users in database are encrypted and have default plan properties
     state.users = state.users.map(u => {
+      if (u.username === 'zenirastrore') {
+        u.role = 'SUPER_ADMIN';
+      }
       if (!u.password.startsWith('pbkdf2_sha256$')) {
         u.password = encryptPassword(u.password);
       }
       if (!u.plan) {
         u.plan = u.username === 'admin' ? 'PREMIUM' : 'FREE';
+      }
+      if (u.planStatus === undefined) {
+        u.planStatus = 'ACTIVE';
+      }
+      if (u.role === undefined || u.role === '') {
+        u.role = u.username === 'zenirastrore' ? 'SUPER_ADMIN' : 'USER';
+      }
+      if (u.businessRole === undefined) {
+        u.businessRole = u.role === 'SUPER_ADMIN' || u.role === 'ADMIN' ? 'Owner' : (u.role || 'Owner');
+      }
+      if (u.businessName === undefined) {
+        u.businessName = u.businessProfile?.namaUsaha || u.namaUsaha || '';
+      }
+      if (u.name === undefined) {
+        u.name = u.nama || '';
+      }
+      if (u.createdAt === undefined) {
+        u.createdAt = Date.now();
+      }
+      if (u.updatedAt === undefined) {
+        u.updatedAt = Date.now();
       }
       if (u.planExpiresAt === undefined) {
         u.planExpiresAt = null;
@@ -95,19 +151,26 @@ function appReducer(state, action) {
       const newUser = {
         id: generateId('u'),
         nama: action.payload.nama,
+        name: action.payload.nama,
         username: action.payload.username.toLowerCase(),
         email: action.payload.email.toLowerCase(),
         password: encryptPassword(action.payload.password),
-        role: '', // Selected in Onboarding Step 2
+        role: 'USER', // system role
+        businessRole: '', // Selected in Onboarding Step 2
         plan: 'FREE',
+        planStatus: 'ACTIVE',
+        planStartedAt: Date.now(),
         planExpiresAt: null,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
         categories: [],
         businessProfile: {
           namaUsaha: action.payload.namaUsaha || (action.payload.nama + ' Convection'),
           telepon: '',
           email: action.payload.email,
           alamat: ''
-        }
+        },
+        businessName: action.payload.namaUsaha || (action.payload.nama + ' Convection')
       };
       sessionStorage.setItem('konveksi-os-session-user', JSON.stringify(newUser));
       return {
@@ -135,13 +198,21 @@ function appReducer(state, action) {
       return { ...state, currentUser: null, rememberMe: false };
     }
     case 'UPDATE_PROFILE': {
+      const isBusinessRole = ['Owner', 'Admin Keuangan', 'Staff Administrasi'].includes(action.payload.role);
       const updatedUser = {
         ...state.currentUser,
-        nama: action.payload.nama,
-        email: action.payload.email,
-        role: action.payload.role !== undefined ? action.payload.role : state.currentUser.role,
+        nama: action.payload.nama !== undefined ? action.payload.nama : state.currentUser.nama,
+        name: action.payload.nama !== undefined ? action.payload.nama : state.currentUser.nama,
+        email: action.payload.email !== undefined ? action.payload.email : state.currentUser.email,
+        role: isBusinessRole 
+          ? (state.currentUser.role || 'USER') 
+          : (action.payload.role !== undefined ? action.payload.role : state.currentUser.role),
+        businessRole: isBusinessRole 
+          ? action.payload.role 
+          : (action.payload.businessRole !== undefined ? action.payload.businessRole : state.currentUser.businessRole),
         categories: action.payload.categories || state.currentUser.categories,
-        businessProfile: action.payload.businessProfile || state.currentUser.businessProfile
+        businessProfile: action.payload.businessProfile || state.currentUser.businessProfile,
+        businessName: action.payload.businessProfile?.namaUsaha || action.payload.businessName || state.currentUser.businessName || ''
       };
       if (action.payload.password) {
         updatedUser.password = encryptPassword(action.payload.password);
@@ -181,6 +252,258 @@ function appReducer(state, action) {
       return {
         ...state,
         upgradeModalOpen: action.payload
+      };
+    }
+    case 'SUBMIT_PAYMENT_ORDER': {
+      const newOrder = {
+        id: generateId('po'),
+        userId: currentUserId,
+        username: state.currentUser.username,
+        businessName: state.currentUser.businessName || state.currentUser.businessProfile?.namaUsaha || '',
+        plan: action.payload.plan,
+        price: action.payload.price,
+        paymentMethod: action.payload.paymentMethod,
+        paymentProof: action.payload.paymentProof,
+        status: 'PENDING',
+        createdAt: Date.now(),
+        adminNote: '',
+        updatedAt: Date.now(),
+      };
+      
+      const updatedUser = {
+        ...state.currentUser,
+        planStatus: 'PENDING',
+        updatedAt: Date.now()
+      };
+      const updatedUsers = state.users.map(u => u.id === updatedUser.id ? updatedUser : u);
+      
+      if (!state.rememberMe) {
+        sessionStorage.setItem('konveksi-os-session-user', JSON.stringify(updatedUser));
+      }
+
+      return {
+        ...state,
+        paymentOrders: [newOrder, ...(state.paymentOrders || [])],
+        currentUser: updatedUser,
+        users: updatedUsers
+      };
+    }
+    case 'APPROVE_PAYMENT': {
+      const { orderId, adminNote } = action.payload;
+      const order = state.paymentOrders.find(o => o.id === orderId);
+      if (!order) return state;
+
+      const updatedOrders = state.paymentOrders.map(o =>
+        o.id === orderId
+          ? { ...o, status: 'APPROVED', adminNote, updatedAt: Date.now() }
+          : o
+      );
+
+      const targetUser = state.users.find(u => u.id === order.userId);
+      if (!targetUser) return { ...state, paymentOrders: updatedOrders };
+
+      const durationMs = 30 * 24 * 60 * 60 * 1000; // 30 days
+      const updatedTargetUser = {
+        ...targetUser,
+        plan: order.plan,
+        planStatus: 'ACTIVE',
+        planStartedAt: Date.now(),
+        planExpiresAt: Date.now() + durationMs,
+        updatedAt: Date.now()
+      };
+
+      const updatedUsers = state.users.map(u => u.id === order.userId ? updatedTargetUser : u);
+
+      const newLog = {
+        id: generateId('log'),
+        timestamp: Date.now(),
+        adminUsername: state.currentUser ? state.currentUser.username : 'system',
+        action: 'APPROVE_PAYMENT',
+        details: `Approved payment order ${orderId} for ${order.username} (${order.plan})`,
+        note: adminNote
+      };
+
+      let currentSessionUser = state.currentUser;
+      if (currentSessionUser && currentSessionUser.id === order.userId) {
+        currentSessionUser = updatedTargetUser;
+        if (!state.rememberMe) {
+          sessionStorage.setItem('konveksi-os-session-user', JSON.stringify(currentSessionUser));
+        }
+      }
+
+      return {
+        ...state,
+        paymentOrders: updatedOrders,
+        users: updatedUsers,
+        currentUser: currentSessionUser,
+        adminLogs: [newLog, ...(state.adminLogs || [])]
+      };
+    }
+    case 'REJECT_PAYMENT': {
+      const { orderId, adminNote } = action.payload;
+      const order = state.paymentOrders.find(o => o.id === orderId);
+      if (!order) return state;
+
+      const updatedOrders = state.paymentOrders.map(o =>
+        o.id === orderId
+          ? { ...o, status: 'REJECTED', adminNote, updatedAt: Date.now() }
+          : o
+      );
+
+      const targetUser = state.users.find(u => u.id === order.userId);
+      if (!targetUser) return { ...state, paymentOrders: updatedOrders };
+
+      const updatedTargetUser = {
+        ...targetUser,
+        planStatus: targetUser.planExpiresAt && targetUser.planExpiresAt < Date.now() ? 'EXPIRED' : 'ACTIVE',
+        updatedAt: Date.now()
+      };
+
+      const updatedUsers = state.users.map(u => u.id === order.userId ? updatedTargetUser : u);
+
+      const newLog = {
+        id: generateId('log'),
+        timestamp: Date.now(),
+        adminUsername: state.currentUser ? state.currentUser.username : 'system',
+        action: 'REJECT_PAYMENT',
+        details: `Rejected payment order ${orderId} for ${order.username}. Reason: ${adminNote}`,
+        note: adminNote
+      };
+
+      let currentSessionUser = state.currentUser;
+      if (currentSessionUser && currentSessionUser.id === order.userId) {
+        currentSessionUser = updatedTargetUser;
+        if (!state.rememberMe) {
+          sessionStorage.setItem('konveksi-os-session-user', JSON.stringify(currentSessionUser));
+        }
+      }
+
+      return {
+        ...state,
+        paymentOrders: updatedOrders,
+        users: updatedUsers,
+        currentUser: currentSessionUser,
+        adminLogs: [newLog, ...(state.adminLogs || [])]
+      };
+    }
+    case 'MANUAL_UPDATE_PLAN': {
+      const { userId, plan, planStatus, planExpiresAt } = action.payload;
+      const targetUser = state.users.find(u => u.id === userId);
+      if (!targetUser) return state;
+
+      const updatedTargetUser = {
+        ...targetUser,
+        plan,
+        planStatus,
+        planExpiresAt,
+        updatedAt: Date.now()
+      };
+
+      const updatedUsers = state.users.map(u => u.id === userId ? updatedTargetUser : u);
+
+      const newLog = {
+        id: generateId('log'),
+        timestamp: Date.now(),
+        adminUsername: state.currentUser ? state.currentUser.username : 'system',
+        action: 'MANUAL_UPDATE_PLAN',
+        details: `Manually updated plan for ${targetUser.username} to ${plan} (${planStatus})`,
+        note: `Expiry: ${planExpiresAt ? new Date(planExpiresAt).toLocaleDateString('id-ID') : 'Never'}`
+      };
+
+      let currentSessionUser = state.currentUser;
+      if (currentSessionUser && currentSessionUser.id === userId) {
+        currentSessionUser = updatedTargetUser;
+        if (!state.rememberMe) {
+          sessionStorage.setItem('konveksi-os-session-user', JSON.stringify(currentSessionUser));
+        }
+      }
+
+      return {
+        ...state,
+        users: updatedUsers,
+        currentUser: currentSessionUser,
+        adminLogs: [newLog, ...(state.adminLogs || [])]
+      };
+    }
+    case 'MANUAL_UPDATE_ROLE': {
+      const { userId, role } = action.payload;
+      const targetUser = state.users.find(u => u.id === userId);
+      if (!targetUser) return state;
+
+      const updatedTargetUser = {
+        ...targetUser,
+        role,
+        updatedAt: Date.now()
+      };
+
+      const updatedUsers = state.users.map(u => u.id === userId ? updatedTargetUser : u);
+
+      const newLog = {
+        id: generateId('log'),
+        timestamp: Date.now(),
+        adminUsername: state.currentUser ? state.currentUser.username : 'system',
+        action: 'MANUAL_UPDATE_ROLE',
+        details: `Manually updated system role for ${targetUser.username} to ${role}`,
+        note: ''
+      };
+
+      let currentSessionUser = state.currentUser;
+      if (currentSessionUser && currentSessionUser.id === userId) {
+        currentSessionUser = updatedTargetUser;
+        if (!state.rememberMe) {
+          sessionStorage.setItem('konveksi-os-session-user', JSON.stringify(currentSessionUser));
+        }
+      }
+
+      return {
+        ...state,
+        users: updatedUsers,
+        currentUser: currentSessionUser,
+        adminLogs: [newLog, ...(state.adminLogs || [])]
+      };
+    }
+    case 'EXTEND_SUBSCRIPTION': {
+      const { userId, days } = action.payload;
+      const targetUser = state.users.find(u => u.id === userId);
+      if (!targetUser) return state;
+
+      const currentExpiry = targetUser.planExpiresAt && targetUser.planExpiresAt > Date.now()
+        ? targetUser.planExpiresAt
+        : Date.now();
+      const durationMs = days * 24 * 60 * 60 * 1000;
+      const newExpiry = currentExpiry + durationMs;
+
+      const updatedTargetUser = {
+        ...targetUser,
+        planStatus: 'ACTIVE',
+        planExpiresAt: newExpiry,
+        updatedAt: Date.now()
+      };
+
+      const updatedUsers = state.users.map(u => u.id === userId ? updatedTargetUser : u);
+
+      const newLog = {
+        id: generateId('log'),
+        timestamp: Date.now(),
+        adminUsername: state.currentUser ? state.currentUser.username : 'system',
+        action: 'EXTEND_SUBSCRIPTION',
+        details: `Extended subscription for ${targetUser.username} by ${days} days`,
+        note: `New Expiry: ${new Date(newExpiry).toLocaleDateString('id-ID')}`
+      };
+
+      let currentSessionUser = state.currentUser;
+      if (currentSessionUser && currentSessionUser.id === userId) {
+        currentSessionUser = updatedTargetUser;
+        if (!state.rememberMe) {
+          sessionStorage.setItem('konveksi-os-session-user', JSON.stringify(currentSessionUser));
+        }
+      }
+
+      return {
+        ...state,
+        users: updatedUsers,
+        currentUser: currentSessionUser,
+        adminLogs: [newLog, ...(state.adminLogs || [])]
       };
     }
 
@@ -520,7 +843,7 @@ export function useAppState() {
   }
 
   // Multi-user data isolation proxy
-  if (currentUser) {
+  if (currentUser && currentUser.role !== 'ADMIN' && currentUser.role !== 'SUPER_ADMIN') {
     const userId = currentUser.id;
     return {
       ...state,

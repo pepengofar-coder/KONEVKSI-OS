@@ -13,7 +13,7 @@ export default function Pricing() {
 
   const [isYearly, setIsYearly] = useState(false);
   const [checkoutPlan, setCheckoutPlan] = useState(null); // 'PREMIUM' or 'BUSINESS'
-  const [paymentGateway, setPaymentGateway] = useState('midtrans'); // 'midtrans', 'stripe', 'paypal'
+  const [paymentGateway, setPaymentGateway] = useState('midtrans'); // 'midtrans', 'stripe', 'paypal', 'manual'
   const [paymentMethod, setPaymentMethod] = useState('gopay'); // 'gopay', 'va', 'cc'
   const [ccNumber, setCcNumber] = useState('');
   const [ccExpiry, setCcExpiry] = useState('');
@@ -22,6 +22,39 @@ export default function Pricing() {
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [receiptInvoice, setReceiptInvoice] = useState(null);
   const [billingHistory, setBillingHistory] = useState([]);
+
+  // Manual payment state
+  const [paymentProof, setPaymentProof] = useState('');
+  const [isSubmittingProof, setIsSubmittingProof] = useState(false);
+  const [bankSettings, setBankSettings] = useState({
+    bankMandiri: '131-00-153482-9',
+    bankBca: '781-0539-281',
+    premiumPrice: '99000',
+    businessPrice: '199000',
+    autoApprove: false
+  });
+
+  // Load bank settings
+  useEffect(() => {
+    const saved = localStorage.getItem('konveksi-os-saas-settings');
+    if (saved) {
+      setBankSettings(JSON.parse(saved));
+    }
+  }, []);
+
+  const pendingOrder = (state.paymentOrders || []).find(
+    (o) => o.userId === currentUserId && o.status === 'PENDING'
+  );
+  const rejectedOrder = (state.paymentOrders || []).find(
+    (o) => o.userId === currentUserId && o.status === 'REJECTED'
+  );
+
+  const getPlanPrice = (plan) => {
+    const basePrice = plan === 'PREMIUM'
+      ? parseInt(bankSettings.premiumPrice, 10)
+      : parseInt(bankSettings.businessPrice, 10);
+    return isYearly ? basePrice * 12 * 0.8 : basePrice;
+  };
 
   // Fetch billing history for this user
   useEffect(() => {
@@ -45,20 +78,92 @@ export default function Pricing() {
       showToast(`Anda sudah menggunakan rencana ${plan}!`, 'info');
       return;
     }
+    if (pendingOrder) {
+      showToast('Anda memiliki permintaan upgrade yang sedang ditinjau admin!', 'warning');
+      return;
+    }
     setCheckoutPlan(plan);
     setPaymentSuccess(false);
     setIsPaying(false);
+    setPaymentProof('');
+    setPaymentGateway('midtrans');
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        showToast('Ukuran file bukti transfer tidak boleh lebih dari 2MB!', 'error');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPaymentProof(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSubmitManualProof = () => {
+    if (!paymentProof) {
+      showToast('Harap unggah bukti transfer pembayaran Anda!', 'error');
+      return;
+    }
+
+    setIsSubmittingProof(true);
+
+    setTimeout(() => {
+      const price = getPlanPrice(checkoutPlan);
+
+      // Check if autoApprove is enabled in settings
+      if (bankSettings.autoApprove) {
+        // Automatically approve payment
+        const expDate = new Date();
+        if (isYearly) {
+          expDate.setFullYear(expDate.getFullYear() + 1);
+        } else {
+          expDate.setMonth(expDate.getMonth() + 1);
+        }
+        dispatch({
+          type: 'UPGRADE_PLAN',
+          payload: {
+            plan: checkoutPlan,
+            planExpiresAt: expDate.toISOString().split('T')[0]
+          }
+        });
+        showToast(`Upgrade otomatis ke rencana ${checkoutPlan} berhasil (Mode Sandbox)!`, 'success');
+      } else {
+        // Submit to admin queue
+        dispatch({
+          type: 'SUBMIT_PAYMENT_ORDER',
+          payload: {
+            plan: checkoutPlan,
+            price: price,
+            paymentMethod: 'Transfer Manual',
+            paymentProof: paymentProof
+          }
+        });
+        showToast('Bukti transfer berhasil dikirim. Menunggu verifikasi admin!', 'success');
+      }
+
+      setIsSubmittingProof(false);
+      setCheckoutPlan(null);
+      setPaymentProof('');
+    }, 1500);
   };
 
   const handleSimulatePayment = () => {
+    if (paymentGateway === 'manual') {
+      handleSubmitManualProof();
+      return;
+    }
+
     setIsPaying(true);
     setTimeout(() => {
       setIsPaying(false);
       setPaymentSuccess(true);
 
-      const price = checkoutPlan === 'PREMIUM'
-        ? (isYearly ? 99000 * 12 * 0.8 : 99000)
-        : (isYearly ? 249000 * 12 * 0.8 : 249000);
+      const price = getPlanPrice(checkoutPlan);
 
       const expDate = new Date();
       if (isYearly) {
@@ -115,6 +220,28 @@ export default function Pricing() {
         <h1 className="text-2xl md:text-3xl font-black font-display bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">Subscription & Rencana</h1>
         <p className="text-xs text-slate-400 mt-1">Buka seluruh kapabilitas Konveksi OS untuk performa bisnis terbaik Anda.</p>
       </div>
+
+      {/* Upgrade Pending Banner */}
+      {pendingOrder && (
+        <div className="p-4 rounded-3xl border border-yellow-500/20 bg-yellow-500/10 text-yellow-300 backdrop-blur-xl flex items-center gap-3 animate-pulse">
+          <span className="material-symbols-outlined text-yellow-400 text-xl">hourglass_empty</span>
+          <div className="text-xs">
+            <p className="font-bold">Upgrade Permohonan Sedang Ditinjau Admin</p>
+            <p className="text-slate-400 mt-0.5">Bukti transfer untuk paket <strong>{pendingOrder.plan}</strong> ({formatRupiah(pendingOrder.price)}) sedang diproses. Layanan Premium/Business akan otomatis aktif setelah diverifikasi.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Upgrade Rejected Banner */}
+      {rejectedOrder && !pendingOrder && (
+        <div className="p-4 rounded-3xl border border-rose-500/20 bg-rose-500/10 text-rose-300 backdrop-blur-xl flex items-center gap-3">
+          <span className="material-symbols-outlined text-rose-400 text-xl">cancel</span>
+          <div className="text-xs">
+            <p className="font-bold">Upgrade Pembayaran Manual Ditolak</p>
+            <p className="text-slate-400 mt-0.5">Permintaan Anda untuk paket <strong>{rejectedOrder.plan}</strong> ditolak oleh admin. Alasan: <span className="text-rose-200 font-semibold">{rejectedOrder.adminNote}</span>. Harap lakukan transfer ulang dan upload bukti pembayaran baru yang sah.</p>
+          </div>
+        </div>
+      )}
 
       {/* Plan Info Bar */}
       <div className="bg-white/[0.02] border border-white/[0.06] rounded-3xl p-5 md:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 backdrop-blur-xl">
@@ -214,7 +341,7 @@ export default function Pricing() {
             <h2 className="text-xl font-extrabold bg-gradient-to-r from-purple-300 to-cyan-300 bg-clip-text text-transparent mt-2">PREMIUM</h2>
             <div className="mt-4 flex items-baseline gap-1">
               <span className="text-3xl font-black text-slate-100">
-                {isYearly ? formatRupiah(99000 * 12 * 0.8) : formatRupiah(99000)}
+                {formatRupiah(getPlanPrice('PREMIUM'))}
               </span>
               <span className="text-xs text-slate-500">/ {isYearly ? 'tahun' : 'bulan'}</span>
             </div>
@@ -251,7 +378,7 @@ export default function Pricing() {
             <h2 className="text-xl font-extrabold text-slate-200 mt-2">BUSINESS</h2>
             <div className="mt-4 flex items-baseline gap-1">
               <span className="text-3xl font-black text-slate-100">
-                {isYearly ? formatRupiah(249000 * 12 * 0.8) : formatRupiah(249000)}
+                {formatRupiah(getPlanPrice('BUSINESS'))}
               </span>
               <span className="text-xs text-slate-500">/ {isYearly ? 'tahun' : 'bulan'}</span>
             </div>
@@ -307,9 +434,7 @@ export default function Pricing() {
               <div className="flex justify-between text-sm font-bold border-t border-white/[0.06] pt-2 mt-2">
                 <span>Total Tagihan:</span>
                 <span className="text-cyan-400">
-                  {checkoutPlan === 'PREMIUM'
-                    ? (isYearly ? formatRupiah(99000 * 12 * 0.8) : formatRupiah(99000))
-                    : (isYearly ? formatRupiah(249000 * 12 * 0.8) : formatRupiah(249000))}
+                  {formatRupiah(getPlanPrice(checkoutPlan))}
                 </span>
               </div>
             </div>
@@ -319,7 +444,8 @@ export default function Pricing() {
               {[
                 { id: 'midtrans', label: 'Midtrans' },
                 { id: 'stripe', label: 'Stripe' },
-                { id: 'paypal', label: 'PayPal' }
+                { id: 'paypal', label: 'PayPal' },
+                { id: 'manual', label: 'Transfer Manual' }
               ].map(gw => (
                 <button
                   key={gw.id}
@@ -422,6 +548,57 @@ export default function Pricing() {
               </div>
             )}
 
+            {paymentGateway === 'manual' && (
+              <div className="space-y-4 text-xs">
+                <div className="p-4 bg-slate-950/60 border border-white/[0.06] rounded-2xl space-y-3">
+                  <p className="text-slate-300 font-bold">Silakan transfer sesuai nominal tagihan ke salah satu rekening berikut:</p>
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center bg-slate-900 p-2.5 rounded-xl border border-white/[0.04]">
+                      <div>
+                        <span className="block text-[8px] font-black uppercase text-slate-500">BANK MANDIRI</span>
+                        <span className="font-mono text-cyan-400 text-xs font-black">{bankSettings.bankMandiri}</span>
+                      </div>
+                      <span className="text-[10px] text-slate-400 font-bold">a.n. Konveksi OS</span>
+                    </div>
+
+                    <div className="flex justify-between items-center bg-slate-900 p-2.5 rounded-xl border border-white/[0.04]">
+                      <div>
+                        <span className="block text-[8px] font-black uppercase text-slate-500">BANK BCA</span>
+                        <span className="font-mono text-cyan-400 text-xs font-black">{bankSettings.bankBca}</span>
+                      </div>
+                      <span className="text-[10px] text-slate-400 font-bold">a.n. Konveksi OS</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 pt-2 border-t border-white/[0.06]">
+                    <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Upload Bukti Transfer Gambar (Maks 2MB)</label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        className="hidden"
+                        id="manual-payment-proof-input"
+                      />
+                      <label
+                        htmlFor="manual-payment-proof-input"
+                        className="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-white/10 rounded-xl cursor-pointer font-bold text-[10px] transition-all flex items-center gap-1.5"
+                      >
+                        <span className="material-symbols-outlined text-sm">cloud_upload</span>
+                        {paymentProof ? 'Ubah Gambar Bukti' : 'Pilih Gambar Bukti'}
+                      </label>
+                      {paymentProof && (
+                        <div className="w-10 h-10 rounded-lg overflow-hidden border border-white/10 shrink-0">
+                          <img src={paymentProof} alt="Proof preview" className="w-full h-full object-cover" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="flex gap-3 mt-6 pt-4 border-t border-white/[0.06]">
               <button
                 onClick={() => setCheckoutPlan(null)}
@@ -431,10 +608,19 @@ export default function Pricing() {
               </button>
               <button
                 onClick={handleSimulatePayment}
-                disabled={isPaying}
+                disabled={isPaying || isSubmittingProof}
                 className="flex-2 py-3 bg-gradient-to-r from-purple-600 to-cyan-600 text-white font-bold text-xs rounded-2xl shadow-lg hover:shadow-purple-500/20 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 transition-all text-center"
               >
-                {isPaying ? 'Memproses Pembayaran...' : 'Simulasikan Pembayaran Sukses'}
+                {isPaying || isSubmittingProof ? (
+                  <>
+                    <span className="material-symbols-outlined text-[16px] animate-spin mr-1.5 align-middle">sync</span>
+                    Memproses...
+                  </>
+                ) : paymentGateway === 'manual' ? (
+                  'Kirim Bukti Pembayaran'
+                ) : (
+                  'Simulasikan Pembayaran Sukses'
+                )}
               </button>
             </div>
           </div>

@@ -102,7 +102,7 @@ export default function Profile() {
               </div>
               <h3 className="text-lg font-bold text-slate-100">{user.nama}</h3>
               <div className="flex items-center justify-center gap-2 mt-1.5">
-                <p className="text-xs text-cyan-400 font-semibold">{user.role}</p>
+                <p className="text-xs text-cyan-400 font-semibold">{user.businessRole || user.role}</p>
                 <span className="text-slate-500 text-xs">•</span>
                 <span className={`text-[9px] font-black tracking-widest px-2 py-0.5 rounded-full uppercase ${
                   (user.plan || 'FREE') === 'PREMIUM'

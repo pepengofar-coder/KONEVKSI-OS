@@ -1,5 +1,5 @@
-import { lazy, Suspense } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { lazy, Suspense, useEffect } from 'react';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
 import AppLayout from './components/layout/AppLayout';
 
@@ -26,6 +26,16 @@ const Onboarding = lazy(() => import('./pages/Onboarding'));
 const TrackingPublic = lazy(() => import('./pages/TrackingPublic'));
 const Pricing = lazy(() => import('./pages/Pricing'));
 
+// Admin pages lazy loads
+const AdminLayout = lazy(() => import('./components/layout/AdminLayout'));
+const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'));
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+const AdminPayments = lazy(() => import('./pages/admin/AdminPayments'));
+const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
+const AdminSubscriptions = lazy(() => import('./pages/admin/AdminSubscriptions'));
+const AdminLogs = lazy(() => import('./pages/admin/AdminLogs'));
+const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
+
 // Loading skeleton for lazy-loaded pages
 function PageLoader() {
   return (
@@ -38,11 +48,35 @@ function PageLoader() {
   );
 }
 
+function DomainRedirector({ children }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const isMockAdminDomain = new URLSearchParams(window.location.search).get('domain') === 'admin';
+    const isAdminDomain = window.location.hostname === 'zenira.konveksios.vercel.app' || (isLocalhost && isMockAdminDomain);
+    
+    if (isAdminDomain) {
+      if (location.pathname === '/' || !location.pathname.startsWith('/admin')) {
+        navigate('/admin/dashboard');
+      }
+    } else if (!isLocalhost) {
+      if (location.pathname.startsWith('/admin')) {
+        window.location.href = `https://zenira.konveksios.vercel.app${location.pathname}${location.search}`;
+      }
+    }
+  }, [location.pathname, navigate]);
+
+  return children;
+}
+
 export default function App() {
   return (
     <AppProvider>
-      <Suspense fallback={<PageLoader />}>
-        <Routes>
+      <DomainRedirector>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
@@ -65,10 +99,22 @@ export default function App() {
             <Route path="/pricing" element={<Pricing />} />
           </Route>
 
+          {/* Admin Routes */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route element={<AdminLayout />}>
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/payments" element={<AdminPayments />} />
+            <Route path="/admin/users" element={<AdminUsers />} />
+            <Route path="/admin/subscriptions" element={<AdminSubscriptions />} />
+            <Route path="/admin/logs" element={<AdminLogs />} />
+            <Route path="/admin/settings" element={<AdminSettings />} />
+          </Route>
+
           {/* 404 catch-all */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
+      </DomainRedirector>
     </AppProvider>
   );
 }

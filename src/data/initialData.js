@@ -59,25 +59,32 @@ export const initialInvoices = [
 export const defaultUser = {
   id: 'u1',
   nama: 'Admin Konveksi',
+  name: 'Admin Konveksi',
   username: 'admin',
   email: 'admin@konveksios.com',
-  password: 'admin', // simple default password
-  role: 'Owner',
+  password: 'admin',
+  role: 'USER', // system role
+  businessRole: 'Owner', // business permissions role
   plan: 'PREMIUM',
+  planStatus: 'ACTIVE',
+  planStartedAt: Date.now(),
   planExpiresAt: null,
+  createdAt: Date.now(),
+  updatedAt: Date.now(),
   categories: ['Kaos', 'Kemeja', 'Jaket'],
   businessProfile: {
     namaUsaha: 'Stitch & Sew',
     telepon: '08123456789',
     email: 'info@stitchsew.com',
     alamat: 'Jl. Produksi No. 45'
-  }
+  },
+  businessName: 'Stitch & Sew'
 };
 
 export function getInitialState() {
   return {
     users: [defaultUser],
-    currentUser: null, // start logged out by default or checked by app layout
+    currentUser: null,
     taylors: initialTaylors,
     models: initialModels,
     barangMasuk: initialBarangMasuk,
@@ -88,6 +95,8 @@ export function getInitialState() {
     customers: initialCustomers,
     invoices: initialInvoices,
     trackingJobs: [],
+    paymentOrders: [],
+    adminLogs: [],
     toasts: [],
   };
 }
