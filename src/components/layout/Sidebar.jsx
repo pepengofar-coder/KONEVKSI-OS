@@ -88,7 +88,7 @@ export default function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="mt-auto px-4 pt-4 border-t border-white/[0.06] space-y-2">
+      <div className="mt-auto px-4 pt-4 border-t border-white/[0.06] space-y-3">
         <div className="px-4 py-3 bg-white/[0.02] border border-white/[0.06] rounded-2xl flex items-center justify-between hover:bg-white/[0.04] transition-all">
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-600 to-cyan-600 flex items-center justify-center text-white text-sm font-bold shadow-lg shadow-purple-500/20 shrink-0">
@@ -113,14 +113,15 @@ export default function Sidebar() {
               <p className="text-[10px] text-slate-500 truncate mt-0.5">{userRoleLabel}</p>
             </div>
           </div>
-          <button
-            onClick={handleLogout}
-            className="p-1 rounded-xl text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-colors"
-            title="Log Keluar"
-          >
-            <span className="material-symbols-outlined text-[18px]">logout</span>
-          </button>
         </div>
+
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-red-400 hover:bg-red-500/10 border border-red-500/10 hover:border-red-500/25 transition-all duration-300"
+        >
+          <span className="material-symbols-outlined text-[18px]">logout</span>
+          Keluar
+        </button>
       </div>
     </aside>
   );
