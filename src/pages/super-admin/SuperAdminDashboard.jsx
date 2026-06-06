@@ -163,25 +163,40 @@ export default function SuperAdminDashboard() {
           </div>
 
           <div className="divide-y divide-white/[0.06] space-y-3">
-            {recentUsers.map((user, idx) => (
-              <div key={user.id || idx} className="flex items-center justify-between pt-3 first:pt-0">
-                <div>
-                  <p className="text-xs font-bold text-slate-200">{user.nama || user.name}</p>
-                  <p className="text-[10px] text-slate-400 mt-0.5">
-                    @{user.username} · {user.businessName || 'Belum Atur Usaha'}
-                  </p>
+            {recentUsers.map((user, idx) => {
+              const userPayments = (state.paymentOrders || []).filter(po => po.userId === user.id);
+              const totalPaid = userPayments.filter(po => po.status === 'APPROVED').reduce((sum, po) => sum + (po.price || 0), 0);
+              const paymentCount = userPayments.length;
+
+              return (
+                <div key={user.id || idx} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 first:pt-0">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-xs font-bold text-slate-200">{user.nama || user.name}</p>
+                      <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-full border ${
+                        user.plan === 'FREE'
+                          ? 'bg-slate-500/10 text-slate-400 border-slate-500/20'
+                          : user.plan === 'PREMIUM'
+                          ? 'bg-cyan-500/10 text-cyan-300 border-cyan-500/20'
+                          : 'bg-purple-500/10 text-purple-300 border-purple-500/20'
+                      }`}>
+                        {user.plan} ({user.planStatus || 'ACTIVE'})
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 mt-0.5">
+                      @{user.username} · {user.email}
+                    </p>
+                    <p className="text-[9px] text-slate-500 mt-0.5">
+                      Terdaftar: {user.createdAt ? new Date(user.createdAt).toLocaleDateString('id-ID') : '-'} · Usaha: {user.businessName || 'Belum Atur Usaha'}
+                    </p>
+                  </div>
+                  <div className="text-left sm:text-right shrink-0">
+                    <p className="text-[10px] font-bold text-slate-300">{paymentCount}x Transaksi</p>
+                    <p className="text-[10px] text-emerald-400 font-extrabold">{formatRupiah(totalPaid)}</p>
+                  </div>
                 </div>
-                <span className={`text-[8px] font-black px-2 py-0.5 rounded-full border ${
-                  user.plan === 'FREE'
-                    ? 'bg-slate-500/10 text-slate-400 border-slate-500/20'
-                    : user.plan === 'PREMIUM'
-                    ? 'bg-cyan-500/10 text-cyan-300 border-cyan-500/20'
-                    : 'bg-purple-500/10 text-purple-300 border-purple-500/20'
-                }`}>
-                  {user.plan}
-                </span>
-              </div>
-            ))}
+              );
+            })}
             {recentUsers.length === 0 && (
               <div className="text-center py-8 text-slate-500 text-xs italic">
                 Belum ada pengguna terdaftar.

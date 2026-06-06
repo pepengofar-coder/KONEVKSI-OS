@@ -26,7 +26,7 @@ export default function SuperAdminLayout() {
 
   const handleLogout = () => {
     dispatch({ type: 'LOGOUT' });
-    navigate('/super-admin/login');
+    navigate('/login');
   };
 
   const adminName = state.currentUser.nama || state.currentUser.name || 'Admin';

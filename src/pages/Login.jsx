@@ -19,7 +19,9 @@ export default function Login() {
   // Redirect if already logged in
   useEffect(() => {
     if (state.currentUser) {
-      if (!state.currentUser.categories || state.currentUser.categories.length === 0 || !state.currentUser.role) {
+      if (state.currentUser.role === 'ADMIN' || state.currentUser.role === 'SUPER_ADMIN') {
+        navigate('/super-admin/dashboard');
+      } else if (!state.currentUser.categories || state.currentUser.categories.length === 0 || !state.currentUser.businessRole) {
         navigate('/onboarding');
       } else {
         navigate('/dashboard');
@@ -84,7 +86,9 @@ export default function Login() {
       }
 
       // Step 5: Redirect
-      if (!user.categories || user.categories.length === 0 || !user.businessRole) {
+      if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
+        navigate('/super-admin/dashboard');
+      } else if (!user.categories || user.categories.length === 0 || !user.businessRole) {
         navigate('/onboarding');
       } else {
         navigate('/dashboard');
@@ -203,9 +207,14 @@ export default function Login() {
             </button>
           </form>
 
-          <div className="mt-8 pt-6 border-t border-white/[0.06] text-center text-xs text-slate-400 font-medium">
-            Belum punya akun?{' '}
-            <Link to="/register" className="text-cyan-400 hover:text-cyan-300 font-bold">Daftar Sekarang</Link>
+          <div className="mt-8 pt-6 border-t border-white/[0.06] text-center text-xs text-slate-400 font-medium space-y-2">
+            <div>
+              Belum punya akun?{' '}
+              <Link to="/register" className="text-cyan-400 hover:text-cyan-300 font-bold">Daftar Sekarang</Link>
+            </div>
+            <div className="pt-2">
+              <Link to="/super-admin/login" className="text-slate-500 hover:text-slate-400 transition-colors text-[10px] tracking-wide uppercase font-bold">Portal Super Admin</Link>
+            </div>
           </div>
         </div>
       </div>

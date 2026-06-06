@@ -395,13 +395,13 @@ function appReducer(state, action) {
       };
     }
     case 'REJECT_PAYMENT': {
-      const { orderId, adminNote } = action.payload;
+      const { orderId, adminNote, status = 'REJECTED' } = action.payload;
       const order = state.paymentOrders.find(o => o.id === orderId);
       if (!order) return state;
 
       const updatedOrders = state.paymentOrders.map(o =>
         o.id === orderId
-          ? { ...o, status: 'REJECTED', adminNote, updatedAt: Date.now() }
+          ? { ...o, status: status, adminNote, updatedAt: Date.now() }
           : o
       );
 
@@ -420,8 +420,8 @@ function appReducer(state, action) {
         id: generateId('log'),
         timestamp: Date.now(),
         adminUsername: state.currentUser ? state.currentUser.username : 'system',
-        action: 'REJECT_PAYMENT',
-        details: `Rejected payment order ${orderId} for ${order.username}. Reason: ${adminNote}`,
+        action: status === 'FAILED' ? 'FAIL_PAYMENT' : 'REJECT_PAYMENT',
+        details: `${status === 'FAILED' ? 'Failed' : 'Rejected'} payment order ${orderId} for ${order.username}. Reason: ${adminNote}`,
         note: adminNote
       };
 
@@ -849,6 +849,27 @@ function appReducer(state, action) {
       return { ...state, trackingJobs: updated };
     }
 
+    case 'SYNC_STATE': {
+      const freshData = loadState();
+      return {
+        ...state,
+        users: freshData.users,
+        taylors: freshData.taylors,
+        models: freshData.models,
+        barangMasuk: freshData.barangMasuk,
+        distribusi: freshData.distribusi,
+        kelaran: freshData.kelaran,
+        kasbon: freshData.kasbon,
+        costHarian: freshData.costHarian,
+        customers: freshData.customers,
+        invoices: freshData.invoices,
+        trackingJobs: freshData.trackingJobs,
+        paymentOrders: freshData.paymentOrders,
+        adminLogs: freshData.adminLogs,
+        currentUser: freshData.currentUser,
+      };
+    }
+
     // Reset
     case 'RESET_DATA': {
       const fresh = getInitialState();
@@ -874,6 +895,46 @@ export function AppProvider({ children }) {
       console.error('Failed to save state:', e);
     }
   }, [state]);
+
+  // Real-time synchronization & polling
+  useEffect(() => {
+    const checkAndSync = (newRawVal) => {
+      try {
+        if (!newRawVal) return;
+        const parsed = JSON.parse(newRawVal);
+        
+        // Check if users or paymentOrders changed
+        const currentUsersStr = JSON.stringify(state?.users || []);
+        const nextUsersStr = JSON.stringify(parsed?.users || []);
+        const currentOrdersStr = JSON.stringify(state?.paymentOrders || []);
+        const nextOrdersStr = JSON.stringify(parsed?.paymentOrders || []);
+        
+        if (currentUsersStr !== nextUsersStr || currentOrdersStr !== nextOrdersStr) {
+          dispatch({ type: 'SYNC_STATE' });
+        }
+      } catch (err) {
+        // Fallback sync
+        dispatch({ type: 'SYNC_STATE' });
+      }
+    };
+
+    const handleStorageChange = (e) => {
+      if (e.key === STORAGE_KEY) {
+        checkAndSync(e.newValue);
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    const interval = setInterval(() => {
+      const rawStored = localStorage.getItem(STORAGE_KEY);
+      checkAndSync(rawStored);
+    }, 2000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, [state?.users, state?.paymentOrders]);
 
   return (
     <AppContext.Provider value={state}>

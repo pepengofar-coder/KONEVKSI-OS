@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
-import { AppProvider } from './context/AppContext';
+import { AppProvider, useAppState } from './context/AppContext';
 import AppLayout from './components/layout/AppLayout';
 
 // Eager load auth pages (needed immediately)
@@ -51,22 +51,26 @@ function PageLoader() {
 function DomainRedirector({ children }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const state = useAppState();
 
   useEffect(() => {
     const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     const isMockAdminDomain = new URLSearchParams(window.location.search).get('domain') === 'admin';
-    const isAdminDomain = window.location.hostname === 'akonveksi.vercel.app' || (isLocalhost && isMockAdminDomain);
+    const isAdminDomain = isLocalhost && isMockAdminDomain;
     
     if (isAdminDomain) {
       if (location.pathname === '/' || !location.pathname.startsWith('/super-admin')) {
         navigate('/super-admin/dashboard');
       }
-    } else if (!isLocalhost) {
-      if (location.pathname.startsWith('/super-admin')) {
-        window.location.href = `https://akonveksi.vercel.app${location.pathname}${location.search}`;
+    }
+
+    // Redirect admins/super-admins to their dashboard when accessing root or user login
+    if (state?.currentUser && (state.currentUser.role === 'SUPER_ADMIN' || state.currentUser.role === 'ADMIN')) {
+      if (location.pathname === '/' || location.pathname === '/login') {
+        navigate('/super-admin/dashboard');
       }
     }
-  }, [location.pathname, navigate]);
+  }, [location.pathname, navigate, state?.currentUser]);
 
   return children;
 }

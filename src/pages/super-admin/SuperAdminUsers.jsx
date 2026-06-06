@@ -4,7 +4,7 @@ import { useAppState, useAppDispatch, useHelpers } from '../../context/AppContex
 export default function SuperAdminUsers() {
   const state = useAppState();
   const dispatch = useAppDispatch();
-  const { showToast } = useHelpers();
+  const { showToast, formatRupiah } = useHelpers();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUserForEdit, setSelectedUserForEdit] = useState(null);
@@ -126,6 +126,7 @@ export default function SuperAdminUsers() {
                 <th className="py-4 px-6">Pengguna & Usaha</th>
                 <th className="py-4 px-6">Lisensi & Role</th>
                 <th className="py-4 px-6 text-center">Penggunaan</th>
+                <th className="py-4 px-6 text-center">Transaksi</th>
                 <th className="py-4 px-6">Terdaftar</th>
                 <th className="py-4 px-6 text-right">Aksi</th>
               </tr>
@@ -134,6 +135,9 @@ export default function SuperAdminUsers() {
               {filteredUsers.map((user) => {
                 const stats = getUserStats(user.id);
                 const isUserAdmin = user.role === 'SUPER_ADMIN' || user.role === 'ADMIN';
+                const userPayments = (state.paymentOrders || []).filter(po => po.userId === user.id);
+                const totalPaid = userPayments.filter(po => po.status === 'APPROVED').reduce((sum, po) => sum + (po.price || 0), 0);
+                const paymentCount = userPayments.length;
 
                 return (
                   <tr key={user.id} className="hover:bg-white/[0.01] transition-all text-xs">
@@ -221,6 +225,14 @@ export default function SuperAdminUsers() {
                       </div>
                     </td>
 
+                    {/* Transaksi */}
+                    <td className="py-4 px-6 text-center">
+                      <div className="inline-block text-left">
+                        <p className="font-bold text-slate-200 text-xs">{paymentCount}x Transaksi</p>
+                        <p className="text-[10px] text-emerald-400 font-extrabold">{formatRupiah(totalPaid)}</p>
+                      </div>
+                    </td>
+
                     {/* CreatedAt */}
                     <td className="py-4 px-6 text-slate-400">
                       {user.createdAt ? new Date(user.createdAt).toLocaleDateString('id-ID') : '-'}
@@ -251,7 +263,7 @@ export default function SuperAdminUsers() {
 
               {filteredUsers.length === 0 && (
                 <tr>
-                  <td colSpan="5" className="py-12 text-center text-slate-500 italic">
+                  <td colSpan="6" className="py-12 text-center text-slate-500 italic">
                     Tidak ada tenant terdaftar yang cocok dengan pencarian Anda.
                   </td>
                 </tr>

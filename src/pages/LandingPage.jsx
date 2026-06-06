@@ -156,10 +156,10 @@ export default function LandingPage() {
                   </div>
 
                   {/* Headline */}
-                  <h1 className="text-4xl md:text-5xl lg:text-6xl font-black font-display tracking-tight leading-[1.1] mb-4">
+                  <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-[1.1] mb-4">
                     <span className="text-white">Konveksi</span>
                     <br />
-                    <span className="bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">OS</span>
+                    <span className="bg-gradient-to-r from-purple-400 via-cyan-400 to-emerald-400 bg-clip-text text-transparent">OS</span>
                   </h1>
 
                   {/* Subheadline */}
@@ -377,7 +377,7 @@ export default function LandingPage() {
                 <h3 className="text-xl font-bold text-white mt-3 mb-2">{step.title}</h3>
                 <p className="text-sm text-slate-400 leading-relaxed">{step.desc}</p>
                 {idx < steps.length - 1 && (
-                  <div className="hidden md:flex absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-slate-900 border border-white/10 items-center justify-center text-cyan-400 z-10">
+                  <div className="hidden md:block absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-slate-900 border border-white/10 flex items-center justify-center text-cyan-400 z-10">
                     <span className="material-symbols-outlined text-sm">arrow_forward</span>
                   </div>
                 )}
