@@ -237,8 +237,14 @@ function appReducer(state, action) {
       };
     }
     case 'LOGOUT': {
-      sessionStorage.removeItem('konveksi-os-session-user');
-      return { ...state, currentUser: null, rememberMe: false };
+      sessionStorage.clear();
+      const cleanState = { ...state, currentUser: null, rememberMe: false };
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(cleanState));
+      } catch (e) {
+        console.error('Failed to clear session from localStorage on logout:', e);
+      }
+      return cleanState;
     }
     case 'MIGRATE_PASSWORD': {
       // Lazily upgrade a user's password hash from legacy Base64 to PBKDF2

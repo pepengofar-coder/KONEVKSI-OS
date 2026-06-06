@@ -15,17 +15,14 @@ export default function SuperAdminLogin() {
   const [errorField, setErrorField] = useState(''); // 'username' | 'password' | ''
   const [errorMessage, setErrorMessage] = useState('');
 
+  const user = state.currentUser;
+
   // Redirect if already logged in
   useEffect(() => {
-    const user = state.currentUser;
-    if (user) {
-      if (user.role === 'SUPER_ADMIN') {
-        navigate('/super-admin/dashboard');
-      } else {
-        navigate('/dashboard');
-      }
-    }
-  }, [state.currentUser, navigate]);
+    if (!user) return; // belum login → jangan redirect
+    if (user.role === "SUPER_ADMIN") navigate("/super-admin/dashboard");
+    else navigate("/dashboard");
+  }, [user, navigate]);
 
   const clearError = () => {
     setErrorField('');

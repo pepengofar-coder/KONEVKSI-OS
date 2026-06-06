@@ -16,18 +16,14 @@ export default function Login() {
   const [errorField, setErrorField] = useState(''); // 'identifier' | 'password' | ''
   const [errorMessage, setErrorMessage] = useState('');
 
+  const user = state.currentUser;
+
   // Redirect if already logged in
   useEffect(() => {
-    if (state.currentUser) {
-      if (state.currentUser.role === 'SUPER_ADMIN') {
-        navigate('/super-admin/dashboard');
-      } else if (!state.currentUser.categories || state.currentUser.categories.length === 0 || !state.currentUser.businessRole) {
-        navigate('/onboarding');
-      } else {
-        navigate('/dashboard');
-      }
-    }
-  }, [state.currentUser, navigate]);
+    if (!user) return; // belum login → jangan redirect
+    if (user.role === "SUPER_ADMIN") navigate("/super-admin/dashboard");
+    else navigate("/dashboard");
+  }, [user, navigate]);
 
   const clearError = () => {
     setErrorField('');

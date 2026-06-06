@@ -52,20 +52,17 @@ function DomainRedirector({ children }) {
   const navigate = useNavigate();
   const location = useLocation();
   const state = useAppState();
+  const user = state?.currentUser;
 
   useEffect(() => {
-    // Redirect logged-in users when visiting public/login pages
-    if (state?.currentUser) {
-      const publicPaths = ['/', '/login', '/register', '/super-admin/login'];
-      if (publicPaths.includes(location.pathname)) {
-        if (state.currentUser.role === 'SUPER_ADMIN') {
-          navigate('/super-admin/dashboard');
-        } else {
-          navigate('/dashboard');
-        }
-      }
+    if (!user) return; // belum login → jangan redirect
+
+    const publicPaths = ['/', '/login', '/register', '/super-admin/login'];
+    if (publicPaths.includes(location.pathname)) {
+      if (user.role === "SUPER_ADMIN") navigate("/super-admin/dashboard");
+      else navigate("/dashboard");
     }
-  }, [location.pathname, navigate, state?.currentUser]);
+  }, [user, location.pathname, navigate]);
 
   return children;
 }
