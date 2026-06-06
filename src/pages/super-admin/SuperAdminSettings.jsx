@@ -255,7 +255,6 @@ export default function SuperAdminSettings() {
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <span className="text-[9px] font-black tracking-widest px-2 py-0.5 rounded-full bg-slate-500/10 text-slate-400 border border-slate-500/20">FREE</span>
-                  <p className="text-lg font-black text-slate-100 mt-2">Gratis</p>
                 </div>
                 <button
                   type="button"
@@ -266,7 +265,19 @@ export default function SuperAdminSettings() {
                   <span className="w-4 h-4 rounded-full bg-white shadow-md" />
                 </button>
               </div>
-              <p className="text-[10px] text-slate-500">Plan dasar gratis dengan fitur terbatas. {settings.freeActive ? 'Aktif' : 'Nonaktif'}</p>
+              <div className="mb-3">
+                <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-1.5">Harga / Bulan (IDR)</label>
+                <input
+                  type="number"
+                  value={settings.freePrice || '0'}
+                  onChange={(e) => update('freePrice', e.target.value)}
+                  disabled={!isSuperAdmin}
+                  className="input-base disabled:opacity-50"
+                />
+              </div>
+              <p className="text-[10px] text-slate-500">
+                {settings.freeActive ? `Aktif — ${formatRupiah(parseInt(settings.freePrice || 0))}` : 'Nonaktif — Tidak ditampilkan'}
+              </p>
             </div>
 
             {/* PREMIUM */}
@@ -402,6 +413,12 @@ export default function SuperAdminSettings() {
                   </div>
                 </div>
               ))}
+              <div className="flex justify-between p-2.5 bg-white/[0.01] border border-white/[0.04] rounded-lg">
+                <span className="text-slate-500 font-medium">Free</span>
+                <span className={`font-bold ${settings.freeActive ? 'text-slate-300' : 'text-slate-500 line-through'}`}>
+                  {formatRupiah(parseInt(settings.freePrice || 0))}
+                </span>
+              </div>
               <div className="flex justify-between p-2.5 bg-white/[0.01] border border-white/[0.04] rounded-lg">
                 <span className="text-slate-500 font-medium">Premium</span>
                 <span className={`font-bold ${settings.premiumActive ? 'text-cyan-300' : 'text-slate-500 line-through'}`}>

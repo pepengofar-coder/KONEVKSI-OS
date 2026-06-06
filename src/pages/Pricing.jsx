@@ -52,8 +52,10 @@ export default function Pricing() {
 
   const getPlanPrice = (plan) => {
     const basePrice = plan === 'PREMIUM'
-      ? parseInt(bankSettings.premiumPrice, 10)
-      : parseInt(bankSettings.businessPrice, 10);
+      ? parseInt(bankSettings.premiumPrice || 0, 10)
+      : plan === 'BUSINESS'
+      ? parseInt(bankSettings.businessPrice || 0, 10)
+      : parseInt(bankSettings.freePrice || 0, 10);
     return isYearly ? basePrice * 12 * 0.8 : basePrice;
   };
 
@@ -302,36 +304,47 @@ export default function Pricing() {
             <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Rencana Dasar</span>
             <h2 className="text-xl font-extrabold text-slate-200 mt-2">FREE</h2>
             <div className="mt-4 flex items-baseline gap-1">
-              <span className="text-3xl font-black text-slate-100">Rp 0</span>
-              <span className="text-xs text-slate-500">/ selamanya</span>
+              <span className="text-3xl font-black text-slate-100">
+                {formatRupiah(getPlanPrice('FREE'))}
+              </span>
+              <span className="text-xs text-slate-500">/ {isYearly ? 'tahun' : 'bulan'}</span>
             </div>
             <p className="text-xs text-slate-400 mt-4 leading-relaxed">Sempurna untuk konveksi rumahan kecil atau untuk mencoba fitur awal.</p>
             
             <div className="border-t border-white/[0.06] my-6 pt-6 space-y-3">
-              {[
-                { active: true, text: 'Maks. 5 Order Bahan Masuk' },
-                { active: true, text: 'Maks. 5 Profil Pelanggan' },
-                { active: true, text: 'Maks. 5 Invoice Tagihan' },
-                { active: false, text: 'Ekspor PDF & Excel (CSV)' },
-                { active: false, text: 'Live Tracking Pekerjaan' },
-                { active: false, text: 'AI Insight & Chart Analitik' }
-              ].map((feature, i) => (
-                <div key={i} className="flex items-center gap-2.5">
-                  <span className={`material-symbols-outlined text-[16px] ${feature.active ? 'text-cyan-400' : 'text-slate-600'}`}>
-                    {feature.active ? 'check_circle' : 'cancel'}
-                  </span>
-                  <span className={`text-xs font-semibold ${feature.active ? 'text-slate-300' : 'text-slate-500 line-through'}`}>{feature.text}</span>
-                </div>
-              ))}
+               {[
+                 { active: true, text: 'Maks. 5 Order Bahan Masuk' },
+                 { active: true, text: 'Maks. 5 Profil Pelanggan' },
+                 { active: true, text: 'Maks. 5 Invoice Tagihan' },
+                 { active: false, text: 'Ekspor PDF & Excel (CSV)' },
+                 { active: false, text: 'Live Tracking Pekerjaan' },
+                 { active: false, text: 'AI Insight & Chart Analitik' }
+               ].map((feature, i) => (
+                 <div key={i} className="flex items-center gap-2.5">
+                   <span className={`material-symbols-outlined text-[16px] ${feature.active ? 'text-cyan-400' : 'text-slate-600'}`}>
+                     {feature.active ? 'check_circle' : 'cancel'}
+                   </span>
+                   <span className={`text-xs font-semibold ${feature.active ? 'text-slate-300' : 'text-slate-500 line-through'}`}>{feature.text}</span>
+                 </div>
+               ))}
             </div>
           </div>
-          <button
-            disabled={currentPlan === 'FREE'}
-            onClick={() => handleOpenCheckout('FREE')}
-            className={`w-full py-3.5 rounded-2xl text-xs font-bold transition-all ${currentPlan === 'FREE' ? 'bg-cyan-500/10 border border-cyan-500/20 text-cyan-300' : 'bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] text-slate-300'}`}
-          >
-            {currentPlan === 'FREE' ? 'Rencana Aktif' : 'Pilih FREE'}
-          </button>
+          {bankSettings.freeActive === false ? (
+            <button
+              disabled={true}
+              className="w-full py-3.5 rounded-2xl text-xs font-bold bg-white/[0.02] border border-white/[0.04] text-slate-500 cursor-not-allowed text-center"
+            >
+              Tidak Tersedia
+            </button>
+          ) : (
+            <button
+              disabled={currentPlan === 'FREE'}
+              onClick={() => handleOpenCheckout('FREE')}
+              className={`w-full py-3.5 rounded-2xl text-xs font-bold transition-all ${currentPlan === 'FREE' ? 'bg-cyan-500/10 border border-cyan-500/20 text-cyan-300' : 'bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] text-slate-300'}`}
+            >
+              {currentPlan === 'FREE' ? 'Rencana Aktif' : 'Pilih FREE'}
+            </button>
+          )}
         </div>
 
         {/* PREMIUM CARD */}
