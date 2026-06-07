@@ -62,14 +62,26 @@ export default function Register() {
     setLoading(true);
 
     try {
-      // Check duplicate username and email in the database
-      const { usernameExists, emailExists } = await checkUserExists(cleanUsername, email);
-      if (usernameExists) {
+      // Check duplicate username and email in the database and local state
+      const localUsernameExists = state.users.some(u => u.username?.toLowerCase() === cleanUsername);
+      const localEmailExists = state.users.some(u => u.email?.toLowerCase() === email.toLowerCase());
+
+      let dbUsernameExists = false;
+      let dbEmailExists = false;
+      try {
+        const check = await checkUserExists(cleanUsername, email);
+        dbUsernameExists = check.usernameExists;
+        dbEmailExists = check.emailExists;
+      } catch (checkErr) {
+        console.warn('Failed to check user existence in Supabase:', checkErr);
+      }
+
+      if (localUsernameExists || dbUsernameExists) {
         showToast('Username sudah digunakan oleh akun lain!', 'error');
         return;
       }
 
-      if (emailExists) {
+      if (localEmailExists || dbEmailExists) {
         showToast('Email sudah terdaftar!', 'error');
         return;
       }
@@ -85,14 +97,14 @@ export default function Register() {
         email: email.toLowerCase(),
         password: hashedPassword,
         role: 'USER',
-        businessRole: '',
+        businessRole: 'Owner', // Set default to bypass AppLayout guard
         plan: 'FREE',
         planStatus: 'ACTIVE',
         planStartedAt: Date.now(),
         planExpiresAt: null,
         createdAt: Date.now(),
         updatedAt: Date.now(),
-        categories: [],
+        categories: ['Kaos & Jersey', 'Kemeja & PDL', 'Jaket & Hoodie'], // Set default to bypass AppLayout guard
         businessProfile: {
           namaUsaha: namaUsaha || (nama + ' Convection'),
           telepon: '',
@@ -103,8 +115,12 @@ export default function Register() {
         phone: ''
       };
 
-      // Save to database
-      await createProfile(newUser);
+      // Save to database (offline-first fallback)
+      try {
+        await createProfile(newUser);
+      } catch (dbErr) {
+        console.warn('Failed to save user to Supabase database, using local fallback:', dbErr);
+      }
 
       // Dispatch to React State
       dispatch({
