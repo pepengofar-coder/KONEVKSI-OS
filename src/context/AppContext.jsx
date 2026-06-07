@@ -1046,6 +1046,32 @@ export function AppProvider({ children }) {
     const syncUsersFromDB = async () => {
       try {
         const dbUsers = await fetchProfiles();
+        
+        // Read latest users from localStorage to avoid React stale closure
+        const saved = localStorage.getItem(STORAGE_KEY);
+        let currentUsers = [];
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            currentUsers = parsed.users || [];
+          } catch (e) {
+            console.error('Failed to parse localStorage in sync:', e);
+          }
+        }
+
+        // Sync local users that are missing from the Supabase database
+        for (const localUser of currentUsers) {
+          const existsInDB = dbUsers.some(dbU => dbU.id === localUser.id);
+          if (!existsInDB) {
+            console.log(`Syncing local user @${localUser.username} to Supabase...`);
+            try {
+              await createProfile(localUser);
+            } catch (syncErr) {
+              console.error(`Failed to sync user @${localUser.username} to DB:`, syncErr);
+            }
+          }
+        }
+
         if (dbUsers && dbUsers.length > 0) {
           dispatch({ type: 'SYNC_ALL_USERS', payload: dbUsers });
         }

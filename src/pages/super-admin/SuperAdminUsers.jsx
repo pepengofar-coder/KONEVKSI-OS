@@ -17,6 +17,7 @@ export default function SuperAdminUsers() {
   const [editExpiryDate, setEditExpiryDate] = useState('');
   const [editNama, setEditNama] = useState('');
   const [editPhone, setEditPhone] = useState('');
+  const [editLoading, setEditLoading] = useState(false);
 
   const users = state.users || [];
 
@@ -83,6 +84,8 @@ export default function SuperAdminUsers() {
       updatedAt: Date.now()
     };
 
+    setEditLoading(true);
+
     fetch('/api/users/update', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -107,6 +110,9 @@ export default function SuperAdminUsers() {
     .catch(err => {
       console.error(err);
       showToast('Gagal memperbarui data pengguna: ' + err.message, 'error');
+    })
+    .finally(() => {
+      setEditLoading(false);
     });
   };
 
@@ -444,7 +450,8 @@ export default function SuperAdminUsers() {
               </h3>
               <button
                 onClick={() => setSelectedUserForEdit(null)}
-                className="w-8 h-8 rounded-full hover:bg-white/[0.04] text-slate-400 hover:text-white flex items-center justify-center"
+                disabled={editLoading}
+                className="w-8 h-8 rounded-full hover:bg-white/[0.04] text-slate-400 hover:text-white flex items-center justify-center disabled:opacity-50"
               >
                 <span className="material-symbols-outlined">close</span>
               </button>
@@ -465,7 +472,7 @@ export default function SuperAdminUsers() {
                   type="text"
                   value={editNama}
                   onChange={(e) => setEditNama(e.target.value)}
-                  disabled={!isSuperAdmin}
+                  disabled={!isSuperAdmin || editLoading}
                   className="input-base disabled:opacity-50"
                   required
                 />
@@ -478,7 +485,7 @@ export default function SuperAdminUsers() {
                   type="text"
                   value={editPhone}
                   onChange={(e) => setEditPhone(e.target.value)}
-                  disabled={!isSuperAdmin}
+                  disabled={!isSuperAdmin || editLoading}
                   placeholder="Belum ada nomor telepon"
                   className="input-base disabled:opacity-50"
                 />
@@ -490,7 +497,7 @@ export default function SuperAdminUsers() {
                 <select
                   value={editPlan}
                   onChange={(e) => setEditPlan(e.target.value)}
-                  disabled={!isSuperAdmin}
+                  disabled={!isSuperAdmin || editLoading}
                   className="input-base cursor-pointer disabled:opacity-50"
                 >
                   <option value="FREE" className="bg-slate-900 text-slate-200">FREE</option>
@@ -505,7 +512,7 @@ export default function SuperAdminUsers() {
                 <select
                   value={editStatus}
                   onChange={(e) => setEditStatus(e.target.value)}
-                  disabled={!isSuperAdmin}
+                  disabled={!isSuperAdmin || editLoading}
                   className="input-base cursor-pointer disabled:opacity-50"
                 >
                   <option value="ACTIVE" className="bg-slate-900 text-slate-200">ACTIVE</option>
@@ -521,7 +528,7 @@ export default function SuperAdminUsers() {
                   type="date"
                   value={editExpiryDate}
                   onChange={(e) => setEditExpiryDate(e.target.value)}
-                  disabled={!isSuperAdmin}
+                  disabled={!isSuperAdmin || editLoading}
                   className="input-base disabled:opacity-50"
                 />
               </div>
@@ -532,7 +539,7 @@ export default function SuperAdminUsers() {
                 <select
                   value={editRole}
                   onChange={(e) => setEditRole(e.target.value)}
-                  disabled={!isSuperAdmin}
+                  disabled={!isSuperAdmin || editLoading}
                   className="input-base cursor-pointer disabled:opacity-50"
                 >
                   <option value="USER" className="bg-slate-900 text-slate-200">USER (Tenant Biasa)</option>
@@ -545,20 +552,28 @@ export default function SuperAdminUsers() {
             <div className="mt-6 pt-4 border-t border-white/[0.06] flex justify-end gap-3">
               <button
                 onClick={() => setSelectedUserForEdit(null)}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-400 hover:bg-white/[0.04]"
+                disabled={editLoading}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-400 hover:bg-white/[0.04] disabled:opacity-50"
               >
                 Batal
               </button>
               <button
                 onClick={handleSaveEdit}
-                disabled={!isSuperAdmin}
-                className={`px-4 py-2 rounded-xl text-xs font-bold text-white shadow-lg ${
-                  isSuperAdmin 
+                disabled={!isSuperAdmin || editLoading}
+                className={`px-4 py-2 rounded-xl text-xs font-bold text-white shadow-lg flex items-center gap-1.5 ${
+                  isSuperAdmin && !editLoading
                     ? 'bg-gradient-to-r from-purple-600 to-cyan-600 cursor-pointer' 
                     : 'bg-slate-800 border border-slate-700 opacity-50 cursor-not-allowed'
                 }`}
               >
-                Simpan Perubahan
+                {editLoading ? (
+                  <>
+                    <span className="material-symbols-outlined text-[14px] animate-spin">sync</span>
+                    Menyimpan...
+                  </>
+                ) : (
+                  'Simpan Perubahan'
+                )}
               </button>
             </div>
           </div>
