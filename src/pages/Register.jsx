@@ -66,13 +66,11 @@ export default function Register() {
       const { usernameExists, emailExists } = await checkUserExists(cleanUsername, email);
       if (usernameExists) {
         showToast('Username sudah digunakan oleh akun lain!', 'error');
-        setLoading(false);
         return;
       }
 
       if (emailExists) {
         showToast('Email sudah terdaftar!', 'error');
-        setLoading(false);
         return;
       }
 
@@ -115,10 +113,15 @@ export default function Register() {
       });
 
       showToast('Registrasi akun berhasil!', 'success');
-      navigate('/onboarding');
+      navigate('/dashboard');
     } catch (err) {
       console.error('Registration error:', err);
-      showToast('Terjadi kesalahan saat mendaftarkan akun.', 'error');
+      if (err.message && err.message.includes('Failed to fetch')) {
+        showToast('Gagal menghubungkan ke server. Silakan periksa koneksi internet Anda.', 'error');
+      } else {
+        showToast(`Gagal mendaftarkan akun: ${err.message || 'Kesalahan Server'}`, 'error');
+      }
+    } finally {
       setLoading(false);
     }
   };
@@ -251,7 +254,7 @@ export default function Register() {
               {loading ? (
                 <>
                   <span className="material-symbols-outlined text-[18px] animate-spin">sync</span>
-                  Mendaftarkan...
+                  Membuat Akun...
                 </>
               ) : (
                 'Buat Akun Baru'
