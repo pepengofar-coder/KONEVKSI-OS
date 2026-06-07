@@ -83,15 +83,21 @@ export default function Pricing() {
       showToast(`Anda sudah menggunakan rencana ${plan}!`, 'info');
       return;
     }
-    if (pendingOrder) {
-      showToast('Anda memiliki permintaan upgrade yang sedang ditinjau admin!', 'warning');
+    if (plan === 'FREE') {
+      dispatch({
+        type: 'UPGRADE_PLAN',
+        payload: {
+          plan: 'FREE',
+          planExpiresAt: null
+        }
+      });
+      showToast('Rencana subscription dikembalikan ke FREE.', 'info');
       return;
     }
-    setCheckoutPlan(plan);
-    setPaymentSuccess(false);
-    setIsPaying(false);
-    setPaymentProof('');
-    setPaymentGateway('midtrans');
+
+    const message = `Hello, I want to upgrade to ${plan} plan.`;
+    const waUrl = `https://wa.me/6285951621496?text=${encodeURIComponent(message)}`;
+    window.open(waUrl, '_blank');
   };
 
   const handleFileChange = (e) => {
@@ -387,12 +393,20 @@ export default function Pricing() {
               Tidak Tersedia
             </button>
           ) : (
-            <button
-              onClick={() => handleOpenCheckout('PREMIUM')}
-              className={`w-full py-4 rounded-2xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-[0.98] ${currentPlan === 'PREMIUM' ? 'bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 cursor-default shadow-md shadow-cyan-500/10' : 'bg-gradient-to-r from-purple-600 to-cyan-600 hover:shadow-purple-500/25 shadow-lg text-white'}`}
-            >
-              {currentPlan === 'PREMIUM' ? 'Rencana Aktif' : 'Mulai PREMIUM'}
-            </button>
+            <div className="space-y-2 w-full">
+              <button
+                onClick={() => handleOpenCheckout('PREMIUM')}
+                className={`w-full py-4 rounded-2xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer ${currentPlan === 'PREMIUM' ? 'bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 cursor-default shadow-md shadow-cyan-500/10' : 'bg-gradient-to-r from-purple-600 to-cyan-600 hover:shadow-purple-500/25 shadow-lg text-white'}`}
+              >
+                {currentPlan === 'PREMIUM' ? 'Rencana Aktif' : 'Mulai PREMIUM'}
+              </button>
+              {currentPlan !== 'PREMIUM' && (
+                <p className="text-[10px] text-center text-slate-400 font-semibold flex items-center justify-center gap-1">
+                  <span className="material-symbols-outlined text-xs text-green-400">chat</span>
+                  Klik untuk upgrade via WhatsApp
+                </p>
+              )}
+            </div>
           )}
         </div>
 
@@ -433,12 +447,20 @@ export default function Pricing() {
               Tidak Tersedia
             </button>
           ) : (
-            <button
-              onClick={() => handleOpenCheckout('BUSINESS')}
-              className={`w-full py-3.5 rounded-2xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-[0.98] ${currentPlan === 'BUSINESS' ? 'bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 cursor-default shadow-md shadow-cyan-500/10' : 'bg-white/[0.06] border border-white/10 hover:bg-white/[0.12] text-slate-100'}`}
-            >
-              {currentPlan === 'BUSINESS' ? 'Rencana Aktif' : 'Mulai BUSINESS'}
-            </button>
+            <div className="space-y-2 w-full">
+              <button
+                onClick={() => handleOpenCheckout('BUSINESS')}
+                className={`w-full py-3.5 rounded-2xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer ${currentPlan === 'BUSINESS' ? 'bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 cursor-default shadow-md shadow-cyan-500/10' : 'bg-white/[0.06] border border-white/10 hover:bg-white/[0.12] text-slate-100'}`}
+              >
+                {currentPlan === 'BUSINESS' ? 'Rencana Aktif' : 'Mulai BUSINESS'}
+              </button>
+              {currentPlan !== 'BUSINESS' && (
+                <p className="text-[10px] text-center text-slate-400 font-semibold flex items-center justify-center gap-1">
+                  <span className="material-symbols-outlined text-xs text-green-400">chat</span>
+                  Klik untuk upgrade via WhatsApp
+                </p>
+              )}
+            </div>
           )}
         </div>
       </div>

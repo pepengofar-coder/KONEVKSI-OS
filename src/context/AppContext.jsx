@@ -67,8 +67,8 @@ function loadState() {
           jagoName: 'a.n. Zenirastrore Convection',
           gopayNumber: '081234567890',
           gopayName: 'a.n. Zenirastrore Convection',
-          premiumPrice: '99000',
-          businessPrice: '199000',
+          premiumPrice: '65000',
+          businessPrice: '99000',
           premiumActive: true,
           businessActive: true,
           freeActive: true,
@@ -76,7 +76,7 @@ function loadState() {
           trialDays: '7',
           gracePeriodDays: '3',
         };
-        state.saasSettings = savedSettings ? { ...defaultSettings, ...JSON.parse(savedSettings) } : defaultSettings;
+        state.saasSettings = savedSettings ? { ...defaultSettings, ...JSON.parse(savedSettings), premiumPrice: '65000', businessPrice: '99000' } : defaultSettings;
       } catch {
         state.saasSettings = {
           activePaymentOption: 'seabank',
@@ -86,8 +86,8 @@ function loadState() {
           jagoName: 'a.n. Zenirastrore Convection',
           gopayNumber: '081234567890',
           gopayName: 'a.n. Zenirastrore Convection',
-          premiumPrice: '99000',
-          businessPrice: '199000',
+          premiumPrice: '65000',
+          businessPrice: '99000',
           premiumActive: true,
           businessActive: true,
           freeActive: true,
@@ -106,15 +106,17 @@ function loadState() {
         jagoName: 'a.n. Zenirastrore Convection',
         gopayNumber: '081234567890',
         gopayName: 'a.n. Zenirastrore Convection',
-        premiumPrice: '99000',
-        businessPrice: '199000',
+        premiumPrice: '65000',
+        businessPrice: '99000',
         premiumActive: true,
         businessActive: true,
         freeActive: true,
         autoApprove: false,
         trialDays: '7',
         gracePeriodDays: '3',
-        ...state.saasSettings
+        ...state.saasSettings,
+        premiumPrice: '65000',
+        businessPrice: '99000'
       };
     }
 
@@ -310,13 +312,10 @@ function appReducer(state, action) {
     }
     case 'LOGOUT': {
       sessionStorage.clear();
-      const cleanState = { ...state, currentUser: null, rememberMe: false };
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(cleanState));
-      } catch (e) {
-        console.error('Failed to clear session from localStorage on logout:', e);
-      }
-      return cleanState;
+      localStorage.clear();
+      const fresh = getInitialState();
+      fresh.currentUser = null;
+      return fresh;
     }
     case 'MIGRATE_PASSWORD': {
       // Lazily upgrade a user's password hash from legacy Base64 to PBKDF2

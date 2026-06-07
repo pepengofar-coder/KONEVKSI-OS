@@ -248,6 +248,10 @@ export default function SuperAdminSettings() {
             <span className="material-symbols-outlined text-purple-400 text-lg">sell</span>
             Tarif Harga Paket Langganan
           </h3>
+          <p className="text-[10px] text-amber-400 font-bold bg-amber-500/10 border border-amber-500/20 p-2.5 rounded-xl flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-sm">info</span>
+            Harga paket langganan bersifat tetap (fixed) sesuai kebijakan platform: PREMIUM (Rp 65.000) dan BUSINESS (Rp 99.000). Super Admin tidak dapat mengubah nominal harga.
+          </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {/* FREE */}
@@ -271,8 +275,9 @@ export default function SuperAdminSettings() {
                   type="number"
                   value={settings.freePrice || '0'}
                   onChange={(e) => update('freePrice', e.target.value)}
-                  disabled={!isSuperAdmin}
-                  className="input-base disabled:opacity-50"
+                  disabled={true}
+                  className="input-base disabled:opacity-50 cursor-not-allowed bg-slate-950/20 text-slate-400"
+                  title="Harga FREE bersifat tetap (fixed) pada Rp 0."
                 />
               </div>
               <p className="text-[10px] text-slate-500">
@@ -301,8 +306,9 @@ export default function SuperAdminSettings() {
                   type="number"
                   value={settings.premiumPrice}
                   onChange={(e) => update('premiumPrice', e.target.value)}
-                  disabled={!isSuperAdmin}
-                  className="input-base disabled:opacity-50"
+                  disabled={true}
+                  className="input-base disabled:opacity-50 cursor-not-allowed bg-slate-950/20 text-slate-400"
+                  title="Harga PREMIUM bersifat tetap (fixed) pada Rp 65.000."
                 />
               </div>
               <p className="text-[10px] text-slate-500">
@@ -331,8 +337,9 @@ export default function SuperAdminSettings() {
                   type="number"
                   value={settings.businessPrice}
                   onChange={(e) => update('businessPrice', e.target.value)}
-                  disabled={!isSuperAdmin}
-                  className="input-base disabled:opacity-50"
+                  disabled={true}
+                  className="input-base disabled:opacity-50 cursor-not-allowed bg-slate-950/20 text-slate-400"
+                  title="Harga BUSINESS bersifat tetap (fixed) pada Rp 99.000."
                 />
               </div>
               <p className="text-[10px] text-slate-500">

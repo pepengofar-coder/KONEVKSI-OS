@@ -15,7 +15,9 @@ export default function UpgradeModal() {
 
   const handleUpgradeClick = () => {
     handleClose();
-    navigate('/pricing');
+    const message = "Hello, I want to upgrade to PREMIUM plan.";
+    const waUrl = `https://wa.me/6285951621496?text=${encodeURIComponent(message)}`;
+    window.open(waUrl, '_blank');
   };
 
   return (
@@ -56,13 +58,17 @@ export default function UpgradeModal() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-2.5 pt-2">
+        <div className="flex flex-col gap-2 pt-2">
           <button
             onClick={handleUpgradeClick}
-            className="w-full py-4 bg-gradient-to-r from-purple-600 to-cyan-600 hover:shadow-purple-500/25 hover:shadow-lg text-white rounded-2xl font-bold text-sm hover:scale-[1.01] active:scale-[0.99] transition-all duration-300 shadow-lg text-center"
+            className="w-full py-4 bg-gradient-to-r from-purple-600 to-cyan-600 hover:shadow-purple-500/25 hover:shadow-lg text-white rounded-2xl font-bold text-sm hover:scale-[1.01] active:scale-[0.99] transition-all duration-300 shadow-lg text-center cursor-pointer"
           >
-            Upgrade Sekarang — Mulai dari Rp {Number(state.saasSettings?.premiumPrice || '99000').toLocaleString('id-ID')}
+            Upgrade Sekarang — Mulai dari Rp {Number(state.saasSettings?.premiumPrice || '65000').toLocaleString('id-ID')}
           </button>
+          <p className="text-[10px] text-center text-slate-400 font-semibold flex items-center justify-center gap-1 -mt-1 mb-1">
+            <span className="material-symbols-outlined text-xs text-green-400">chat</span>
+            Klik untuk upgrade via WhatsApp
+          </p>
           <button
             onClick={handleClose}
             className="w-full py-3.5 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] text-slate-400 hover:text-slate-200 rounded-2xl font-bold text-xs transition-all text-center"
