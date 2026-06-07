@@ -1,14 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useAppState, useAppDispatch, useHelpers } from '../context/AppContext';
+import { useAppState, useAppDispatch, useHelpers, usePlan } from '../context/AppContext';
 import Badge from '../components/ui/Badge';
 
 export default function Pricing() {
   const state = useAppState();
   const dispatch = useAppDispatch();
   const { formatRupiah, showToast } = useHelpers();
-
-  const currentPlan = state.currentUser?.plan || 'FREE';
-  const planExpiresAt = state.currentUser?.planExpiresAt || null;
+  const { plan: currentPlan, planExpiresAt } = usePlan();
   const currentUserId = state.currentUser?.id;
 
   const [isYearly, setIsYearly] = useState(false);

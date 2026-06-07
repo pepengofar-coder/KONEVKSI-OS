@@ -1200,8 +1200,14 @@ export function usePlan() {
   const dispatch = useAppDispatch();
 
   const currentUser = state?.currentUser;
-  const plan = currentUser?.plan || 'FREE';
+  const rawPlan = currentUser?.plan || 'FREE';
+  const planStatus = currentUser?.planStatus || 'ACTIVE';
   const planExpiresAt = currentUser?.planExpiresAt || null;
+  
+  const isExpired = planStatus === 'EXPIRED' || (planExpiresAt && planExpiresAt < Date.now());
+  const isActive = planStatus === 'ACTIVE' && !isExpired;
+  
+  const plan = isActive ? rawPlan : 'FREE';
   const isPremium = plan === 'PREMIUM' || plan === 'BUSINESS';
   const isBusiness = plan === 'BUSINESS';
 

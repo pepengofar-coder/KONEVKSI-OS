@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAppState, useHelpers } from '../context/AppContext';
+import { useAppState, useHelpers, usePlan } from '../context/AppContext';
 import { ROLE_ROUTES } from '../components/layout/AppLayout';
 import StatCard from '../components/ui/StatCard';
 import Badge from '../components/ui/Badge';
@@ -10,6 +10,7 @@ import CostForm from '../components/forms/CostForm';
 
 export default function Dashboard() {
   const state = useAppState();
+  const { plan } = usePlan();
   const { getTodayKelaran, getTodayCost, getAllKasbonBelumLunas, formatRupiah, getModel, getTaylor, getSisaDistribusi } = useHelpers();
 
   const [showBarangMasuk, setShowBarangMasuk] = useState(false);
@@ -229,15 +230,15 @@ export default function Dashboard() {
                 <Link
                   to="/pricing"
                   className={`text-[8px] font-black tracking-widest px-2 py-0.5 rounded-full uppercase hover:scale-[1.03] active:scale-[0.97] transition-all flex items-center gap-1 shrink-0 ${
-                    (state.currentUser?.plan || 'FREE') === 'PREMIUM'
+                    plan === 'PREMIUM'
                       ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
-                      : (state.currentUser?.plan || 'FREE') === 'BUSINESS'
+                      : plan === 'BUSINESS'
                       ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
                       : 'bg-slate-500/20 text-slate-400 border border-slate-500/30'
                   }`}
                 >
                   <span className="w-1 h-1 rounded-full bg-current animate-pulse shrink-0" />
-                  {state.currentUser?.plan || 'FREE'} PLAN
+                  {plan} PLAN
                 </Link>
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                   {dayNames[today.getDay()]} &middot; {today.getDate()} {monthNames[today.getMonth()]} {today.getFullYear()}

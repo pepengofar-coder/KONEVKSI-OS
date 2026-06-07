@@ -27,6 +27,7 @@ export default function SuperAdminPayments() {
   const [editExpiryDate, setEditExpiryDate] = useState('');
   const [editNama, setEditNama] = useState('');
   const [editPhone, setEditPhone] = useState('');
+  const [editLoading, setEditLoading] = useState(false);
 
   const orders = state.paymentOrders || [];
   const isSuperAdmin = state.currentUser?.role === 'SUPER_ADMIN';
@@ -241,6 +242,8 @@ export default function SuperAdminPayments() {
       updatedAt: Date.now()
     };
 
+    setEditLoading(true);
+
     fetch('/api/users/update', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -265,6 +268,9 @@ export default function SuperAdminPayments() {
     .catch(err => {
       console.error(err);
       showToast('Gagal memperbarui data pengguna: ' + err.message, 'error');
+    })
+    .finally(() => {
+      setEditLoading(false);
     });
   };
 
@@ -608,7 +614,8 @@ export default function SuperAdminPayments() {
               </h3>
               <button
                 onClick={() => setSelectedUserForEdit(null)}
-                className="w-8 h-8 rounded-full hover:bg-white/[0.04] text-slate-400 hover:text-white flex items-center justify-center"
+                disabled={editLoading}
+                className="w-8 h-8 rounded-full hover:bg-white/[0.04] text-slate-400 hover:text-white flex items-center justify-center disabled:opacity-50"
               >
                 <span className="material-symbols-outlined">close</span>
               </button>
@@ -622,7 +629,8 @@ export default function SuperAdminPayments() {
                   type="text"
                   value={editNama}
                   onChange={(e) => setEditNama(e.target.value)}
-                  className="input-base"
+                  disabled={editLoading}
+                  className="input-base disabled:opacity-50"
                   required
                 />
               </div>
@@ -634,8 +642,9 @@ export default function SuperAdminPayments() {
                   type="text"
                   value={editPhone}
                   onChange={(e) => setEditPhone(e.target.value)}
+                  disabled={editLoading}
                   placeholder="Belum ada nomor telepon"
-                  className="input-base"
+                  className="input-base disabled:opacity-50"
                 />
               </div>
 
@@ -645,7 +654,8 @@ export default function SuperAdminPayments() {
                 <select
                   value={editPlan}
                   onChange={(e) => setEditPlan(e.target.value)}
-                  className="input-base cursor-pointer"
+                  disabled={editLoading}
+                  className="input-base cursor-pointer disabled:opacity-50"
                 >
                   <option value="FREE" className="bg-slate-900 text-slate-200">FREE</option>
                   <option value="PREMIUM" className="bg-slate-900 text-slate-200">PREMIUM</option>
@@ -659,7 +669,8 @@ export default function SuperAdminPayments() {
                 <select
                   value={editStatus}
                   onChange={(e) => setEditStatus(e.target.value)}
-                  className="input-base cursor-pointer"
+                  disabled={editLoading}
+                  className="input-base cursor-pointer disabled:opacity-50"
                 >
                   <option value="ACTIVE" className="bg-slate-900 text-slate-200">ACTIVE</option>
                   <option value="PENDING" className="bg-slate-900 text-slate-200">PENDING</option>
@@ -674,7 +685,8 @@ export default function SuperAdminPayments() {
                   type="date"
                   value={editExpiryDate}
                   onChange={(e) => setEditExpiryDate(e.target.value)}
-                  className="input-base"
+                  disabled={editLoading}
+                  className="input-base disabled:opacity-50"
                 />
               </div>
 
@@ -684,7 +696,8 @@ export default function SuperAdminPayments() {
                 <select
                   value={editRole}
                   onChange={(e) => setEditRole(e.target.value)}
-                  className="input-base cursor-pointer"
+                  disabled={editLoading}
+                  className="input-base cursor-pointer disabled:opacity-50"
                 >
                   <option value="USER" className="bg-slate-900 text-slate-200">USER (Tenant Biasa)</option>
                   <option value="ADMIN" className="bg-slate-900 text-slate-200">ADMIN (Platform Administrator)</option>
@@ -696,15 +709,28 @@ export default function SuperAdminPayments() {
             <div className="mt-6 pt-4 border-t border-white/[0.06] flex justify-end gap-3">
               <button
                 onClick={() => setSelectedUserForEdit(null)}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-400 hover:bg-white/[0.04]"
+                disabled={editLoading}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-400 hover:bg-white/[0.04] disabled:opacity-50"
               >
                 Batal
               </button>
               <button
                 onClick={handleSaveEdit}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-cyan-600 cursor-pointer shadow-lg"
+                disabled={editLoading}
+                className={`px-4 py-2 rounded-xl text-xs font-bold text-white shadow-lg flex items-center gap-1.5 ${
+                  !editLoading
+                    ? 'bg-gradient-to-r from-purple-600 to-cyan-600 cursor-pointer'
+                    : 'bg-slate-800 border border-slate-700 opacity-50 cursor-not-allowed'
+                }`}
               >
-                Simpan Perubahan
+                {editLoading ? (
+                  <>
+                    <span className="material-symbols-outlined text-[14px] animate-spin">sync</span>
+                    Menyimpan...
+                  </>
+                ) : (
+                  'Simpan Perubahan'
+                )}
               </button>
             </div>
           </div>

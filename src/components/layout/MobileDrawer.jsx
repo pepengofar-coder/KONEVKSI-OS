@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { useAppState, useAppDispatch } from '../../context/AppContext';
+import { useAppState, useAppDispatch, usePlan } from '../../context/AppContext';
 import { ROLE_ROUTES } from './AppLayout';
 
 const navGroups = [
@@ -30,6 +30,7 @@ export { navGroups };
 export default function MobileDrawer({ isOpen, onClose }) {
   const state = useAppState();
   const dispatch = useAppDispatch();
+  const { plan } = usePlan();
   const navigate = useNavigate();
   const drawerRef = useRef(null);
 
@@ -154,14 +155,14 @@ export default function MobileDrawer({ isOpen, onClose }) {
                   to="/pricing"
                   onClick={onClose}
                   className={`text-[8px] font-black tracking-widest px-1.5 py-0.5 rounded-full uppercase shrink-0 hover:scale-105 active:scale-95 transition-all ${
-                    (state.currentUser?.plan || 'FREE') === 'PREMIUM'
+                    plan === 'PREMIUM'
                       ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
-                      : (state.currentUser?.plan || 'FREE') === 'BUSINESS'
+                      : plan === 'BUSINESS'
                       ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
                       : 'bg-slate-500/20 text-slate-400 border border-slate-500/30'
                   }`}
                 >
-                  {state.currentUser?.plan || 'FREE'}
+                  {plan}
                 </NavLink>
               </div>
               <p className="text-[10px] text-slate-500 truncate">{userRoleLabel}</p>

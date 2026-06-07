@@ -27,6 +27,7 @@ export default function SuperAdminDashboard() {
   const [editStatus, setEditStatus] = useState('ACTIVE');
   const [editExpiryDate, setEditExpiryDate] = useState('');
   const [extendDays, setExtendDays] = useState('');
+  const [editLoading, setEditLoading] = useState(false);
 
   const isSuperAdmin = state.currentUser?.role === 'SUPER_ADMIN';
 
@@ -274,6 +275,8 @@ export default function SuperAdminDashboard() {
       updatedAt: Date.now()
     };
 
+    setEditLoading(true);
+
     fetch('/api/users/update', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -298,6 +301,9 @@ export default function SuperAdminDashboard() {
     .catch(err => {
       console.error(err);
       showToast('Gagal memperbarui data pengguna: ' + err.message, 'error');
+    })
+    .finally(() => {
+      setEditLoading(false);
     });
   };
 
@@ -797,8 +803,12 @@ export default function SuperAdminDashboard() {
               <h3 className="text-base font-bold text-slate-100 flex items-center gap-2">
                 <span className="material-symbols-outlined text-purple-400">admin_panel_settings</span>
                 Edit Lisensi — @{quickEditUser.username}
-              </h3>
-              <button onClick={() => setQuickEditUser(null)} className="w-8 h-8 rounded-full hover:bg-white/[0.04] text-slate-400 hover:text-white flex items-center justify-center">
+             </h3>
+              <button
+                onClick={() => setQuickEditUser(null)}
+                disabled={editLoading}
+                className="w-8 h-8 rounded-full hover:bg-white/[0.04] text-slate-400 hover:text-white flex items-center justify-center disabled:opacity-50"
+              >
                 <span className="material-symbols-outlined">close</span>
               </button>
             </div>
@@ -807,7 +817,12 @@ export default function SuperAdminDashboard() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Paket Plan</label>
-                  <select value={editPlan} onChange={(e) => setEditPlan(e.target.value)} className="input-base cursor-pointer">
+                  <select
+                    value={editPlan}
+                    onChange={(e) => setEditPlan(e.target.value)}
+                    disabled={editLoading}
+                    className="input-base cursor-pointer disabled:opacity-50"
+                  >
                     <option value="FREE" className="bg-slate-900">FREE</option>
                     <option value="PREMIUM" className="bg-slate-900">PREMIUM</option>
                     <option value="BUSINESS" className="bg-slate-900">BUSINESS</option>
@@ -815,7 +830,12 @@ export default function SuperAdminDashboard() {
                 </div>
                 <div>
                   <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Status</label>
-                  <select value={editStatus} onChange={(e) => setEditStatus(e.target.value)} className="input-base cursor-pointer">
+                  <select
+                    value={editStatus}
+                    onChange={(e) => setEditStatus(e.target.value)}
+                    disabled={editLoading}
+                    className="input-base cursor-pointer disabled:opacity-50"
+                  >
                     <option value="ACTIVE" className="bg-slate-900">ACTIVE</option>
                     <option value="PENDING" className="bg-slate-900">PENDING</option>
                     <option value="EXPIRED" className="bg-slate-900">EXPIRED</option>
@@ -824,7 +844,13 @@ export default function SuperAdminDashboard() {
               </div>
               <div>
                 <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Tanggal Berakhir</label>
-                <input type="date" value={editExpiryDate} onChange={(e) => setEditExpiryDate(e.target.value)} className="input-base" />
+                <input
+                  type="date"
+                  value={editExpiryDate}
+                  onChange={(e) => setEditExpiryDate(e.target.value)}
+                  disabled={editLoading}
+                  className="input-base disabled:opacity-50"
+                />
               </div>
               <div>
                 <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Perpanjang (Hari Tambahan)</label>
@@ -833,20 +859,37 @@ export default function SuperAdminDashboard() {
                   value={extendDays}
                   onChange={(e) => setExtendDays(e.target.value)}
                   placeholder="Contoh: 30"
-                  className="input-base"
+                  disabled={editLoading}
+                  className="input-base disabled:opacity-50"
                 />
               </div>
             </div>
 
             <div className="flex justify-end gap-3 pt-3 border-t border-white/[0.06]">
-              <button onClick={() => setQuickEditUser(null)} className="px-4 py-2 rounded-xl text-xs font-bold text-slate-400 hover:bg-white/[0.04]">
+              <button
+                onClick={() => setQuickEditUser(null)}
+                disabled={editLoading}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-400 hover:bg-white/[0.04] disabled:opacity-50"
+              >
                 Batal
               </button>
               <button
                 onClick={handleSaveQuickEdit}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-cyan-600 shadow-lg"
+                disabled={editLoading}
+                className={`px-4 py-2 rounded-xl text-xs font-bold text-white shadow-lg flex items-center gap-1.5 ${
+                  !editLoading
+                    ? 'bg-gradient-to-r from-purple-600 to-cyan-600 cursor-pointer'
+                    : 'bg-slate-800 border border-slate-700 opacity-50 cursor-not-allowed'
+                }`}
               >
-                Simpan Perubahan
+                {editLoading ? (
+                  <>
+                    <span className="material-symbols-outlined text-[14px] animate-spin">sync</span>
+                    Menyimpan...
+                  </>
+                ) : (
+                  'Simpan Perubahan'
+                )}
               </button>
             </div>
           </div>
