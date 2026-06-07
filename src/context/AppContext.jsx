@@ -1,6 +1,7 @@
 import { createContext, useContext, useReducer, useEffect } from 'react';
 import { getInitialState } from '../data/initialData';
 import { hashPassword, verifyPassword, needsMigration } from '../utils/cryptoUtils';
+import { fetchProfiles, fetchProfile, createProfile, updateProfile } from '../utils/supabaseClient';
 
 const AppContext = createContext(null);
 const AppDispatchContext = createContext(null);
@@ -286,6 +287,62 @@ function appReducer(state, action) {
         users: [...state.users, newUserAsync],
         currentUser: newUserAsync,
         rememberMe: false
+      };
+    }
+    case 'REGISTER_DIRECT': {
+      const newUser = action.payload;
+      sessionStorage.setItem('konveksi-os-session-user', JSON.stringify(newUser));
+      return {
+        ...state,
+        users: [...state.users, newUser],
+        currentUser: newUser,
+        rememberMe: false
+      };
+    }
+    case 'SYNC_USER_DIRECT': {
+      const updatedUser = action.payload;
+      const updatedUsers = state.users.map(u => u.id === updatedUser.id ? { ...u, ...updatedUser } : u);
+      let currentSessionUser = state.currentUser;
+      if (currentSessionUser && currentSessionUser.id === updatedUser.id) {
+        currentSessionUser = { ...currentSessionUser, ...updatedUser };
+        if (!state.rememberMe) {
+          sessionStorage.setItem('konveksi-os-session-user', JSON.stringify(currentSessionUser));
+        }
+      }
+      return {
+        ...state,
+        users: updatedUsers,
+        currentUser: currentSessionUser
+      };
+    }
+    case 'SYNC_ALL_USERS': {
+      const dbUsers = action.payload;
+      const mergedUsers = [...state.users];
+      
+      dbUsers.forEach(dbU => {
+        const idx = mergedUsers.findIndex(u => u.id === dbU.id);
+        if (idx !== -1) {
+          mergedUsers[idx] = { ...mergedUsers[idx], ...dbU };
+        } else {
+          mergedUsers.push(dbU);
+        }
+      });
+
+      let updatedCurrentUser = state.currentUser;
+      if (updatedCurrentUser) {
+        const freshUser = dbUsers.find(u => u.id === updatedCurrentUser.id);
+        if (freshUser) {
+          updatedCurrentUser = { ...updatedCurrentUser, ...freshUser };
+          if (!state.rememberMe) {
+            sessionStorage.setItem('konveksi-os-session-user', JSON.stringify(updatedCurrentUser));
+          }
+        }
+      }
+
+      return {
+        ...state,
+        users: mergedUsers,
+        currentUser: updatedCurrentUser
       };
     }
     case 'SET_CURRENT_USER': {
@@ -984,6 +1041,24 @@ function appReducer(state, action) {
 
 export function AppProvider({ children }) {
   const [state, dispatch] = useReducer(appReducer, null, loadState);
+
+  useEffect(() => {
+    const syncUsersFromDB = async () => {
+      try {
+        const dbUsers = await fetchProfiles();
+        if (dbUsers && dbUsers.length > 0) {
+          dispatch({ type: 'SYNC_ALL_USERS', payload: dbUsers });
+        }
+      } catch (err) {
+        console.error('Failed to sync users from DB:', err);
+      }
+    };
+
+    syncUsersFromDB();
+
+    const interval = setInterval(syncUsersFromDB, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     try {

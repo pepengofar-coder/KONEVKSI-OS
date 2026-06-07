@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useAppState, useAppDispatch, useHelpers } from '../context/AppContext';
+import { useAppState, useAppDispatch, useHelpers, legacyEncryptPassword } from '../context/AppContext';
+import { updateProfile } from '../utils/supabaseClient';
 
 const AVAILABLE_CATEGORIES = [
   'Kaos & Jersey',
@@ -44,7 +45,7 @@ export default function Profile() {
     }
   };
 
-  const handleUpdateProfile = (e) => {
+  const handleUpdateProfile = async (e) => {
     e.preventDefault();
     if (!nama || !email) {
       showToast('Nama dan Email harus diisi!', 'error');
@@ -56,31 +57,58 @@ export default function Profile() {
       return;
     }
 
-    const payload = {
+    const updates = {
       nama,
+      name: nama,
       email,
-      role: user.role,
       categories,
       businessProfile: {
         namaUsaha,
         telepon: teleponUsaha,
         email: emailUsaha,
         alamat: alamatUsaha
-      }
+      },
+      businessName: namaUsaha,
+      phone: teleponUsaha,
+      updatedAt: Date.now()
     };
 
     if (password) {
-      payload.password = password;
+      updates.password = legacyEncryptPassword(password);
     }
 
-    dispatch({
-      type: 'UPDATE_PROFILE',
-      payload
-    });
+    try {
+      await updateProfile(user.id, updates);
 
-    showToast('Profil dan pengaturan usaha berhasil diperbarui!', 'success');
-    setPassword('');
-    setConfirmPassword('');
+      const payload = {
+        nama,
+        email,
+        role: user.role,
+        categories,
+        businessProfile: {
+          namaUsaha,
+          telepon: teleponUsaha,
+          email: emailUsaha,
+          alamat: alamatUsaha
+        }
+      };
+
+      if (password) {
+        payload.password = password;
+      }
+
+      dispatch({
+        type: 'UPDATE_PROFILE',
+        payload
+      });
+
+      showToast('Profil dan pengaturan usaha berhasil diperbarui!', 'success');
+      setPassword('');
+      setConfirmPassword('');
+    } catch (err) {
+      console.error(err);
+      showToast('Gagal memperbarui profil ke database.', 'error');
+    }
   };
 
   return (

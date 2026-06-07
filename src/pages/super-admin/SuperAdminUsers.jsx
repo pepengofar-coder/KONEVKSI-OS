@@ -15,6 +15,8 @@ export default function SuperAdminUsers() {
   const [editStatus, setEditStatus] = useState('ACTIVE');
   const [editRole, setEditRole] = useState('USER');
   const [editExpiryDate, setEditExpiryDate] = useState('');
+  const [editNama, setEditNama] = useState('');
+  const [editPhone, setEditPhone] = useState('');
 
   const users = state.users || [];
 
@@ -52,6 +54,8 @@ export default function SuperAdminUsers() {
         ? new Date(user.planExpiresAt).toISOString().split('T')[0] 
         : ''
     );
+    setEditNama(user.nama || user.name || '');
+    setEditPhone(user.phone || '');
   };
 
   const handleSaveEdit = () => {
@@ -61,32 +65,49 @@ export default function SuperAdminUsers() {
     }
     if (!selectedUserForEdit) return;
 
-    const expiryTimestamp = editExpiryDate ? new Date(editExpiryDate).getTime() : null;
-
-    // 1. Update plan and status
-    dispatch({
-      type: 'MANUAL_UPDATE_PLAN',
-      payload: {
-        userId: selectedUserForEdit.id,
-        plan: editPlan,
-        planStatus: editStatus,
-        planExpiresAt: expiryTimestamp
-      }
-    });
-
-    // 2. Update role if changed
-    if (editRole !== selectedUserForEdit.role) {
-      dispatch({
-        type: 'MANUAL_UPDATE_ROLE',
-        payload: {
-          userId: selectedUserForEdit.id,
-          role: editRole
-        }
-      });
+    if (!editNama.trim()) {
+      showToast('Nama pengguna tidak boleh kosong!', 'error');
+      return;
     }
 
-    showToast(`Akun @${selectedUserForEdit.username} berhasil diperbarui!`, 'success');
-    setSelectedUserForEdit(null);
+    const expiryTimestamp = editExpiryDate ? new Date(editExpiryDate).getTime() : null;
+
+    const updates = {
+      nama: editNama.trim(),
+      name: editNama.trim(),
+      phone: editPhone.trim(),
+      plan: editPlan,
+      planStatus: editStatus,
+      planExpiresAt: expiryTimestamp,
+      role: editRole,
+      updatedAt: Date.now()
+    };
+
+    fetch('/api/users/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        adminUserId: state.currentUser.id,
+        targetUserId: selectedUserForEdit.id,
+        updates
+      })
+    })
+    .then(res => {
+      if (!res.ok) throw new Error('Gagal memperbarui di server');
+      return res.json();
+    })
+    .then((updatedUser) => {
+      dispatch({
+        type: 'SYNC_USER_DIRECT',
+        payload: updatedUser
+      });
+      showToast(`Akun @${selectedUserForEdit.username} berhasil diperbarui!`, 'success');
+      setSelectedUserForEdit(null);
+    })
+    .catch(err => {
+      console.error(err);
+      showToast('Gagal memperbarui data pengguna: ' + err.message, 'error');
+    });
   };
 
   return (
@@ -437,6 +458,32 @@ export default function SuperAdminUsers() {
             )}
 
             <div className="space-y-4">
+              {/* User Name */}
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Nama Pengguna</label>
+                <input
+                  type="text"
+                  value={editNama}
+                  onChange={(e) => setEditNama(e.target.value)}
+                  disabled={!isSuperAdmin}
+                  className="input-base disabled:opacity-50"
+                  required
+                />
+              </div>
+
+              {/* User Phone Number */}
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Nomor Telepon</label>
+                <input
+                  type="text"
+                  value={editPhone}
+                  onChange={(e) => setEditPhone(e.target.value)}
+                  disabled={!isSuperAdmin}
+                  placeholder="Belum ada nomor telepon"
+                  className="input-base disabled:opacity-50"
+                />
+              </div>
+
               {/* SaaS Plan Tier */}
               <div>
                 <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Paket Langganan (Plan Tier)</label>

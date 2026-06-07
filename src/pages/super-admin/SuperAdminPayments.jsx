@@ -25,6 +25,8 @@ export default function SuperAdminPayments() {
   const [editStatus, setEditStatus] = useState('ACTIVE');
   const [editRole, setEditRole] = useState('USER');
   const [editExpiryDate, setEditExpiryDate] = useState('');
+  const [editNama, setEditNama] = useState('');
+  const [editPhone, setEditPhone] = useState('');
 
   const orders = state.paymentOrders || [];
   const isSuperAdmin = state.currentUser?.role === 'SUPER_ADMIN';
@@ -65,16 +67,46 @@ export default function SuperAdminPayments() {
       return;
     }
     if (!approveModalOrder) return;
-    dispatch({
-      type: 'APPROVE_PAYMENT',
-      payload: {
-        orderId: approveModalOrder.id,
-        adminNote: adminNote || 'Pembayaran diverifikasi secara manual oleh Super Admin.'
-      }
+
+    // Calculate new expiration date
+    const durationMs = 30 * 24 * 60 * 60 * 1000; // 30 days
+    const expiryTimestamp = Date.now() + durationMs;
+
+    fetch('/api/users/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        adminUserId: state.currentUser.id,
+        targetUserId: approveModalOrder.userId,
+        updates: {
+          plan: approveModalOrder.plan,
+          planStatus: 'ACTIVE',
+          planStartedAt: Date.now(),
+          planExpiresAt: expiryTimestamp,
+          updatedAt: Date.now()
+        }
+      })
+    })
+    .then(res => {
+      if (!res.ok) throw new Error('Gagal memperbarui di server');
+      return res.json();
+    })
+    .then((updatedUser) => {
+      dispatch({
+        type: 'APPROVE_PAYMENT',
+        payload: {
+          orderId: approveModalOrder.id,
+          adminNote: adminNote || 'Pembayaran diverifikasi secara manual oleh Super Admin.'
+        }
+      });
+      showToast(`Upgrade pembayaran untuk ${approveModalOrder.businessName || approveModalOrder.username} disetujui!`, 'success');
+      setApproveModalOrder(null);
+      setAdminNote('');
+    })
+    .catch(err => {
+      console.error(err);
+      showToast('Gagal menyetujui pembayaran.', 'error');
     });
-    showToast(`Upgrade pembayaran untuk ${approveModalOrder.businessName || approveModalOrder.username} disetujui!`, 'success');
-    setApproveModalOrder(null);
-    setAdminNote('');
   };
 
   const handleReject = (status = 'REJECTED') => {
@@ -87,17 +119,43 @@ export default function SuperAdminPayments() {
       showToast('Harap masukkan alasan tindakan penolakan/kegagalan!', 'error');
       return;
     }
-    dispatch({
-      type: 'REJECT_PAYMENT',
-      payload: {
-        orderId: rejectModalOrder.id,
-        adminNote,
-        status
-      }
+
+    const targetUser = state.users.find(u => u.id === rejectModalOrder.userId);
+    const planStatus = targetUser && targetUser.planExpiresAt && targetUser.planExpiresAt < Date.now() ? 'EXPIRED' : 'ACTIVE';
+
+    fetch('/api/users/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        adminUserId: state.currentUser.id,
+        targetUserId: rejectModalOrder.userId,
+        updates: {
+          planStatus,
+          updatedAt: Date.now()
+        }
+      })
+    })
+    .then(res => {
+      if (!res.ok) throw new Error('Gagal memperbarui di server');
+      return res.json();
+    })
+    .then(() => {
+      dispatch({
+        type: 'REJECT_PAYMENT',
+        payload: {
+          orderId: rejectModalOrder.id,
+          adminNote,
+          status
+        }
+      });
+      showToast(`Upgrade pembayaran untuk ${rejectModalOrder.businessName || rejectModalOrder.username} ditandai sebagai ${status}!`, 'success');
+      setRejectModalOrder(null);
+      setAdminNote('');
+    })
+    .catch(err => {
+      console.error(err);
+      showToast('Gagal menolak/menggagalkan pembayaran.', 'error');
     });
-    showToast(`Upgrade pembayaran untuk ${rejectModalOrder.businessName || rejectModalOrder.username} ditandai sebagai ${status}!`, 'success');
-    setRejectModalOrder(null);
-    setAdminNote('');
   };
 
   const handleExtend = (userId, days) => {
@@ -105,11 +163,43 @@ export default function SuperAdminPayments() {
       showToast('Akses Ditolak: Hanya Super Admin yang dapat memperpanjang lisensi!', 'error');
       return;
     }
-    dispatch({
-      type: 'EXTEND_SUBSCRIPTION',
-      payload: { userId, days }
+    const targetUser = state.users.find(u => u.id === userId);
+    if (!targetUser) return;
+
+    const currentExpiry = targetUser.planExpiresAt && targetUser.planExpiresAt > Date.now()
+      ? targetUser.planExpiresAt
+      : Date.now();
+    const durationMs = days * 24 * 60 * 60 * 1000;
+    const newExpiry = currentExpiry + durationMs;
+
+    fetch('/api/users/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        adminUserId: state.currentUser.id,
+        targetUserId: userId,
+        updates: {
+          planStatus: 'ACTIVE',
+          planExpiresAt: newExpiry,
+          updatedAt: Date.now()
+        }
+      })
+    })
+    .then(res => {
+      if (!res.ok) throw new Error('Gagal memperbarui di server');
+      return res.json();
+    })
+    .then((updatedUser) => {
+      dispatch({
+        type: 'SYNC_USER_DIRECT',
+        payload: updatedUser
+      });
+      showToast(`Masa aktif berhasil diperpanjang ${days} hari!`, 'success');
+    })
+    .catch(err => {
+      console.error(err);
+      showToast('Gagal memperpanjang masa aktif.', 'error');
     });
-    showToast(`Masa aktif berhasil diperpanjang ${days} hari!`, 'success');
   };
 
   const handleOpenEdit = (user) => {
@@ -122,6 +212,8 @@ export default function SuperAdminPayments() {
         ? new Date(user.planExpiresAt).toISOString().split('T')[0] 
         : ''
     );
+    setEditNama(user.nama || user.name || '');
+    setEditPhone(user.phone || '');
   };
 
   const handleSaveEdit = () => {
@@ -131,32 +223,49 @@ export default function SuperAdminPayments() {
     }
     if (!selectedUserForEdit) return;
 
-    const expiryTimestamp = editExpiryDate ? new Date(editExpiryDate).getTime() : null;
-
-    // 1. Update plan and status
-    dispatch({
-      type: 'MANUAL_UPDATE_PLAN',
-      payload: {
-        userId: selectedUserForEdit.id,
-        plan: editPlan,
-        planStatus: editStatus,
-        planExpiresAt: expiryTimestamp
-      }
-    });
-
-    // 2. Update role if changed
-    if (editRole !== selectedUserForEdit.role) {
-      dispatch({
-        type: 'MANUAL_UPDATE_ROLE',
-        payload: {
-          userId: selectedUserForEdit.id,
-          role: editRole
-        }
-      });
+    if (!editNama.trim()) {
+      showToast('Nama pengguna tidak boleh kosong!', 'error');
+      return;
     }
 
-    showToast(`Akun @${selectedUserForEdit.username} berhasil diperbarui secara manual!`, 'success');
-    setSelectedUserForEdit(null);
+    const expiryTimestamp = editExpiryDate ? new Date(editExpiryDate).getTime() : null;
+
+    const updates = {
+      nama: editNama.trim(),
+      name: editNama.trim(),
+      phone: editPhone.trim(),
+      plan: editPlan,
+      planStatus: editStatus,
+      planExpiresAt: expiryTimestamp,
+      role: editRole,
+      updatedAt: Date.now()
+    };
+
+    fetch('/api/users/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        adminUserId: state.currentUser.id,
+        targetUserId: selectedUserForEdit.id,
+        updates
+      })
+    })
+    .then(res => {
+      if (!res.ok) throw new Error('Gagal memperbarui di server');
+      return res.json();
+    })
+    .then((updatedUser) => {
+      dispatch({
+        type: 'SYNC_USER_DIRECT',
+        payload: updatedUser
+      });
+      showToast(`Akun @${selectedUserForEdit.username} berhasil diperbarui secara manual!`, 'success');
+      setSelectedUserForEdit(null);
+    })
+    .catch(err => {
+      console.error(err);
+      showToast('Gagal memperbarui data pengguna: ' + err.message, 'error');
+    });
   };
 
   return (
@@ -506,6 +615,30 @@ export default function SuperAdminPayments() {
             </div>
 
             <div className="space-y-4">
+              {/* User Name */}
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Nama Pengguna</label>
+                <input
+                  type="text"
+                  value={editNama}
+                  onChange={(e) => setEditNama(e.target.value)}
+                  className="input-base"
+                  required
+                />
+              </div>
+
+              {/* User Phone Number */}
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Nomor Telepon</label>
+                <input
+                  type="text"
+                  value={editPhone}
+                  onChange={(e) => setEditPhone(e.target.value)}
+                  placeholder="Belum ada nomor telepon"
+                  className="input-base"
+                />
+              </div>
+
               {/* SaaS Plan Tier */}
               <div>
                 <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Paket Langganan (Plan Tier)</label>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAppState, useAppDispatch, useHelpers, hashPassword } from '../context/AppContext';
+import { checkUserExists, createProfile } from '../utils/supabaseClient';
 
 export default function Register() {
   const state = useAppState();
@@ -58,28 +59,61 @@ export default function Register() {
       return;
     }
 
-    const usernameExist = state.users.some(u => u.username?.toLowerCase() === cleanUsername);
-    if (usernameExist) {
-      showToast('Username sudah digunakan oleh akun lain!', 'error');
-      return;
-    }
-
-    const emailExist = state.users.some(u => u.email.toLowerCase() === email.toLowerCase());
-    if (emailExist) {
-      showToast('Email sudah terdaftar!', 'error');
-      return;
-    }
-
     setLoading(true);
 
     try {
+      // Check duplicate username and email in the database
+      const { usernameExists, emailExists } = await checkUserExists(cleanUsername, email);
+      if (usernameExists) {
+        showToast('Username sudah digunakan oleh akun lain!', 'error');
+        setLoading(false);
+        return;
+      }
+
+      if (emailExists) {
+        showToast('Email sudah terdaftar!', 'error');
+        setLoading(false);
+        return;
+      }
+
       // Hash password securely with PBKDF2 before storing
       const hashedPassword = await hashPassword(password);
 
+      const newUser = {
+        id: 'u_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
+        nama,
+        name: nama,
+        username: cleanUsername,
+        email: email.toLowerCase(),
+        password: hashedPassword,
+        role: 'USER',
+        businessRole: '',
+        plan: 'FREE',
+        planStatus: 'ACTIVE',
+        planStartedAt: Date.now(),
+        planExpiresAt: null,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        categories: [],
+        businessProfile: {
+          namaUsaha: namaUsaha || (nama + ' Convection'),
+          telepon: '',
+          email: email.toLowerCase(),
+          alamat: ''
+        },
+        businessName: namaUsaha || (nama + ' Convection'),
+        phone: ''
+      };
+
+      // Save to database
+      await createProfile(newUser);
+
+      // Dispatch to React State
       dispatch({
-        type: 'REGISTER_ASYNC',
-        payload: { nama, username: cleanUsername, namaUsaha, email, hashedPassword }
+        type: 'REGISTER_DIRECT',
+        payload: newUser
       });
+
       showToast('Registrasi akun berhasil!', 'success');
       navigate('/onboarding');
     } catch (err) {

@@ -124,16 +124,46 @@ export default function SuperAdminDashboard() {
 
   const handleApprove = () => {
     if (!isSuperAdmin || !paymentDetailOrder) return;
-    dispatch({
-      type: 'APPROVE_PAYMENT',
-      payload: {
-        orderId: paymentDetailOrder.id,
-        adminNote: adminNote || 'Pembayaran diverifikasi dari dashboard.'
-      }
+
+    // Calculate new expiration date
+    const durationMs = 30 * 24 * 60 * 60 * 1000; // 30 days
+    const expiryTimestamp = Date.now() + durationMs;
+
+    fetch('/api/users/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        adminUserId: state.currentUser.id,
+        targetUserId: paymentDetailOrder.userId,
+        updates: {
+          plan: paymentDetailOrder.plan,
+          planStatus: 'ACTIVE',
+          planStartedAt: Date.now(),
+          planExpiresAt: expiryTimestamp,
+          updatedAt: Date.now()
+        }
+      })
+    })
+    .then(res => {
+      if (!res.ok) throw new Error('Gagal memperbarui di server');
+      return res.json();
+    })
+    .then((updatedUser) => {
+      dispatch({
+        type: 'APPROVE_PAYMENT',
+        payload: {
+          orderId: paymentDetailOrder.id,
+          adminNote: adminNote || 'Pembayaran diverifikasi dari dashboard.'
+        }
+      });
+      showToast(`Pembayaran ${paymentDetailOrder.businessName || paymentDetailOrder.username} disetujui!`, 'success');
+      setPaymentDetailOrder(null);
+      setAdminNote('');
+    })
+    .catch(err => {
+      console.error(err);
+      showToast('Gagal menyetujui pembayaran.', 'error');
     });
-    showToast(`Pembayaran ${paymentDetailOrder.businessName || paymentDetailOrder.username} disetujui!`, 'success');
-    setPaymentDetailOrder(null);
-    setAdminNote('');
   };
 
   const handleReject = () => {
@@ -141,19 +171,80 @@ export default function SuperAdminDashboard() {
       showToast('Harap masukkan alasan penolakan!', 'error');
       return;
     }
-    dispatch({
-      type: 'REJECT_PAYMENT',
-      payload: { orderId: paymentDetailOrder.id, adminNote, status: 'REJECTED' }
+
+    const targetUser = state.users.find(u => u.id === paymentDetailOrder.userId);
+    const planStatus = targetUser && targetUser.planExpiresAt && targetUser.planExpiresAt < Date.now() ? 'EXPIRED' : 'ACTIVE';
+
+    fetch('/api/users/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        adminUserId: state.currentUser.id,
+        targetUserId: paymentDetailOrder.userId,
+        updates: {
+          planStatus,
+          updatedAt: Date.now()
+        }
+      })
+    })
+    .then(res => {
+      if (!res.ok) throw new Error('Gagal memperbarui di server');
+      return res.json();
+    })
+    .then(() => {
+      dispatch({
+        type: 'REJECT_PAYMENT',
+        payload: { orderId: paymentDetailOrder.id, adminNote, status: 'REJECTED' }
+      });
+      showToast(`Pembayaran ${paymentDetailOrder.businessName || paymentDetailOrder.username} ditolak.`, 'success');
+      setPaymentDetailOrder(null);
+      setAdminNote('');
+    })
+    .catch(err => {
+      console.error(err);
+      showToast('Gagal menolak pembayaran.', 'error');
     });
-    showToast(`Pembayaran ${paymentDetailOrder.businessName || paymentDetailOrder.username} ditolak.`, 'success');
-    setPaymentDetailOrder(null);
-    setAdminNote('');
   };
 
   const handleQuickExtend = (userId, days) => {
     if (!isSuperAdmin) return;
-    dispatch({ type: 'EXTEND_SUBSCRIPTION', payload: { userId, days } });
-    showToast(`Masa aktif diperpanjang ${days} hari!`, 'success');
+    const targetUser = state.users.find(u => u.id === userId);
+    if (!targetUser) return;
+
+    const currentExpiry = targetUser.planExpiresAt && targetUser.planExpiresAt > Date.now()
+      ? targetUser.planExpiresAt
+      : Date.now();
+    const durationMs = days * 24 * 60 * 60 * 1000;
+    const newExpiry = currentExpiry + durationMs;
+
+    fetch('/api/users/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        adminUserId: state.currentUser.id,
+        targetUserId: userId,
+        updates: {
+          planStatus: 'ACTIVE',
+          planExpiresAt: newExpiry,
+          updatedAt: Date.now()
+        }
+      })
+    })
+    .then(res => {
+      if (!res.ok) throw new Error('Gagal memperbarui di server');
+      return res.json();
+    })
+    .then((updatedUser) => {
+      dispatch({
+        type: 'SYNC_USER_DIRECT',
+        payload: updatedUser
+      });
+      showToast(`Masa aktif diperpanjang ${days} hari!`, 'success');
+    })
+    .catch(err => {
+      console.error(err);
+      showToast('Gagal memperpanjang masa aktif.', 'error');
+    });
   };
 
   const handleOpenQuickEdit = (user) => {
@@ -166,21 +257,48 @@ export default function SuperAdminDashboard() {
 
   const handleSaveQuickEdit = () => {
     if (!isSuperAdmin || !quickEditUser) return;
-    const expiryTimestamp = editExpiryDate ? new Date(editExpiryDate).getTime() : null;
-    dispatch({
-      type: 'MANUAL_UPDATE_PLAN',
-      payload: {
-        userId: quickEditUser.id,
-        plan: editPlan,
-        planStatus: editStatus,
-        planExpiresAt: expiryTimestamp
-      }
-    });
+    
+    let expiryTimestamp = editExpiryDate ? new Date(editExpiryDate).getTime() : null;
     if (extendDays && parseInt(extendDays) > 0) {
-      dispatch({ type: 'EXTEND_SUBSCRIPTION', payload: { userId: quickEditUser.id, days: parseInt(extendDays) } });
+      const currentExpiry = expiryTimestamp && expiryTimestamp > Date.now()
+        ? expiryTimestamp
+        : Date.now();
+      const durationMs = parseInt(extendDays) * 24 * 60 * 60 * 1000;
+      expiryTimestamp = currentExpiry + durationMs;
     }
-    showToast(`Akun @${quickEditUser.username} berhasil diperbarui!`, 'success');
-    setQuickEditUser(null);
+
+    const updates = {
+      plan: editPlan,
+      planStatus: editStatus,
+      planExpiresAt: expiryTimestamp,
+      updatedAt: Date.now()
+    };
+
+    fetch('/api/users/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        adminUserId: state.currentUser.id,
+        targetUserId: quickEditUser.id,
+        updates
+      })
+    })
+    .then(res => {
+      if (!res.ok) throw new Error('Gagal memperbarui di server');
+      return res.json();
+    })
+    .then((updatedUser) => {
+      dispatch({
+        type: 'SYNC_USER_DIRECT',
+        payload: updatedUser
+      });
+      showToast(`Akun @${quickEditUser.username} berhasil diperbarui!`, 'success');
+      setQuickEditUser(null);
+    })
+    .catch(err => {
+      console.error(err);
+      showToast('Gagal memperbarui data pengguna: ' + err.message, 'error');
+    });
   };
 
   const getActionBadge = (action) => {
