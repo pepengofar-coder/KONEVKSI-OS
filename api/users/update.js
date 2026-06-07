@@ -25,8 +25,8 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Missing required parameters' });
   }
 
-  const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://xckcepsallcbruluoovx.supabase.co';
-  const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhja2NlcHNhbGxjYnJ1bHVvb3Z4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1OTc5MjQsImV4cCI6MjA5MTE3MzkyNH0.tx5r53L9PQsaxl23_kdvun3WnxfhzmQtNScv-S_GBdE';
+  const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://ntbjayaxjhjqixpzlmmc.supabase.co';
+  const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_yVJROT8bL4bJAq4GXCzN1w_V1LiJ64p';
 
   const headers = {
     'apikey': supabaseAnonKey,
