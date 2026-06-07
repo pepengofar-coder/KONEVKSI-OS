@@ -27,10 +27,11 @@ export default async function handler(req, res) {
 
   const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://ntbjayaxjhjqixpzlmmc.supabase.co';
   const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_yVJROT8bL4bJAq4GXCzN1w_V1LiJ64p';
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || supabaseAnonKey;
 
   const headers = {
     'apikey': supabaseAnonKey,
-    'Authorization': `Bearer ${supabaseAnonKey}`,
+    'Authorization': `Bearer ${supabaseServiceKey}`,
     'Content-Type': 'application/json'
   };
 
