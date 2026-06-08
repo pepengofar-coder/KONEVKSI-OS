@@ -83,24 +83,32 @@ export default function Pricing() {
       return;
     }
     if (plan === 'FREE') {
-      updateProfile(currentUserId, {
-        plan: 'FREE',
-        planExpiresAt: null,
-        planStatus: 'ACTIVE'
+      setIsPaying(true);
+      fetch('/api/subscription/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: currentUserId,
+          subscriptionId: 'FREE'
+        })
       })
-      .then(() => {
+      .then(res => {
+        if (!res.ok) throw new Error('Gagal memproses di server');
+        return res.json();
+      })
+      .then((updatedUser) => {
         dispatch({
-          type: 'UPGRADE_PLAN',
-          payload: {
-            plan: 'FREE',
-            planExpiresAt: null
-          }
+          type: 'SYNC_USER_DIRECT',
+          payload: updatedUser
         });
         showToast('Rencana subscription dikembalikan ke FREE.', 'info');
       })
       .catch(err => {
         console.error(err);
         showToast('Gagal membatalkan subscription: ' + err.message, 'error');
+      })
+      .finally(() => {
+        setIsPaying(false);
       });
       return;
     }
@@ -135,27 +143,25 @@ export default function Pricing() {
 
     const price = getPlanPrice(checkoutPlan);
 
-    // Check if autoApprove is enabled in settings
     if (bankSettings.autoApprove) {
       // Automatically approve payment
-      const expDate = new Date();
-      if (isYearly) {
-        expDate.setFullYear(expDate.getFullYear() + 1);
-      } else {
-        expDate.setMonth(expDate.getMonth() + 1);
-      }
-      updateProfile(currentUserId, {
-        plan: checkoutPlan,
-        planStatus: 'ACTIVE',
-        planExpiresAt: expDate.getTime()
+      fetch('/api/subscription/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: currentUserId,
+          subscriptionId: checkoutPlan,
+          billingCycle: isYearly ? 'yearly' : 'monthly'
+        })
       })
-      .then(() => {
+      .then(res => {
+        if (!res.ok) throw new Error('Gagal memproses di server');
+        return res.json();
+      })
+      .then((updatedUser) => {
         dispatch({
-          type: 'UPGRADE_PLAN',
-          payload: {
-            plan: checkoutPlan,
-            planExpiresAt: expDate.toISOString().split('T')[0]
-          }
+          type: 'SYNC_USER_DIRECT',
+          payload: updatedUser
         });
         showToast(`Upgrade otomatis ke rencana ${checkoutPlan} berhasil (Mode Sandbox)!`, 'success');
         setIsSubmittingProof(false);
@@ -213,16 +219,25 @@ export default function Pricing() {
 
     const expDateStr = expDate.toISOString().split('T')[0];
 
-    updateProfile(currentUserId, {
-      plan: checkoutPlan,
-      planStatus: 'ACTIVE',
-      planExpiresAt: expDate.getTime()
+    fetch('/api/subscription/execute', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: currentUserId,
+        subscriptionId: checkoutPlan,
+        billingCycle: isYearly ? 'yearly' : 'monthly'
+      })
     })
-    .then(() => {
+    .then(res => {
+      if (!res.ok) throw new Error('Gagal memproses di server');
+      return res.json();
+    })
+    .then((updatedUser) => {
       setIsPaying(false);
       setPaymentSuccess(true);
 
       const invNum = `SUB-${Date.now().toString(36).toUpperCase()}`;
+      const expDate = updatedUser.planExpiresAt ? new Date(updatedUser.planExpiresAt) : new Date();
       const newInvoice = {
         invoiceNumber: invNum,
         plan: checkoutPlan,
@@ -236,11 +251,8 @@ export default function Pricing() {
 
       // Update state
       dispatch({
-        type: 'UPGRADE_PLAN',
-        payload: {
-          plan: checkoutPlan,
-          planExpiresAt: expDateStr
-        }
+        type: 'SYNC_USER_DIRECT',
+        payload: updatedUser
       });
 
       // Save to billing history
@@ -257,24 +269,32 @@ export default function Pricing() {
 
   const handleDowngradeToFree = () => {
     if (window.confirm('Apakah Anda yakin ingin membatalkan subscription dan kembali ke FREE plan?')) {
-      updateProfile(currentUserId, {
-        plan: 'FREE',
-        planExpiresAt: null,
-        planStatus: 'ACTIVE'
+      setIsPaying(true);
+      fetch('/api/subscription/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: currentUserId,
+          subscriptionId: 'FREE'
+        })
       })
-      .then(() => {
+      .then(res => {
+        if (!res.ok) throw new Error('Gagal membatalkan subscription');
+        return res.json();
+      })
+      .then((updatedUser) => {
         dispatch({
-          type: 'UPGRADE_PLAN',
-          payload: {
-            plan: 'FREE',
-            planExpiresAt: null
-          }
+          type: 'SYNC_USER_DIRECT',
+          payload: updatedUser
         });
         showToast('Rencana subscription dibatalkan.', 'info');
       })
       .catch(err => {
         console.error(err);
         showToast('Gagal membatalkan subscription: ' + err.message, 'error');
+      })
+      .finally(() => {
+        setIsPaying(false);
       });
     }
   };
