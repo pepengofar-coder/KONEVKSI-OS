@@ -16,10 +16,8 @@ export default function SuperAdminSubscriptions() {
   const isSuperAdmin = state.currentUser?.role === 'SUPER_ADMIN';
 
   // Classify and filter users
+  // Classify and filter users
   const filteredUsers = customers.filter(user => {
-    const isPayingUser = user.plan !== 'FREE' || user.planStatus === 'PENDING' || user.planExpiresAt !== null;
-    if (!isPayingUser) return false;
-
     // Search query match
     const matchesSearch = 
       (user.nama || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -32,11 +30,11 @@ export default function SuperAdminSubscriptions() {
     const isWarning = user.planStatus === 'ACTIVE' && user.planExpiresAt && (user.planExpiresAt - today) <= sevenDaysMs && user.planExpiresAt > today;
     const isActive = user.planStatus === 'ACTIVE' && (!user.planExpiresAt || (user.planExpiresAt - today) > sevenDaysMs);
 
-    if (filterType === 'ACTIVE') return isActive;
+    if (filterType === 'ACTIVE') return isActive && user.plan !== 'FREE';
     if (filterType === 'WARNING') return isWarning;
     if (filterType === 'EXPIRED') return isExpired;
 
-    return true;
+    return true; // ALL shows all users
   });
 
   const handleExtend = (userId, days) => {
@@ -44,11 +42,48 @@ export default function SuperAdminSubscriptions() {
       showToast('Akses Ditolak: Hanya Super Admin yang dapat memperpanjang lisensi!', 'error');
       return;
     }
-    dispatch({
-      type: 'EXTEND_SUBSCRIPTION',
-      payload: { userId, days }
+
+    const targetUser = state.users.find(u => u.id === userId);
+    if (!targetUser) return;
+
+    const currentExpiry = targetUser.planExpiresAt && targetUser.planExpiresAt > Date.now()
+      ? targetUser.planExpiresAt
+      : Date.now();
+    const durationMs = days * 24 * 60 * 60 * 1000;
+    const newExpiry = currentExpiry + durationMs;
+
+    fetch('/api/users/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        adminUserId: state.currentUser.id,
+        targetUserId: userId,
+        updates: {
+          planStatus: 'ACTIVE',
+          planExpiresAt: newExpiry,
+          updatedAt: Date.now()
+        }
+      })
+    })
+    .then(res => {
+      if (!res.ok) throw new Error('Gagal memperbarui di server');
+      return res.json();
+    })
+    .then((updatedUser) => {
+      dispatch({
+        type: 'SYNC_USER_DIRECT',
+        payload: updatedUser
+      });
+      dispatch({
+        type: 'EXTEND_SUBSCRIPTION',
+        payload: { userId, days }
+      });
+      showToast(`Masa aktif berhasil diperpanjang ${days} hari!`, 'success');
+    })
+    .catch(err => {
+      console.error(err);
+      showToast('Gagal memperpanjang masa aktif: ' + err.message, 'error');
     });
-    showToast(`Masa aktif berhasil diperpanjang ${days} hari!`, 'success');
   };
 
   const handleCancelSubscription = (userId) => {
@@ -56,16 +91,45 @@ export default function SuperAdminSubscriptions() {
       showToast('Akses Ditolak: Hanya Super Admin yang dapat membatalkan subscription!', 'error');
       return;
     }
-    dispatch({
-      type: 'MANUAL_UPDATE_PLAN',
-      payload: {
-        userId,
-        plan: 'FREE',
-        planStatus: 'ACTIVE',
-        planExpiresAt: null
-      }
+
+    fetch('/api/users/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        adminUserId: state.currentUser.id,
+        targetUserId: userId,
+        updates: {
+          plan: 'FREE',
+          planStatus: 'ACTIVE',
+          planExpiresAt: null,
+          updatedAt: Date.now()
+        }
+      })
+    })
+    .then(res => {
+      if (!res.ok) throw new Error('Gagal memperbarui di server');
+      return res.json();
+    })
+    .then((updatedUser) => {
+      dispatch({
+        type: 'SYNC_USER_DIRECT',
+        payload: updatedUser
+      });
+      dispatch({
+        type: 'MANUAL_UPDATE_PLAN',
+        payload: {
+          userId,
+          plan: 'FREE',
+          planStatus: 'ACTIVE',
+          planExpiresAt: null
+        }
+      });
+      showToast(`Paket subskripsi dibatalkan dan dikembalikan ke FREE!`, 'info');
+    })
+    .catch(err => {
+      console.error(err);
+      showToast('Gagal membatalkan subscription: ' + err.message, 'error');
     });
-    showToast(`Paket subskripsi dibatalkan dan dikembalikan ke FREE!`, 'info');
   };
 
   const handleUpgradeToBusiness = (userId) => {
@@ -73,16 +137,47 @@ export default function SuperAdminSubscriptions() {
       showToast('Akses Ditolak: Hanya Super Admin yang dapat meningkatkan paket!', 'error');
       return;
     }
-    dispatch({
-      type: 'MANUAL_UPDATE_PLAN',
-      payload: {
-        userId,
-        plan: 'BUSINESS',
-        planStatus: 'ACTIVE',
-        planExpiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000
-      }
+
+    const expiryTimestamp = Date.now() + 30 * 24 * 60 * 60 * 1000;
+
+    fetch('/api/users/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        adminUserId: state.currentUser.id,
+        targetUserId: userId,
+        updates: {
+          plan: 'BUSINESS',
+          planStatus: 'ACTIVE',
+          planExpiresAt: expiryTimestamp,
+          updatedAt: Date.now()
+        }
+      })
+    })
+    .then(res => {
+      if (!res.ok) throw new Error('Gagal memperbarui di server');
+      return res.json();
+    })
+    .then((updatedUser) => {
+      dispatch({
+        type: 'SYNC_USER_DIRECT',
+        payload: updatedUser
+      });
+      dispatch({
+        type: 'MANUAL_UPDATE_PLAN',
+        payload: {
+          userId,
+          plan: 'BUSINESS',
+          planStatus: 'ACTIVE',
+          planExpiresAt: expiryTimestamp
+        }
+      });
+      showToast(`Akun berhasil ditingkatkan ke paket BUSINESS!`, 'success');
+    })
+    .catch(err => {
+      console.error(err);
+      showToast('Gagal meningkatkan paket: ' + err.message, 'error');
     });
-    showToast(`Akun berhasil ditingkatkan ke paket BUSINESS!`, 'success');
   };
 
   return (
@@ -93,7 +188,7 @@ export default function SuperAdminSubscriptions() {
           Manajemen Lisensi & Subskripsi
         </h1>
         <p className="text-xs text-slate-400 mt-1">
-          Pantau status siklus hidup langganan tenant, perpanjang masa aktif dengan cepat, atau batalkan paket premium.
+          Pantau status siklus hidup langganan tenant, perpanjang masa aktif dengan cepat, or batalkan paket premium.
         </p>
       </div>
 
@@ -101,7 +196,7 @@ export default function SuperAdminSubscriptions() {
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white/[0.02] border border-white/[0.06] p-4 rounded-3xl backdrop-blur-xl">
         <div className="flex flex-wrap gap-2 w-full md:w-auto">
           {[
-            { id: 'ALL', label: 'Semua Berbayar' },
+            { id: 'ALL', label: 'Semua Tenant' },
             { id: 'ACTIVE', label: 'Aktif Aman' },
             { id: 'WARNING', label: 'Hampir Habis (≤ 7 Hari)' },
             { id: 'EXPIRED', label: 'Kedaluwarsa' }

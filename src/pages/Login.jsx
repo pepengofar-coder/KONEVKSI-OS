@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAppState, useAppDispatch, useHelpers, verifyPassword, needsMigration, hashPassword } from '../context/AppContext';
+import { fetchProfile, createProfile } from '../utils/supabaseClient';
 
 export default function Login() {
   const state = useAppState();
@@ -39,13 +40,13 @@ export default function Login() {
 
     try {
       // Step 1: Find user by username or email
-      const user = state.users.find(
+      let authenticatedUser = state.users.find(
         (u) =>
           u.email.toLowerCase() === identifier.toLowerCase() ||
           (u.username && u.username.toLowerCase() === identifier.toLowerCase())
       );
 
-      if (!user) {
+      if (!authenticatedUser) {
         setErrorField('identifier');
         setErrorMessage('Username atau email tidak terdaftar.');
         showToast('Username atau email tidak terdaftar.', 'error');
@@ -55,7 +56,7 @@ export default function Login() {
       }
 
       // Step 2: Verify password (async — uses Web Crypto API)
-      const isValid = await verifyPassword(password, user.password);
+      const isValid = await verifyPassword(password, authenticatedUser.password);
 
       if (!isValid) {
         setErrorField('password');
@@ -67,7 +68,7 @@ export default function Login() {
       }
 
       // Step 3: Block SUPER_ADMIN — they must use /super-admin/login
-      if (user.role === 'SUPER_ADMIN') {
+      if (authenticatedUser.role === 'SUPER_ADMIN') {
         setErrorField('identifier');
         setErrorMessage('Akun Super Admin tidak dapat login di sini. Silakan gunakan Portal Super Admin.');
         showToast('Silakan gunakan halaman login Super Admin.', 'error');
@@ -76,23 +77,47 @@ export default function Login() {
         return;
       }
 
-      // Step 4: Login success — set current user
-      dispatch({ type: 'SET_CURRENT_USER', payload: { user, rememberMe } });
-      showToast(`Selamat datang kembali, ${user.nama || user.name}!`, 'success');
+      // Step 4: Sync user profile from Supabase on successful login
+      try {
+        const dbProfile = await fetchProfile(authenticatedUser.id);
+        if (dbProfile) {
+          // Merge Supabase database profile into our authenticatedUser
+          authenticatedUser = {
+            ...authenticatedUser,
+            name: dbProfile.name || authenticatedUser.name,
+            nama: dbProfile.name || authenticatedUser.nama,
+            role: dbProfile.role || authenticatedUser.role,
+            plan: dbProfile.plan || authenticatedUser.plan,
+            planStatus: dbProfile.planStatus || authenticatedUser.planStatus,
+            planExpiresAt: dbProfile.planExpiresAt !== undefined ? dbProfile.planExpiresAt : authenticatedUser.planExpiresAt
+          };
+          // Sync it directly in React state
+          dispatch({ type: 'SYNC_USER_DIRECT', payload: authenticatedUser });
+        } else {
+          // Create user profile in Supabase database if it does not exist yet
+          await createProfile(authenticatedUser);
+        }
+      } catch (syncErr) {
+        console.warn('Failed to sync or create user profile in Supabase on login:', syncErr);
+      }
 
-      // Step 5: Lazy password migration — upgrade legacy hash to PBKDF2
-      if (needsMigration(user.password)) {
+      // Step 5: Login success — set current user
+      dispatch({ type: 'SET_CURRENT_USER', payload: { user: authenticatedUser, rememberMe } });
+      showToast(`Selamat datang kembali, ${authenticatedUser.nama || authenticatedUser.name}!`, 'success');
+
+      // Step 6: Lazy password migration — upgrade legacy hash to PBKDF2
+      if (needsMigration(authenticatedUser.password)) {
         try {
           const newHash = await hashPassword(password);
-          dispatch({ type: 'MIGRATE_PASSWORD', payload: { userId: user.id, newHashedPassword: newHash } });
+          dispatch({ type: 'MIGRATE_PASSWORD', payload: { userId: authenticatedUser.id, newHashedPassword: newHash } });
         } catch {
           // Migration failure is non-critical — user can still use the app
           console.warn('Password migration skipped.');
         }
       }
 
-      // Step 6: Redirect
-      if (!user.categories || user.categories.length === 0 || !user.businessRole) {
+      // Step 7: Redirect
+      if (!authenticatedUser.categories || authenticatedUser.categories.length === 0 || !authenticatedUser.businessRole) {
         navigate('/onboarding');
       } else {
         navigate('/dashboard');
@@ -104,6 +129,7 @@ export default function Login() {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center relative px-4 overflow-hidden">

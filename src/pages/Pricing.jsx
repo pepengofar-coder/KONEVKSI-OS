@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAppState, useAppDispatch, useHelpers, usePlan } from '../context/AppContext';
 import Badge from '../components/ui/Badge';
+import { updateProfile } from '../utils/supabaseClient';
 
 export default function Pricing() {
   const state = useAppState();
@@ -82,14 +83,25 @@ export default function Pricing() {
       return;
     }
     if (plan === 'FREE') {
-      dispatch({
-        type: 'UPGRADE_PLAN',
-        payload: {
-          plan: 'FREE',
-          planExpiresAt: null
-        }
+      updateProfile(currentUserId, {
+        plan: 'FREE',
+        planExpiresAt: null,
+        planStatus: 'ACTIVE'
+      })
+      .then(() => {
+        dispatch({
+          type: 'UPGRADE_PLAN',
+          payload: {
+            plan: 'FREE',
+            planExpiresAt: null
+          }
+        });
+        showToast('Rencana subscription dikembalikan ke FREE.', 'info');
+      })
+      .catch(err => {
+        console.error(err);
+        showToast('Gagal membatalkan subscription: ' + err.message, 'error');
       });
-      showToast('Rencana subscription dikembalikan ke FREE.', 'info');
       return;
     }
 
@@ -121,18 +133,23 @@ export default function Pricing() {
 
     setIsSubmittingProof(true);
 
-    setTimeout(() => {
-      const price = getPlanPrice(checkoutPlan);
+    const price = getPlanPrice(checkoutPlan);
 
-      // Check if autoApprove is enabled in settings
-      if (bankSettings.autoApprove) {
-        // Automatically approve payment
-        const expDate = new Date();
-        if (isYearly) {
-          expDate.setFullYear(expDate.getFullYear() + 1);
-        } else {
-          expDate.setMonth(expDate.getMonth() + 1);
-        }
+    // Check if autoApprove is enabled in settings
+    if (bankSettings.autoApprove) {
+      // Automatically approve payment
+      const expDate = new Date();
+      if (isYearly) {
+        expDate.setFullYear(expDate.getFullYear() + 1);
+      } else {
+        expDate.setMonth(expDate.getMonth() + 1);
+      }
+      updateProfile(currentUserId, {
+        plan: checkoutPlan,
+        planStatus: 'ACTIVE',
+        planExpiresAt: expDate.getTime()
+      })
+      .then(() => {
         dispatch({
           type: 'UPGRADE_PLAN',
           payload: {
@@ -141,8 +158,21 @@ export default function Pricing() {
           }
         });
         showToast(`Upgrade otomatis ke rencana ${checkoutPlan} berhasil (Mode Sandbox)!`, 'success');
-      } else {
-        // Submit to admin queue
+        setIsSubmittingProof(false);
+        setCheckoutPlan(null);
+        setPaymentProof('');
+      })
+      .catch(err => {
+        console.error(err);
+        showToast('Gagal memproses upgrade: ' + err.message, 'error');
+        setIsSubmittingProof(false);
+      });
+    } else {
+      // Submit to admin queue
+      updateProfile(currentUserId, {
+        planStatus: 'PENDING'
+      })
+      .then(() => {
         dispatch({
           type: 'SUBMIT_PAYMENT_ORDER',
           payload: {
@@ -153,12 +183,16 @@ export default function Pricing() {
           }
         });
         showToast('Bukti transfer berhasil dikirim. Menunggu verifikasi admin!', 'success');
-      }
-
-      setIsSubmittingProof(false);
-      setCheckoutPlan(null);
-      setPaymentProof('');
-    }, 1500);
+        setIsSubmittingProof(false);
+        setCheckoutPlan(null);
+        setPaymentProof('');
+      })
+      .catch(err => {
+        console.error(err);
+        showToast('Gagal mengirim bukti pembayaran: ' + err.message, 'error');
+        setIsSubmittingProof(false);
+      });
+    }
   };
 
   const handleSimulatePayment = () => {
@@ -168,18 +202,25 @@ export default function Pricing() {
     }
 
     setIsPaying(true);
-    setTimeout(() => {
+    const price = getPlanPrice(checkoutPlan);
+
+    const expDate = new Date();
+    if (isYearly) {
+      expDate.setFullYear(expDate.getFullYear() + 1);
+    } else {
+      expDate.setMonth(expDate.getMonth() + 1);
+    }
+
+    const expDateStr = expDate.toISOString().split('T')[0];
+
+    updateProfile(currentUserId, {
+      plan: checkoutPlan,
+      planStatus: 'ACTIVE',
+      planExpiresAt: expDate.getTime()
+    })
+    .then(() => {
       setIsPaying(false);
       setPaymentSuccess(true);
-
-      const price = getPlanPrice(checkoutPlan);
-
-      const expDate = new Date();
-      if (isYearly) {
-        expDate.setFullYear(expDate.getFullYear() + 1);
-      } else {
-        expDate.setMonth(expDate.getMonth() + 1);
-      }
 
       const invNum = `SUB-${Date.now().toString(36).toUpperCase()}`;
       const newInvoice = {
@@ -198,7 +239,7 @@ export default function Pricing() {
         type: 'UPGRADE_PLAN',
         payload: {
           plan: checkoutPlan,
-          planExpiresAt: expDate.toISOString().split('T')[0]
+          planExpiresAt: expDateStr
         }
       });
 
@@ -206,19 +247,35 @@ export default function Pricing() {
       saveBillingHistory([newInvoice, ...billingHistory]);
       setReceiptInvoice(newInvoice);
       showToast(`Upgrade ke rencana ${checkoutPlan} berhasil!`, 'success');
-    }, 2000);
+    })
+    .catch(err => {
+      console.error(err);
+      showToast('Gagal memproses pembayaran: ' + err.message, 'error');
+      setIsPaying(false);
+    });
   };
 
   const handleDowngradeToFree = () => {
     if (window.confirm('Apakah Anda yakin ingin membatalkan subscription dan kembali ke FREE plan?')) {
-      dispatch({
-        type: 'UPGRADE_PLAN',
-        payload: {
-          plan: 'FREE',
-          planExpiresAt: null
-        }
+      updateProfile(currentUserId, {
+        plan: 'FREE',
+        planExpiresAt: null,
+        planStatus: 'ACTIVE'
+      })
+      .then(() => {
+        dispatch({
+          type: 'UPGRADE_PLAN',
+          payload: {
+            plan: 'FREE',
+            planExpiresAt: null
+          }
+        });
+        showToast('Rencana subscription dibatalkan.', 'info');
+      })
+      .catch(err => {
+        console.error(err);
+        showToast('Gagal membatalkan subscription: ' + err.message, 'error');
       });
-      showToast('Rencana subscription dibatalkan.', 'info');
     }
   };
 

@@ -6,6 +6,7 @@ import BottomNav from './BottomNav';
 import TopBar from './TopBar';
 import MobileDrawer from './MobileDrawer';
 import UpgradeModal from '../ui/UpgradeModal';
+import { fetchProfile } from '../../utils/supabaseClient';
 
 export const ROLE_ROUTES = {
   'Owner': ['/dashboard', '/barang-masuk', '/on-progress', '/kelaran', '/kasbon-taylor', '/invoice-taylor', '/cost-harian', '/laporan', '/invoice-pelanggan', '/pelanggan', '/profile', '/pricing'],
@@ -20,6 +21,24 @@ export default function AppLayout() {
   const location = useLocation();
   const { showToast } = useHelpers();
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // Sync user profile from Supabase on layout load
+  useEffect(() => {
+    const user = state.currentUser;
+    if (!user) return;
+
+    const refreshProfile = async () => {
+      try {
+        const freshProfile = await fetchProfile(user.id);
+        if (freshProfile) {
+          dispatch({ type: 'SYNC_USER_DIRECT', payload: freshProfile });
+        }
+      } catch (err) {
+        console.warn('Failed to refresh user profile on load:', err);
+      }
+    };
+    refreshProfile();
+  }, [state.currentUser?.id]);
 
   // Auth Guard & Onboarding Redirect
   useEffect(() => {
