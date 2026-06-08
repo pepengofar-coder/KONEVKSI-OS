@@ -28,8 +28,52 @@ export default function SuperAdminDashboard() {
   const [editExpiryDate, setEditExpiryDate] = useState('');
   const [extendDays, setExtendDays] = useState('');
   const [editLoading, setEditLoading] = useState(false);
+  const [backfillLoading, setBackfillLoading] = useState(false);
 
   const isSuperAdmin = state.currentUser?.role === 'SUPER_ADMIN';
+
+  const handleRunBackfill = () => {
+    if (!isSuperAdmin) {
+      showToast('Akses Ditolak: Hanya Super Admin yang dapat menjalankan backfill!', 'error');
+      return;
+    }
+
+    if (!window.confirm('Apakah Anda yakin ingin mem-backfill status PREMIUM untuk semua tenant hingga akhir 2026? Ini akan mengubah data di database Supabase.')) {
+      return;
+    }
+
+    setBackfillLoading(true);
+
+    fetch('/api/users/backfill', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        adminUserId: state.currentUser.id
+      })
+    })
+    .then(res => {
+      if (!res.ok) throw new Error('Gagal memproses backfill di server');
+      return res.json();
+    })
+    .then((data) => {
+      dispatch({
+        type: 'ADD_ADMIN_LOG',
+        payload: {
+          action: 'EXTEND_SUBSCRIPTION',
+          details: `Executed bulk premium backfill for ${data.updatedCount} tenants until end of 2026`,
+          note: 'Database synchronized'
+        }
+      });
+      showToast(data.message || `Berhasil mem-backfill ${data.updatedCount} tenant ke PREMIUM!`, 'success');
+    })
+    .catch(err => {
+      console.error(err);
+      showToast('Gagal mem-backfill: ' + err.message, 'error');
+    })
+    .finally(() => {
+      setBackfillLoading(false);
+    });
+  };
 
   // Close notification dropdown when clicking outside
   useEffect(() => {
@@ -330,80 +374,97 @@ export default function SuperAdminDashboard() {
           </p>
         </div>
 
-        {/* Notification Bell */}
-        <div className="relative" ref={notifRef}>
-          <button
-            onClick={() => { setNotifOpen(!notifOpen); if (!notifOpen) markAllSeen(); }}
-            className={`relative w-11 h-11 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-slate-300 hover:text-white hover:bg-white/[0.08] transition-all ${pulseNotif ? 'animate-pulse' : ''}`}
-          >
-            <span className="material-symbols-outlined text-[22px]">notifications</span>
-            {unseenCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-rose-500 text-white text-[9px] font-black flex items-center justify-center shadow-lg shadow-rose-500/40 animate-pulse">
-                {unseenCount}
-              </span>
-            )}
-          </button>
+        <div className="flex items-center gap-3">
+          {isSuperAdmin && (
+            <button
+              onClick={handleRunBackfill}
+              disabled={backfillLoading}
+              className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-all shadow-lg flex items-center gap-1.5 ${
+                backfillLoading
+                  ? 'bg-slate-800 border border-slate-700 text-slate-500 opacity-50 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-cyan-600 to-purple-600 hover:shadow-cyan-500/25 text-white cursor-pointer hover:scale-[1.02] active:scale-[0.98]'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[16px]">database</span>
+              {backfillLoading ? 'Backfilling...' : 'Backfill Premium 2026'}
+            </button>
+          )}
 
-          {/* Notification Dropdown */}
-          {notifOpen && (
-            <div className="absolute right-0 top-14 w-96 max-h-[420px] bg-slate-900/95 backdrop-blur-2xl border border-white/[0.08] rounded-2xl shadow-2xl shadow-black/60 z-50 overflow-hidden animate-scale-in">
-              <div className="px-4 py-3 border-b border-white/[0.06] flex items-center justify-between">
-                <h4 className="text-xs font-black uppercase tracking-wider text-slate-300">
-                  Notifikasi Pembayaran
-                </h4>
-                <span className="text-[10px] text-slate-500 font-bold">{pendingCount} Pending</span>
-              </div>
-              <div className="overflow-y-auto max-h-[340px] divide-y divide-white/[0.04]">
-                {pendingPayments.length === 0 ? (
-                  <div className="p-8 text-center text-slate-500 text-xs italic">
-                    <span className="material-symbols-outlined text-[32px] block mb-2 opacity-30">notifications_off</span>
-                    Tidak ada pembayaran pending.
+          {/* Notification Bell */}
+          <div className="relative" ref={notifRef}>
+            <button
+              onClick={() => { setNotifOpen(!notifOpen); if (!notifOpen) markAllSeen(); }}
+              className={`relative w-11 h-11 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-slate-300 hover:text-white hover:bg-white/[0.08] transition-all ${pulseNotif ? 'animate-pulse' : ''}`}
+            >
+              <span className="material-symbols-outlined text-[22px]">notifications</span>
+              {unseenCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-rose-500 text-white text-[9px] font-black flex items-center justify-center shadow-lg shadow-rose-500/40 animate-pulse">
+                  {unseenCount}
+                </span>
+              )}
+            </button>
+
+            {/* Notification Dropdown */}
+            {notifOpen && (
+              <div className="absolute right-0 top-14 w-96 max-h-[420px] bg-slate-900/95 backdrop-blur-2xl border border-white/[0.08] rounded-2xl shadow-2xl shadow-black/60 z-50 overflow-hidden animate-scale-in">
+                <div className="px-4 py-3 border-b border-white/[0.06] flex items-center justify-between">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-300">
+                    Notifikasi Pembayaran
+                  </h4>
+                  <span className="text-[10px] text-slate-500 font-bold">{pendingCount} Pending</span>
+                </div>
+                <div className="overflow-y-auto max-h-[340px] divide-y divide-white/[0.04]">
+                  {pendingPayments.length === 0 ? (
+                    <div className="p-8 text-center text-slate-500 text-xs italic">
+                      <span className="material-symbols-outlined text-[32px] block mb-2 opacity-30">notifications_off</span>
+                      Tidak ada pembayaran pending.
+                    </div>
+                  ) : (
+                    pendingPayments.map((order) => {
+                      const user = (state.users || []).find(u => u.id === order.userId);
+                      const isUnseen = !seenPaymentIds.includes(order.id);
+                      return (
+                        <button
+                          key={order.id}
+                          onClick={() => handleApproveFromNotif(order)}
+                          className={`w-full text-left px-4 py-3 hover:bg-white/[0.03] transition-all flex items-start gap-3 ${isUnseen ? 'bg-purple-500/5' : ''}`}
+                        >
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${isUnseen ? 'bg-rose-500/20 text-rose-300' : 'bg-slate-800 text-slate-400'}`}>
+                            <span className="material-symbols-outlined text-[16px]">payments</span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-bold text-slate-200 truncate">
+                              {order.businessName || order.username}
+                              {user && <span className="text-slate-500 font-normal"> · {user.email}</span>}
+                            </p>
+                            <p className="text-[10px] text-slate-400 mt-0.5">
+                              Upgrade ke <span className="text-purple-300 font-bold">{order.plan}</span> · {formatRupiah(order.price)} · {order.paymentMethod}
+                            </p>
+                            <p className="text-[9px] text-slate-500 mt-0.5">
+                              {new Date(order.createdAt).toLocaleString('id-ID')}
+                            </p>
+                          </div>
+                          {isUnseen && (
+                            <span className="w-2 h-2 rounded-full bg-rose-400 shrink-0 mt-2 animate-pulse" />
+                          )}
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+                {pendingCount > 0 && (
+                  <div className="px-4 py-2.5 border-t border-white/[0.06]">
+                    <button
+                      onClick={() => { navigate('/super-admin/payments'); setNotifOpen(false); }}
+                      className="w-full text-center text-[10px] text-cyan-400 hover:text-cyan-300 font-bold transition-colors"
+                    >
+                      Lihat Semua di Halaman Pembayaran →
+                    </button>
                   </div>
-                ) : (
-                  pendingPayments.map((order) => {
-                    const user = (state.users || []).find(u => u.id === order.userId);
-                    const isUnseen = !seenPaymentIds.includes(order.id);
-                    return (
-                      <button
-                        key={order.id}
-                        onClick={() => handleApproveFromNotif(order)}
-                        className={`w-full text-left px-4 py-3 hover:bg-white/[0.03] transition-all flex items-start gap-3 ${isUnseen ? 'bg-purple-500/5' : ''}`}
-                      >
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${isUnseen ? 'bg-rose-500/20 text-rose-300' : 'bg-slate-800 text-slate-400'}`}>
-                          <span className="material-symbols-outlined text-[16px]">payments</span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-bold text-slate-200 truncate">
-                            {order.businessName || order.username}
-                            {user && <span className="text-slate-500 font-normal"> · {user.email}</span>}
-                          </p>
-                          <p className="text-[10px] text-slate-400 mt-0.5">
-                            Upgrade ke <span className="text-purple-300 font-bold">{order.plan}</span> · {formatRupiah(order.price)} · {order.paymentMethod}
-                          </p>
-                          <p className="text-[9px] text-slate-500 mt-0.5">
-                            {new Date(order.createdAt).toLocaleString('id-ID')}
-                          </p>
-                        </div>
-                        {isUnseen && (
-                          <span className="w-2 h-2 rounded-full bg-rose-400 shrink-0 mt-2 animate-pulse" />
-                        )}
-                      </button>
-                    );
-                  })
                 )}
               </div>
-              {pendingCount > 0 && (
-                <div className="px-4 py-2.5 border-t border-white/[0.06]">
-                  <button
-                    onClick={() => { navigate('/super-admin/payments'); setNotifOpen(false); }}
-                    className="w-full text-center text-[10px] text-cyan-400 hover:text-cyan-300 font-bold transition-colors"
-                  >
-                    Lihat Semua di Halaman Pembayaran →
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 

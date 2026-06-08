@@ -98,10 +98,10 @@ export default function Register() {
         password: hashedPassword,
         role: 'USER',
         businessRole: 'Owner', // Set default to bypass AppLayout guard
-        plan: 'FREE',
+        plan: 'PREMIUM',
         planStatus: 'ACTIVE',
         planStartedAt: Date.now(),
-        planExpiresAt: null,
+        planExpiresAt: new Date("2026-12-31T23:59:59.000Z").getTime(),
         createdAt: Date.now(),
         updatedAt: Date.now(),
         categories: ['Kaos & Jersey', 'Kemeja & PDL', 'Jaket & Hoodie'], // Set default to bypass AppLayout guard

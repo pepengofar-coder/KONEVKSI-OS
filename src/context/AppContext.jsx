@@ -1195,11 +1195,39 @@ export function useAppDispatch() {
   return dispatch;
 }
 
+export function hasPremiumAccess(userProfile) {
+  if (!userProfile) return false;
+
+  const temporaryPremiumUntil = new Date("2026-12-31T23:59:59.000Z");
+  const now = new Date();
+
+  if (now <= temporaryPremiumUntil) {
+    return true;
+  }
+
+  const rawPlan = userProfile.plan || 'FREE';
+  const planStatus = userProfile.planStatus || 'ACTIVE';
+  const planExpiresAt = userProfile.planExpiresAt || null;
+  
+  const isExpired = planStatus === 'EXPIRED' || (planExpiresAt && planExpiresAt < Date.now());
+  const isActive = planStatus === 'ACTIVE' && !isExpired;
+  
+  const plan = isActive ? rawPlan : 'FREE';
+  return plan === 'PREMIUM' || plan === 'BUSINESS';
+}
+
 export function usePlan() {
   const state = useAppState();
   const dispatch = useAppDispatch();
 
   const currentUser = state?.currentUser;
+  
+  const temporaryPremiumUntil = new Date("2026-12-31T23:59:59.000Z");
+  const now = new Date();
+  const isTemporaryPeriod = now <= temporaryPremiumUntil;
+
+  const isPremium = hasPremiumAccess(currentUser);
+  
   const rawPlan = currentUser?.plan || 'FREE';
   const planStatus = currentUser?.planStatus || 'ACTIVE';
   const planExpiresAt = currentUser?.planExpiresAt || null;
@@ -1207,11 +1235,17 @@ export function usePlan() {
   const isExpired = planStatus === 'EXPIRED' || (planExpiresAt && planExpiresAt < Date.now());
   const isActive = planStatus === 'ACTIVE' && !isExpired;
   
-  const plan = isActive ? rawPlan : 'FREE';
-  const isPremium = plan === 'PREMIUM' || plan === 'BUSINESS';
-  const isBusiness = plan === 'BUSINESS';
+  const actualPlan = isActive ? rawPlan : 'FREE';
+  const isBusiness = actualPlan === 'BUSINESS';
+
+  // Override plan name and planExpiresAt for registered users during temporary period
+  let plan = actualPlan;
+  if (currentUser && isTemporaryPeriod) {
+    plan = actualPlan === 'BUSINESS' ? 'BUSINESS' : 'PREMIUM';
+  }
 
   const isLimitExceeded = (type) => {
+    if (currentUser && isTemporaryPeriod) return false;
     if (plan === 'PREMIUM' || plan === 'BUSINESS') return false;
 
     // FREE plan limits
@@ -1239,7 +1273,9 @@ export function usePlan() {
 
   return {
     plan,
-    planExpiresAt,
+    planExpiresAt: (currentUser && isTemporaryPeriod)
+      ? temporaryPremiumUntil.getTime()
+      : planExpiresAt,
     isPremium,
     isBusiness,
     isLimitExceeded,

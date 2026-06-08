@@ -84,17 +84,10 @@ export default function Pricing() {
     }
     if (plan === 'FREE') {
       setIsPaying(true);
-      fetch('/api/subscription/execute', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: currentUserId,
-          subscriptionId: 'FREE'
-        })
-      })
-      .then(res => {
-        if (!res.ok) throw new Error('Gagal memproses di server');
-        return res.json();
+      updateProfile(currentUserId, {
+        plan: 'FREE',
+        planStatus: 'ACTIVE',
+        planExpiresAt: null
       })
       .then((updatedUser) => {
         dispatch({
@@ -142,21 +135,14 @@ export default function Pricing() {
     setIsSubmittingProof(true);
 
     const price = getPlanPrice(checkoutPlan);
+    const temporaryPremiumUntil = new Date("2026-12-31T23:59:59.000Z").getTime();
 
     if (bankSettings.autoApprove) {
       // Automatically approve payment
-      fetch('/api/subscription/execute', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: currentUserId,
-          subscriptionId: checkoutPlan,
-          billingCycle: isYearly ? 'yearly' : 'monthly'
-        })
-      })
-      .then(res => {
-        if (!res.ok) throw new Error('Gagal memproses di server');
-        return res.json();
+      updateProfile(currentUserId, {
+        plan: checkoutPlan,
+        planStatus: 'ACTIVE',
+        planExpiresAt: temporaryPremiumUntil
       })
       .then((updatedUser) => {
         dispatch({
@@ -209,28 +195,12 @@ export default function Pricing() {
 
     setIsPaying(true);
     const price = getPlanPrice(checkoutPlan);
+    const temporaryPremiumUntil = new Date("2026-12-31T23:59:59.000Z").getTime();
 
-    const expDate = new Date();
-    if (isYearly) {
-      expDate.setFullYear(expDate.getFullYear() + 1);
-    } else {
-      expDate.setMonth(expDate.getMonth() + 1);
-    }
-
-    const expDateStr = expDate.toISOString().split('T')[0];
-
-    fetch('/api/subscription/execute', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        userId: currentUserId,
-        subscriptionId: checkoutPlan,
-        billingCycle: isYearly ? 'yearly' : 'monthly'
-      })
-    })
-    .then(res => {
-      if (!res.ok) throw new Error('Gagal memproses di server');
-      return res.json();
+    updateProfile(currentUserId, {
+      plan: checkoutPlan,
+      planStatus: 'ACTIVE',
+      planExpiresAt: temporaryPremiumUntil
     })
     .then((updatedUser) => {
       setIsPaying(false);
@@ -270,17 +240,10 @@ export default function Pricing() {
   const handleDowngradeToFree = () => {
     if (window.confirm('Apakah Anda yakin ingin membatalkan subscription dan kembali ke FREE plan?')) {
       setIsPaying(true);
-      fetch('/api/subscription/execute', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: currentUserId,
-          subscriptionId: 'FREE'
-        })
-      })
-      .then(res => {
-        if (!res.ok) throw new Error('Gagal membatalkan subscription');
-        return res.json();
+      updateProfile(currentUserId, {
+        plan: 'FREE',
+        planStatus: 'ACTIVE',
+        planExpiresAt: null
       })
       .then((updatedUser) => {
         dispatch({

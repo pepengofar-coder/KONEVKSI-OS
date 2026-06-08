@@ -37,16 +37,20 @@ export default async function handler(req, res) {
 
   try {
     // 1. Verify that the admin exists and is a SUPER_ADMIN in the database
-    const adminCheckRes = await fetch(`${supabaseUrl}/rest/v1/profiles?userId=eq.${encodeURIComponent(adminUserId)}&select=role`, {
-      headers
-    });
+    let isAdmin = adminUserId === 'u_admin';
     
-    if (!adminCheckRes.ok) {
-      return res.status(500).json({ error: 'Failed to verify admin status' });
+    if (!isAdmin) {
+      const adminCheckRes = await fetch(`${supabaseUrl}/rest/v1/profiles?userId=eq.${encodeURIComponent(adminUserId)}&select=role`, {
+        headers
+      });
+      
+      if (adminCheckRes.ok) {
+        const adminCheckData = await adminCheckRes.json();
+        isAdmin = adminCheckData && adminCheckData[0] && adminCheckData[0].role === 'SUPER_ADMIN';
+      } else {
+        console.warn(`Failed to query admin status for ${adminUserId}, HTTP ${adminCheckRes.status}`);
+      }
     }
-
-    const adminCheckData = await adminCheckRes.json();
-    const isAdmin = (adminCheckData && adminCheckData[0] && adminCheckData[0].role === 'SUPER_ADMIN') || adminUserId === 'u_admin';
 
     if (!isAdmin) {
       return res.status(403).json({ error: 'Forbidden: Only Super Admins can update users' });

@@ -79,8 +79,31 @@ export default function Login() {
 
       // Step 4: Sync user profile from Supabase on successful login
       try {
-        const dbProfile = await fetchProfile(authenticatedUser.id);
+        let dbProfile = await fetchProfile(authenticatedUser.id);
+        const temporaryPremiumUntil = new Date("2026-12-31T23:59:59.000Z").getTime();
+        
         if (dbProfile) {
+          // Normalize user profile to premium access until 2026-12-31 if they don't have it
+          const dbExpiresAt = dbProfile.planExpiresAt;
+          const needsNormalization = 
+            (dbProfile.plan !== 'PREMIUM' && dbProfile.plan !== 'BUSINESS') ||
+            dbProfile.planStatus !== 'ACTIVE' ||
+            !dbExpiresAt || 
+            dbExpiresAt < temporaryPremiumUntil;
+
+          if (needsNormalization && dbProfile.role !== 'SUPER_ADMIN') {
+            const targetPlan = dbProfile.plan === 'BUSINESS' ? 'BUSINESS' : 'PREMIUM';
+            try {
+              dbProfile = await updateProfile(authenticatedUser.id, {
+                plan: targetPlan,
+                planStatus: 'ACTIVE',
+                planExpiresAt: temporaryPremiumUntil
+              });
+            } catch (updErr) {
+              console.warn('Failed to normalize user profile in Supabase:', updErr);
+            }
+          }
+
           // Merge Supabase database profile into our authenticatedUser
           authenticatedUser = {
             ...authenticatedUser,
@@ -94,8 +117,25 @@ export default function Login() {
           // Sync it directly in React state
           dispatch({ type: 'SYNC_USER_DIRECT', payload: authenticatedUser });
         } else {
-          // Create user profile in Supabase database if it does not exist yet
-          await createProfile(authenticatedUser);
+          // Create user profile in Supabase database if it does not exist yet, defaulting to premium access
+          const tempUser = {
+            ...authenticatedUser,
+            plan: 'PREMIUM',
+            planStatus: 'ACTIVE',
+            planExpiresAt: temporaryPremiumUntil
+          };
+          try {
+            const newProfile = await createProfile(tempUser);
+            authenticatedUser = {
+              ...authenticatedUser,
+              plan: newProfile.plan,
+              planStatus: newProfile.planStatus,
+              planExpiresAt: newProfile.planExpiresAt
+            };
+          } catch (createErr) {
+            console.warn('Failed to create user profile in Supabase on login:', createErr);
+          }
+          dispatch({ type: 'SYNC_USER_DIRECT', payload: authenticatedUser });
         }
       } catch (syncErr) {
         console.warn('Failed to sync or create user profile in Supabase on login:', syncErr);
