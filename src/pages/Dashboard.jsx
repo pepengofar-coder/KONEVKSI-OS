@@ -7,6 +7,7 @@ import Badge from '../components/ui/Badge';
 import BarangMasukForm from '../components/forms/BarangMasukForm';
 import KasbonForm from '../components/forms/KasbonForm';
 import CostForm from '../components/forms/CostForm';
+import PrayerCalendarWidget from '../components/ui/PrayerCalendarWidget';
 
 export default function Dashboard() {
   const state = useAppState();
@@ -15,6 +16,7 @@ export default function Dashboard() {
   const { plan } = usePlan();
   const { getTodayKelaran, getTodayCost, getAllKasbonBelumLunas, formatRupiah, getModel, getTaylor, getSisaDistribusi } = useHelpers();
 
+  const [nowMs] = useState(() => Date.now());
   const [showBarangMasuk, setShowBarangMasuk] = useState(false);
   const [showKasbon, setShowKasbon] = useState(false);
   const [showCost, setShowCost] = useState(false);
@@ -25,8 +27,6 @@ export default function Dashboard() {
   const kasbonBelumLunas = getAllKasbonBelumLunas();
 
   const totalKelaranPcs = todayKelaran.reduce((s, k) => s + k.jumlah, 0);
-  const totalCostRp = todayCost.reduce((s, c) => s + c.nominal, 0);
-  const totalKasbonRp = kasbonBelumLunas.reduce((s, kb) => s + kb.nominal, 0);
 
   const userRole = state.currentUser?.businessRole || 'Owner';
   const businessName = state.currentUser?.businessProfile?.namaUsaha || 'Konveksi Anda';
@@ -75,7 +75,7 @@ export default function Dashboard() {
   const [orderChartTab, setOrderChartTab] = useState('daily'); // 'daily' | 'weekly' | 'monthly'
   
   const getOrderChartData = () => {
-    const todayMs = Date.now();
+    const todayMs = nowMs;
     if (orderChartTab === 'daily') {
       const labels = [];
       const values = [];
@@ -216,7 +216,7 @@ export default function Dashboard() {
     .filter(bm => {
       if (bm.sisaBelumDistribusi === 0) return false;
       const deadline = bm.deadline || new Date(new Date(bm.tanggal).getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-      const diffTime = new Date(deadline).getTime() - Date.now();
+      const diffTime = new Date(deadline).getTime() - nowMs;
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       return diffDays >= 0 && diffDays <= 3; // within 3 days
     })
@@ -497,6 +497,9 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* ══════════ PRAYER & CALENDAR WIDGET ══════════ */}
+      <PrayerCalendarWidget />
 
       {/* ══════════ ALERTS PANEL (LOW STOCK & DEADLINES) ══════════ */}
       {(lowStockMaterials.length > 0 || deadlineApproachingOrders.length > 0) && (
