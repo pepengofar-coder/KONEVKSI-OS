@@ -13,14 +13,14 @@ export default function Sidebar() {
     navigate('/');
   };
 
-  const userInitial = state.currentUser ? state.currentUser.nama.charAt(0).toUpperCase() : 'A';
-  const userName = state.currentUser ? state.currentUser.nama : 'Admin';
+  const userName = state.currentUser?.nama || state.currentUser?.name || 'Admin';
+  const userInitial = userName.charAt(0).toUpperCase();
   const businessName = state.currentUser?.businessProfile?.namaUsaha || 'Konveksi';
   const userBusinessRole = state.currentUser ? (state.currentUser.businessRole || 'Owner') : 'Owner';
-  const userRoleLabel = state.currentUser ? `${state.currentUser.role} · ${businessName}` : 'Owner';
+  const userRoleLabel = state.currentUser ? `${state.currentUser.role || 'USER'} · ${businessName}` : 'Owner';
 
   // Filter nav groups by user's business role
-  const allowedRoutes = ROLE_ROUTES[userBusinessRole] || [];
+  const allowedRoutes = ROLE_ROUTES[userBusinessRole] || ROLE_ROUTES['Owner'] || [];
   const filteredNavGroups = navGroups
     .map(group => ({
       ...group,

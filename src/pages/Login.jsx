@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAppState, useAppDispatch, useHelpers, verifyPassword, needsMigration, hashPassword } from '../context/AppContext';
-import { fetchProfile, createProfile } from '../utils/supabaseClient';
+import { fetchProfile, createProfile, updateProfile } from '../utils/supabaseClient';
 
 export default function Login() {
   const state = useAppState();

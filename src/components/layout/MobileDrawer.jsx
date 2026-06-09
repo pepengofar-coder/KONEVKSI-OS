@@ -40,7 +40,7 @@ export default function MobileDrawer({ isOpen, onClose }) {
   const userRoleLabel = `${state.currentUser?.role || 'USER'} · ${state.currentUser?.businessProfile?.namaUsaha || 'Konveksi'}`;
 
   // Filter nav groups by user's business role
-  const allowedRoutes = ROLE_ROUTES[userBusinessRole] || [];
+  const allowedRoutes = ROLE_ROUTES[userBusinessRole] || ROLE_ROUTES['Owner'] || [];
   const filteredNavGroups = navGroups
     .map(group => ({
       ...group,
