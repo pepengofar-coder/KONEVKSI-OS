@@ -6,7 +6,6 @@ import BottomNav from './BottomNav';
 import TopBar from './TopBar';
 import MobileDrawer from './MobileDrawer';
 import UpgradeModal from '../ui/UpgradeModal';
-import { fetchProfile, updateProfile } from '../../utils/supabaseClient';
 
 export const ROLE_ROUTES = {
   'Owner': ['/dashboard', '/barang-masuk', '/on-progress', '/kelaran', '/kasbon-taylor', '/invoice-taylor', '/cost-harian', '/laporan', '/invoice-pelanggan', '/pelanggan', '/profile', '/pricing'],
@@ -21,45 +20,6 @@ export default function AppLayout() {
   const location = useLocation();
   const { showToast } = useHelpers();
   const [drawerOpen, setDrawerOpen] = useState(false);
-
-  // Sync user profile from Supabase on layout load
-  useEffect(() => {
-    const user = state.currentUser;
-    if (!user) return;
-
-    const refreshProfile = async () => {
-      try {
-        let freshProfile = await fetchProfile(user.id);
-        if (freshProfile) {
-          const temporaryPremiumUntil = new Date("2026-12-31T23:59:59.000Z").getTime();
-          const dbExpiresAt = freshProfile.planExpiresAt;
-          
-          const needsNormalization = 
-            (freshProfile.plan !== 'PREMIUM' && freshProfile.plan !== 'BUSINESS') ||
-            freshProfile.planStatus !== 'ACTIVE' ||
-            !dbExpiresAt || 
-            dbExpiresAt < temporaryPremiumUntil;
-            
-          if (needsNormalization && freshProfile.role !== 'SUPER_ADMIN') {
-            const targetPlan = freshProfile.plan === 'BUSINESS' ? 'BUSINESS' : 'PREMIUM';
-            try {
-              freshProfile = await updateProfile(user.id, {
-                plan: targetPlan,
-                planStatus: 'ACTIVE',
-                planExpiresAt: temporaryPremiumUntil
-              });
-            } catch (updErr) {
-              console.warn('Failed to normalize user profile in Supabase on layout load:', updErr);
-            }
-          }
-          dispatch({ type: 'SYNC_USER_DIRECT', payload: freshProfile });
-        }
-      } catch (err) {
-        console.warn('Failed to refresh user profile on load:', err);
-      }
-    };
-    refreshProfile();
-  }, [state.currentUser?.id]);
 
   // Auth Guard & Onboarding Redirect
   useEffect(() => {
