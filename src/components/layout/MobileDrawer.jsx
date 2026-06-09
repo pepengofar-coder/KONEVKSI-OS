@@ -7,6 +7,7 @@ const navGroups = [
   { label: 'Utama', items: [{ to: '/dashboard', icon: 'dashboard', label: 'Dashboard' }] },
   { label: 'Produksi', items: [
     { to: '/barang-masuk', icon: 'inventory_2', label: 'Barang Masuk' },
+    { to: '/bahan-baku', icon: 'inventory', label: 'Bahan Baku' },
     { to: '/on-progress', icon: 'sync', label: 'On Progress' },
     { to: '/kelaran', icon: 'check_circle', label: 'Kelaran' },
   ]},

@@ -51,6 +51,12 @@ export const initialCustomers = [
   { id: 'c2', nama: 'Butik Cantik Ibu Linda', phone: '087712345678', alamat: 'Kopo Permai Block C-4, Bandung', userId: 'u1' },
 ];
 
+export const initialBahanBaku = [
+  { id: 'bb1', nama: 'Kain Katun Combed 30s', stok: 15, minimalStok: 20, satuan: 'Roll', userId: 'u1' },
+  { id: 'bb2', nama: 'Benang Jahit Hitam Astra', stok: 45, minimalStok: 10, satuan: 'Pcs', userId: 'u1' },
+  { id: 'bb3', nama: 'Kancing Kemeja Putih', stok: 8, minimalStok: 50, satuan: 'Gross', userId: 'u1' }
+];
+
 export const initialInvoices = [
   { id: 'inv1', invoiceNumber: 'INV-2026-001', customerId: 'c1', produk: 'Kaos Polo Seragam', qty: 100, harga: 45000, discount: 150000, tax: 0, shipping: 50000, total: 4400000, status: 'Lunas', tanggal: yesterday, userId: 'u1' },
   { id: 'inv2', invoiceNumber: 'INV-2026-002', customerId: 'c2', produk: 'Gamis Satin Premium', qty: 30, harga: 125000, discount: 0, tax: 375000, shipping: 35000, total: 4160000, status: 'DP', tanggal: today, userId: 'u1' },
@@ -94,6 +100,7 @@ export function getInitialState() {
     costHarian: initialCostHarian,
     customers: initialCustomers,
     invoices: initialInvoices,
+    bahanBaku: initialBahanBaku,
     trackingJobs: [],
     paymentOrders: [],
     adminLogs: [],

@@ -8,9 +8,9 @@ import MobileDrawer from './MobileDrawer';
 import UpgradeModal from '../ui/UpgradeModal';
 
 export const ROLE_ROUTES = {
-  'Owner': ['/dashboard', '/barang-masuk', '/on-progress', '/kelaran', '/kasbon-taylor', '/invoice-taylor', '/cost-harian', '/laporan', '/invoice-pelanggan', '/pelanggan', '/profile', '/pricing'],
-  'Admin Keuangan': ['/dashboard', '/barang-masuk', '/on-progress', '/kelaran', '/kasbon-taylor', '/invoice-taylor', '/cost-harian', '/laporan', '/invoice-pelanggan', '/pelanggan', '/profile', '/pricing'],
-  'Staff Administrasi': ['/dashboard', '/barang-masuk', '/on-progress', '/kelaran', '/kasbon-taylor', '/invoice-taylor', '/cost-harian', '/laporan', '/invoice-pelanggan', '/pelanggan', '/profile', '/pricing']
+  'Owner': ['/dashboard', '/barang-masuk', '/bahan-baku', '/on-progress', '/kelaran', '/kasbon-taylor', '/invoice-taylor', '/cost-harian', '/laporan', '/invoice-pelanggan', '/pelanggan', '/profile', '/pricing'],
+  'Admin Keuangan': ['/dashboard', '/barang-masuk', '/bahan-baku', '/on-progress', '/kelaran', '/kasbon-taylor', '/invoice-taylor', '/cost-harian', '/laporan', '/invoice-pelanggan', '/pelanggan', '/profile', '/pricing'],
+  'Staff Administrasi': ['/dashboard', '/barang-masuk', '/bahan-baku', '/on-progress', '/kelaran', '/kasbon-taylor', '/invoice-taylor', '/cost-harian', '/laporan', '/invoice-pelanggan', '/pelanggan', '/profile', '/pricing']
 };
 
 export default function AppLayout() {

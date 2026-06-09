@@ -111,6 +111,66 @@ export default function Profile() {
     }
   };
 
+  const handleExportBackup = () => {
+    try {
+      const backupObj = {
+        app: 'konveksi-os',
+        timestamp: Date.now(),
+        data: state
+      };
+      const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(
+        JSON.stringify(backupObj, null, 2)
+      )}`;
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute('href', jsonString);
+      const dateStr = new Date().toISOString().split('T')[0];
+      downloadAnchor.setAttribute('download', `konveksi_os_backup_${dateStr}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      showToast('Cadangan data berhasil diunduh!', 'success');
+    } catch (err) {
+      console.error(err);
+      showToast('Gagal mengekspor data cadangan!', 'error');
+    }
+  };
+
+  const handleImportBackup = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const parsed = JSON.parse(event.target.result);
+        if (parsed.app !== 'konveksi-os' || !parsed.data) {
+          showToast('File JSON bukan cadangan Konveksi OS yang valid!', 'error');
+          return;
+        }
+
+        const d = parsed.data;
+        if (!d.users || !d.taylors || !d.models || !d.barangMasuk) {
+          showToast('Data cadangan tidak lengkap atau rusak!', 'error');
+          return;
+        }
+
+        localStorage.setItem('konveksi-os-data', JSON.stringify(d));
+        if (d.currentUser) {
+          sessionStorage.setItem('konveksi-os-session-user', JSON.stringify(d.currentUser));
+        }
+
+        showToast('Cadangan berhasil diimpor! Memuat ulang sistem...', 'success');
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      } catch (err) {
+        console.error(err);
+        showToast('Gagal membaca atau mem-parse file cadangan!', 'error');
+      }
+    };
+    reader.readAsText(file);
+  };
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -322,11 +382,48 @@ export default function Profile() {
             <div className="flex justify-end gap-3">
               <button
                 type="submit"
-                className="px-8 py-3.5 bg-gradient-to-r from-purple-600 to-cyan-600 hover:shadow-purple-500/25 text-white rounded-2xl font-bold text-sm hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex items-center gap-2 shadow-lg"
+                className="px-8 py-3.5 bg-gradient-to-r from-purple-600 to-cyan-600 hover:shadow-purple-500/25 text-white rounded-2xl font-bold text-sm hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex items-center gap-2 shadow-lg cursor-pointer"
               >
                 <span className="material-symbols-outlined text-[18px]">save</span>
                 Simpan Perubahan
               </button>
+            </div>
+
+            {/* Box 4: Pencadangan & Pemulihan Data */}
+            <div className="bg-white/[0.02] border border-white/[0.06] rounded-3xl p-6 md:p-8 backdrop-blur-xl space-y-6 mt-6">
+              <div>
+                <h3 className="text-sm font-black uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-purple-400 text-lg">backup</span>
+                  Pencadangan & Pemulihan Data
+                </h3>
+                <p className="text-xs text-slate-500 font-semibold mt-1">Ekspor seluruh data konveksi Anda (pelanggan, bahan baku, keuangan, progres) ke file JSON lokal, atau impor kembali untuk memulihkan data.</p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={handleExportBackup}
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 hover:bg-cyan-500/20 text-xs font-bold transition-all cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[18px]">download</span>
+                  Ekspor Cadangan (JSON)
+                </button>
+
+                <label
+                  htmlFor="import-backup-file"
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] text-slate-300 hover:text-white text-xs font-bold transition-all cursor-pointer text-center"
+                >
+                  <span className="material-symbols-outlined text-[18px]">upload</span>
+                  Impor Cadangan (JSON)
+                  <input
+                    type="file"
+                    id="import-backup-file"
+                    accept=".json"
+                    onChange={handleImportBackup}
+                    className="hidden"
+                  />
+                </label>
+              </div>
             </div>
 
           </form>

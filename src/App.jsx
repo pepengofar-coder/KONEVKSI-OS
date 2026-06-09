@@ -25,6 +25,8 @@ const Profile = lazy(() => import('./pages/Profile'));
 const Onboarding = lazy(() => import('./pages/Onboarding'));
 const TrackingPublic = lazy(() => import('./pages/TrackingPublic'));
 const Pricing = lazy(() => import('./pages/Pricing'));
+const BahanBaku = lazy(() => import('./pages/BahanBaku'));
+const CustomerPortal = lazy(() => import('./pages/CustomerPortal'));
 
 // Super Admin pages lazy loads
 const SuperAdminLayout = lazy(() => import('./components/layout/SuperAdminLayout'));
@@ -87,10 +89,12 @@ export default function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/tracking/:id" element={<TrackingPublic />} />
+          <Route path="/customer-portal" element={<CustomerPortal />} />
 
           <Route element={<AppLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/barang-masuk" element={<BarangMasuk />} />
+            <Route path="/bahan-baku" element={<BahanBaku />} />
             <Route path="/on-progress" element={<OnProgress />} />
             <Route path="/kelaran" element={<Kelaran />} />
             <Route path="/kasbon-taylor" element={<Kasbon />} />

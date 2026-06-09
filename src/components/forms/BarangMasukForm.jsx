@@ -14,6 +14,8 @@ export default function BarangMasukForm({ isOpen, onClose, barangMasukToEdit = n
   const [modelId, setModelId] = useState('');
   const [jumlah, setJumlah] = useState('');
   const [catatan, setCatatan] = useState('');
+  const [priority, setPriority] = useState('Sedang');
+  const [deadline, setDeadline] = useState('');
   const [showNewModel, setShowNewModel] = useState(false);
   const [newModelNama, setNewModelNama] = useState('');
   const [newModelHarga, setNewModelHarga] = useState('');
@@ -23,10 +25,17 @@ export default function BarangMasukForm({ isOpen, onClose, barangMasukToEdit = n
       setModelId(barangMasukToEdit.modelId);
       setJumlah(barangMasukToEdit.jumlah);
       setCatatan(barangMasukToEdit.catatan || '');
+      setPriority(barangMasukToEdit.priority || 'Sedang');
+      setDeadline(barangMasukToEdit.deadline || '');
     } else {
       setModelId('');
       setJumlah('');
       setCatatan('');
+      setPriority('Sedang');
+      // Default to 7 days from now
+      const defaultDate = new Date();
+      defaultDate.setDate(defaultDate.getDate() + 7);
+      setDeadline(defaultDate.toISOString().split('T')[0]);
     }
   }, [barangMasukToEdit, isOpen]);
 
@@ -55,13 +64,15 @@ export default function BarangMasukForm({ isOpen, onClose, barangMasukToEdit = n
           modelId,
           jumlah: jumlahNum,
           sisaBelumDistribusi: newSisa,
-          catatan
+          catatan,
+          priority,
+          deadline
         }
       });
     } else {
       dispatch({
         type: 'ADD_BARANG_MASUK',
-        payload: { modelId, jumlah: jumlahNum, catatan },
+        payload: { modelId, jumlah: jumlahNum, catatan, priority, deadline },
       });
     }
     resetForm();
@@ -158,6 +169,32 @@ export default function BarangMasukForm({ isOpen, onClose, barangMasukToEdit = n
             className="input-base font-medium"
             required
           />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Prioritas</label>
+            <select
+              value={priority}
+              onChange={(e) => setPriority(e.target.value)}
+              className="input-base appearance-none"
+              required
+            >
+              <option value="Rendah" className="bg-slate-900 text-slate-200">Rendah</option>
+              <option value="Sedang" className="bg-slate-900 text-slate-200">Sedang</option>
+              <option value="Tinggi" className="bg-slate-900 text-slate-200">Tinggi</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Tenggat Waktu</label>
+            <input
+              type="date"
+              value={deadline}
+              onChange={(e) => setDeadline(e.target.value)}
+              className="input-base"
+              required
+            />
+          </div>
         </div>
 
         <div>

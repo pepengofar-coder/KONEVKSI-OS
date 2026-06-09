@@ -1,19 +1,28 @@
 import { useState } from 'react';
-import { useAppState, useHelpers, usePlan } from '../context/AppContext';
+import { useAppState, useHelpers, usePlan, useAppDispatch } from '../context/AppContext';
 import DistribusiForm from '../components/forms/DistribusiForm';
 import KelaranForm from '../components/forms/KelaranForm';
 import TrackingJobForm from '../components/forms/TrackingJobForm';
+import ConfirmDialog from '../components/ui/ConfirmDialog';
 import Badge from '../components/ui/Badge';
 import EmptyState from '../components/ui/EmptyState';
 
 export default function OnProgress() {
-  const { distribusi, trackingJobs } = useAppState();
-  const { getModel, getTaylor, getSisaDistribusi, formatRupiah, showToast } = useHelpers();
+  const state = useAppState();
+  const dispatch = useAppDispatch();
+  const { distribusi, trackingJobs } = state;
+  const { getModel, getTaylor, getSisaDistribusi, getTotalKelaranByDistribusi, formatRupiah, showToast } = useHelpers();
   const { isLimitExceeded, showUpgradeModal } = usePlan();
   
   const [showDistribusi, setShowDistribusi] = useState(false);
   const [showKelaran, setShowKelaran] = useState(false);
   
+  // Edit & Delete state
+  const [editingId, setEditingId] = useState(null);
+  const [editValue, setEditValue] = useState('');
+  const [itemToDelete, setItemToDelete] = useState(null);
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+
   // Tracking Modal state
   const [selectedDist, setSelectedDist] = useState(null);
   const [showTrackingModal, setShowTrackingModal] = useState(false);
@@ -40,6 +49,63 @@ export default function OnProgress() {
     }
     setSelectedDist(d);
     setShowTrackingModal(true);
+  };
+
+  const handleStartEdit = (d) => {
+    setEditingId(d.id);
+    setEditValue(d.jumlah.toString());
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditValue('');
+  };
+
+  const handleSaveEdit = (d) => {
+    const valInt = parseInt(editValue);
+    if (isNaN(valInt) || valInt <= 0) {
+      showToast('Jumlah jahitan harus berupa angka bulat positif!', 'error');
+      return;
+    }
+
+    const totalKelaran = getTotalKelaranByDistribusi(d.id);
+    if (valInt < totalKelaran) {
+      showToast(`Jumlah tidak boleh kurang dari yang sudah dikerjakan (${totalKelaran} pcs)!`, 'error');
+      return;
+    }
+
+    // Check undistributed availability in barangMasuk
+    const bm = state.barangMasuk.find(b => b.id === d.barangMasukId);
+    if (bm) {
+      const oldJumlah = d.jumlah;
+      const diff = valInt - oldJumlah;
+      if (diff > bm.sisaBelumDistribusi) {
+        showToast(`Stok bahan masuk tidak mencukupi! Sisa belum distribusi: ${bm.sisaBelumDistribusi} pcs`, 'error');
+        return;
+      }
+    }
+
+    dispatch({
+      type: 'EDIT_DISTRIBUSI',
+      payload: { id: d.id, jumlah: valInt }
+    });
+    showToast('Jumlah jahitan berhasil diperbarui!', 'success');
+    setEditingId(null);
+    setEditValue('');
+  };
+
+  const handleDeleteClick = (d) => {
+    setItemToDelete(d);
+    setShowConfirmDelete(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (itemToDelete) {
+      dispatch({ type: 'DELETE_DISTRIBUSI', payload: itemToDelete.id });
+      showToast('Data distribusi berhasil dihapus dan dikembalikan ke sisa stok barang masuk.', 'success');
+      setItemToDelete(null);
+      setShowConfirmDelete(false);
+    }
   };
 
   return (
@@ -129,13 +195,44 @@ export default function OnProgress() {
                               <span className="text-[10px] text-slate-400 border border-white/10 px-2 py-0.5 rounded-md font-semibold bg-white/[0.02]">{d.tanggal}</span>
                             </div>
                             
-                            {/* Detail Nominal/pcs */}
-                            <div>
-                              <div className="flex items-baseline gap-2">
-                                <p className="text-sm font-black text-cyan-400">{d.sisa} pcs</p>
-                                <p className="text-[10px] text-slate-500 font-black uppercase tracking-wider">sisa dari {d.jumlah}</p>
+                            {/* Detail Nominal/pcs or Edit Input */}
+                            {editingId === d.id ? (
+                              <div className="flex items-center gap-3 bg-slate-950/40 p-2.5 rounded-2xl border border-white/[0.06] w-full max-w-sm animate-scale-in">
+                                <div className="flex-1 space-y-1">
+                                  <label className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Ubah Jumlah Jahitan</label>
+                                  <input
+                                    type="number"
+                                    value={editValue}
+                                    onChange={(e) => setEditValue(e.target.value)}
+                                    className="w-full bg-slate-900 border border-white/[0.08] rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-400 font-bold"
+                                    placeholder="Contoh: 50"
+                                  />
+                                </div>
+                                <div className="flex items-center gap-1.5 self-end">
+                                  <button
+                                    onClick={() => handleSaveEdit(d)}
+                                    className="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 hover:bg-cyan-500/20 transition-all flex items-center justify-center cursor-pointer"
+                                    title="Simpan"
+                                  >
+                                    <span className="material-symbols-outlined text-[18px]">check</span>
+                                  </button>
+                                  <button
+                                    onClick={handleCancelEdit}
+                                    className="p-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-slate-400 hover:text-white transition-all flex items-center justify-center cursor-pointer"
+                                    title="Batal"
+                                  >
+                                    <span className="material-symbols-outlined text-[18px]">close</span>
+                                  </button>
+                                </div>
                               </div>
-                            </div>
+                            ) : (
+                              <div>
+                                <div className="flex items-baseline gap-2">
+                                  <p className="text-sm font-black text-cyan-400">{d.sisa} pcs</p>
+                                  <p className="text-[10px] text-slate-500 font-black uppercase tracking-wider">sisa dari {d.jumlah}</p>
+                                </div>
+                              </div>
+                            )}
 
                             {/* Progress Bar */}
                             <div className="w-full bg-slate-950/60 border border-white/[0.04] h-1.5 rounded-full overflow-hidden">
@@ -146,12 +243,31 @@ export default function OnProgress() {
                             </div>
                           </div>
 
-                          {/* Tracking Action Button */}
-                          <div className="flex w-full shrink-0 lg:w-auto mt-2 lg:mt-0">
+                          {/* Tracking Action Button & Edit/Delete Buttons */}
+                          <div className="flex items-center gap-2 w-full shrink-0 lg:w-auto mt-2 lg:mt-0 justify-end">
+                            {editingId !== d.id && (
+                              <>
+                                <button
+                                  onClick={() => handleStartEdit(d)}
+                                  className="p-2.5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-slate-400 hover:text-cyan-400 transition-all flex items-center justify-center cursor-pointer"
+                                  title="Ubah jumlah jahitan"
+                                >
+                                  <span className="material-symbols-outlined text-[18px]">edit</span>
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteClick(d)}
+                                  className="p-2.5 rounded-2xl bg-white/[0.04] hover:bg-red-500/10 border border-white/[0.08] text-slate-400 hover:text-red-400 transition-all flex items-center justify-center cursor-pointer"
+                                  title="Hapus distribusi"
+                                >
+                                  <span className="material-symbols-outlined text-[18px]">delete</span>
+                                </button>
+                              </>
+                            )}
+
                             {trackJob ? (
                               <button
                                 onClick={() => handleOpenTracking(d)}
-                                className="w-full lg:w-auto flex items-center justify-center gap-1.5 px-6 py-3 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 text-xs font-bold hover:bg-cyan-500/20 transition-all shadow-sm active:scale-95"
+                                className="flex-1 lg:flex-initial flex items-center justify-center gap-1.5 px-6 py-3 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 text-xs font-bold hover:bg-cyan-500/20 transition-all shadow-sm active:scale-95 cursor-pointer"
                               >
                                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
                                 Tracking ({trackJob.progress}%)
@@ -159,7 +275,7 @@ export default function OnProgress() {
                             ) : (
                               <button
                                 onClick={() => handleOpenTracking(d)}
-                                className="w-full lg:w-auto flex items-center justify-center gap-1.5 px-6 py-3 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-slate-400 hover:text-slate-200 text-xs font-bold transition-all active:scale-95"
+                                className="flex-1 lg:flex-initial flex items-center justify-center gap-1.5 px-6 py-3 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-slate-400 hover:text-slate-200 text-xs font-bold transition-all active:scale-95 cursor-pointer"
                               >
                                 <span className="material-symbols-outlined text-[14px]">share</span>
                                 Aktifkan Link
@@ -191,6 +307,17 @@ export default function OnProgress() {
           distribusiItem={selectedDist}
         />
       )}
+
+      {/* Confirm Delete Dialog */}
+      <ConfirmDialog
+        isOpen={showConfirmDelete}
+        onClose={() => { setShowConfirmDelete(false); setItemToDelete(null); }}
+        onConfirm={handleConfirmDelete}
+        title="Hapus Distribusi"
+        message="Apakah Anda yakin ingin menghapus data distribusi ini? Bahan yang sudah didistribusikan akan dikembalikan ke sisa stok barang masuk. Semua catatan kelaran dan link tracking terkait juga akan dihapus."
+        confirmText="Hapus"
+        variant="error"
+      />
     </div>
   );
 }

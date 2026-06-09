@@ -55,6 +55,10 @@ function loadState() {
     if (!state.paymentOrders) state.paymentOrders = [];
     if (!state.adminLogs) state.adminLogs = [];
     if (!state.toasts) state.toasts = [];
+    if (!state.bahanBaku) {
+      const initial = getInitialState();
+      state.bahanBaku = initial.bahanBaku || [];
+    }
 
     // Ensure saasSettings exist in state
     if (!state.saasSettings) {
@@ -715,6 +719,8 @@ function appReducer(state, action) {
         sisaBelumDistribusi: action.payload.jumlah,
         tanggal: action.payload.tanggal || new Date().toISOString().split('T')[0],
         catatan: action.payload.catatan || '',
+        priority: action.payload.priority || 'Sedang',
+        deadline: action.payload.deadline || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         userId: currentUserId,
       };
       return { ...state, barangMasuk: [newItem, ...state.barangMasuk] };
@@ -792,10 +798,22 @@ function appReducer(state, action) {
       };
     }
     case 'EDIT_DISTRIBUSI': {
-      const updated = state.distribusi.map(d =>
-        d.id === action.payload.id ? { ...d, ...action.payload } : d
+      const dist = state.distribusi.find(d => d.id === action.payload.id);
+      if (!dist) return state;
+      const oldJumlah = dist.jumlah;
+      const newJumlah = action.payload.jumlah !== undefined ? parseInt(action.payload.jumlah) : oldJumlah;
+      const diff = newJumlah - oldJumlah;
+
+      const updatedBM = state.barangMasuk.map(bm =>
+        bm.id === dist.barangMasukId
+          ? { ...bm, sisaBelumDistribusi: bm.sisaBelumDistribusi - diff }
+          : bm
       );
-      return { ...state, distribusi: updated };
+
+      const updated = state.distribusi.map(d =>
+        d.id === action.payload.id ? { ...d, ...action.payload, jumlah: newJumlah } : d
+      );
+      return { ...state, distribusi: updated, barangMasuk: updatedBM };
     }
     case 'DELETE_DISTRIBUSI': {
       // Revert barang masuk stock when deleting
@@ -811,7 +829,9 @@ function appReducer(state, action) {
       return {
         ...state,
         distribusi: state.distribusi.filter(d => d.id !== action.payload),
-        barangMasuk: updatedBM
+        barangMasuk: updatedBM,
+        kelaran: state.kelaran.filter(k => k.distribusiId !== action.payload),
+        trackingJobs: (state.trackingJobs || []).filter(j => j.distribusiId !== action.payload)
       };
     }
 
@@ -890,6 +910,28 @@ function appReducer(state, action) {
     }
     case 'DELETE_COST': {
       return { ...state, costHarian: state.costHarian.filter(c => c.id !== action.payload) };
+    }
+
+    // Bahan Baku CRUD
+    case 'ADD_BAHAN_BAKU': {
+      const newBB = {
+        id: generateId('bb'),
+        nama: action.payload.nama,
+        stok: parseFloat(action.payload.stok) || 0,
+        minimalStok: parseFloat(action.payload.minimalStok) || 0,
+        satuan: action.payload.satuan || 'Pcs',
+        userId: currentUserId,
+      };
+      return { ...state, bahanBaku: [newBB, ...(state.bahanBaku || [])] };
+    }
+    case 'EDIT_BAHAN_BAKU': {
+      const updated = (state.bahanBaku || []).map(b =>
+        b.id === action.payload.id ? { ...b, ...action.payload } : b
+      );
+      return { ...state, bahanBaku: updated };
+    }
+    case 'DELETE_BAHAN_BAKU': {
+      return { ...state, bahanBaku: (state.bahanBaku || []).filter(b => b.id !== action.payload) };
     }
 
     // Customers CRUD
@@ -997,6 +1039,7 @@ function appReducer(state, action) {
         costHarian: freshData.costHarian,
         customers: freshData.customers,
         invoices: freshData.invoices,
+        bahanBaku: freshData.bahanBaku,
         trackingJobs: freshData.trackingJobs,
         paymentOrders: freshData.paymentOrders,
         adminLogs: freshData.adminLogs,
@@ -1182,6 +1225,7 @@ export function useAppState() {
       customers: (state.customers || []).filter(item => item.userId === userId),
       invoices: (state.invoices || []).filter(item => item.userId === userId),
       trackingJobs: (state.trackingJobs || []).filter(item => item.userId === userId),
+      bahanBaku: (state.bahanBaku || []).filter(item => item.userId === userId),
     };
   }
 
