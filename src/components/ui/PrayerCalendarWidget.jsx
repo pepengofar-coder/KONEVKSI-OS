@@ -122,7 +122,8 @@ export default function PrayerCalendarWidget() {
     };
 
     fetchTimings();
-  }, [coords, showToast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [coords]);
 
   // Handle geolocation
   const handleGeolocation = () => {
