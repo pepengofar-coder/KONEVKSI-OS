@@ -205,7 +205,7 @@ export default function OnProgress() {
                                     value={editValue}
                                     onChange={(e) => setEditValue(e.target.value)}
                                     className="w-full bg-slate-900 border border-white/[0.08] rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-400 font-bold"
-                                    placeholder="Contoh: 50"
+                                    placeholder="Contoh: 1"
                                   />
                                 </div>
                                 <div className="flex items-center gap-1.5 self-end">

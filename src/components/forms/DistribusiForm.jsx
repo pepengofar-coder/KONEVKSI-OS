@@ -122,9 +122,9 @@ export default function DistribusiForm({ isOpen, onClose }) {
             inputMode="numeric"
             value={jumlah}
             onChange={(e) => setJumlah(e.target.value)}
-            placeholder="50"
+            placeholder="Contoh: 1"
             min="1"
-            max={selectedBM?.sisaBelumDistribusi || 9999}
+            max={selectedBM?.sisaBelumDistribusi || undefined}
             className="input-base font-medium"
             required
           />

@@ -106,9 +106,9 @@ export default function KelaranForm({ isOpen, onClose, kelaranToEdit = null }) {
             inputMode="numeric"
             value={jumlah}
             onChange={(e) => setJumlah(e.target.value)}
-            placeholder="30"
+            placeholder="Contoh: 1"
             min="1"
-            max={sisaDist || 9999}
+            max={sisaDist || undefined}
             className="input-base font-medium"
             required
           />

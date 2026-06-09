@@ -249,7 +249,8 @@ export default function BahanBaku() {
                   step="any"
                   value={stok}
                   onChange={(e) => setStok(e.target.value)}
-                  placeholder="Contoh: 15"
+                  placeholder="Contoh: 1"
+                  min="0"
                   className="input-base"
                   required
                 />
@@ -261,7 +262,8 @@ export default function BahanBaku() {
                   step="any"
                   value={minimalStok}
                   onChange={(e) => setMinimalStok(e.target.value)}
-                  placeholder="Contoh: 20"
+                  placeholder="Contoh: 1"
+                  min="0"
                   className="input-base"
                   required
                 />

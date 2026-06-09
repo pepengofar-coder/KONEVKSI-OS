@@ -142,7 +142,7 @@ export default function BarangMasukForm({ isOpen, onClose, barangMasukToEdit = n
             <input
               type="text"
               inputMode="numeric"
-              placeholder="Harga jahit per pcs"
+              placeholder="Contoh: 1.000"
               value={newModelHarga}
               onChange={(e) => setNewModelHarga(formatCurrency(e.target.value))}
               className="input-base"
@@ -164,7 +164,7 @@ export default function BarangMasukForm({ isOpen, onClose, barangMasukToEdit = n
             inputMode="numeric"
             value={jumlah}
             onChange={(e) => setJumlah(e.target.value)}
-            placeholder="100"
+            placeholder="Contoh: 1"
             min="1"
             className="input-base font-medium"
             required

@@ -181,7 +181,7 @@ export default function InvoicePelangganForm({ isOpen, onClose, invoiceToEdit = 
               inputMode="numeric"
               value={qty}
               onChange={(e) => setQty(e.target.value)}
-              placeholder="100"
+              placeholder="Contoh: 1"
               min="1"
               className="input-base font-semibold"
               required
@@ -196,7 +196,7 @@ export default function InvoicePelangganForm({ isOpen, onClose, invoiceToEdit = 
               inputMode="numeric"
               value={harga}
               onChange={(e) => setHarga(formatCurrency(e.target.value))}
-              placeholder="45.000"
+              placeholder="Contoh: 1.000"
               className="input-base font-semibold"
               required
             />
@@ -210,7 +210,7 @@ export default function InvoicePelangganForm({ isOpen, onClose, invoiceToEdit = 
               inputMode="numeric"
               value={discount}
               onChange={(e) => setDiscount(formatCurrency(e.target.value))}
-              placeholder="0"
+              placeholder="Contoh: 0"
               className="input-base"
             />
           </div>
@@ -223,7 +223,7 @@ export default function InvoicePelangganForm({ isOpen, onClose, invoiceToEdit = 
               inputMode="numeric"
               value={tax}
               onChange={handleTaxChange}
-              placeholder="0"
+              placeholder="Contoh: 0"
               min="0"
               max="100"
               step="0.1"
@@ -239,7 +239,7 @@ export default function InvoicePelangganForm({ isOpen, onClose, invoiceToEdit = 
               inputMode="numeric"
               value={shipping}
               onChange={(e) => setShipping(formatCurrency(e.target.value))}
-              placeholder="0"
+              placeholder="Contoh: 0"
               className="input-base"
             />
           </div>

@@ -1148,19 +1148,25 @@ export function AppProvider({ children }) {
         if (!newRawVal) return;
         const parsed = JSON.parse(newRawVal);
 
-        // Check if users, paymentOrders or saasSettings changed
-        const currentUsersStr = JSON.stringify(state?.users || []);
-        const nextUsersStr = JSON.stringify(parsed?.users || []);
-        const currentOrdersStr = JSON.stringify(state?.paymentOrders || []);
-        const nextOrdersStr = JSON.stringify(parsed?.paymentOrders || []);
-        const currentSettingsStr = JSON.stringify(state?.saasSettings || {});
-        const nextSettingsStr = JSON.stringify(parsed?.saasSettings || {});
+        const keysToCompare = [
+          'users', 'taylors', 'models', 'barangMasuk', 'distribusi', 
+          'kelaran', 'kasbon', 'costHarian', 'customers', 'invoices', 
+          'trackingJobs', 'bahanBaku', 'paymentOrders', 'saasSettings'
+        ];
 
-        if (
-          currentUsersStr !== nextUsersStr ||
-          currentOrdersStr !== nextOrdersStr ||
-          currentSettingsStr !== nextSettingsStr
-        ) {
+        let hasChanged = false;
+        for (const key of keysToCompare) {
+          const currentVal = state?.[key];
+          const nextVal = parsed?.[key];
+          const currentStr = JSON.stringify(currentVal || (key === 'saasSettings' ? {} : []));
+          const nextStr = JSON.stringify(nextVal || (key === 'saasSettings' ? {} : []));
+          if (currentStr !== nextStr) {
+            hasChanged = true;
+            break;
+          }
+        }
+
+        if (hasChanged) {
           dispatch({ type: 'SYNC_STATE' });
         }
       } catch (err) {
@@ -1185,7 +1191,7 @@ export function AppProvider({ children }) {
       window.removeEventListener('storage', handleStorageChange);
       clearInterval(interval);
     };
-  }, [state?.users, state?.paymentOrders, state?.saasSettings]);
+  }, [state]);
 
   return (
     <AppContext.Provider value={state}>
@@ -1203,7 +1209,7 @@ export function useAppState() {
   // Sync currentUser with users database to guarantee fresh plan and profile data
   let currentUser = state.currentUser;
   if (currentUser) {
-    const freshUser = state.users.find(u => u.id === currentUser.id);
+    const freshUser = (state.users || []).find(u => u.id === currentUser.id);
     if (freshUser) {
       currentUser = freshUser;
     }
@@ -1215,13 +1221,13 @@ export function useAppState() {
     return {
       ...state,
       currentUser,
-      models: state.models.filter(item => item.userId === userId),
-      taylors: state.taylors.filter(item => item.userId === userId),
-      barangMasuk: state.barangMasuk.filter(item => item.userId === userId),
-      distribusi: state.distribusi.filter(item => item.userId === userId),
-      kelaran: state.kelaran.filter(item => item.userId === userId),
-      kasbon: state.kasbon.filter(item => item.userId === userId),
-      costHarian: state.costHarian.filter(item => item.userId === userId),
+      models: (state.models || []).filter(item => item.userId === userId),
+      taylors: (state.taylors || []).filter(item => item.userId === userId),
+      barangMasuk: (state.barangMasuk || []).filter(item => item.userId === userId),
+      distribusi: (state.distribusi || []).filter(item => item.userId === userId),
+      kelaran: (state.kelaran || []).filter(item => item.userId === userId),
+      kasbon: (state.kasbon || []).filter(item => item.userId === userId),
+      costHarian: (state.costHarian || []).filter(item => item.userId === userId),
       customers: (state.customers || []).filter(item => item.userId === userId),
       invoices: (state.invoices || []).filter(item => item.userId === userId),
       trackingJobs: (state.trackingJobs || []).filter(item => item.userId === userId),
@@ -1229,8 +1235,22 @@ export function useAppState() {
     };
   }
 
-  // If not logged in, return base lists
-  return state;
+  // If not logged in or admin, return state with fallbacks to avoid crashes on destructuring
+  return {
+    ...state,
+    users: state?.users || [],
+    taylors: state?.taylors || [],
+    models: state?.models || [],
+    barangMasuk: state?.barangMasuk || [],
+    distribusi: state?.distribusi || [],
+    kelaran: state?.kelaran || [],
+    kasbon: state?.kasbon || [],
+    costHarian: state?.costHarian || [],
+    customers: state?.customers || [],
+    invoices: state?.invoices || [],
+    trackingJobs: state?.trackingJobs || [],
+    bahanBaku: state?.bahanBaku || [],
+  };
 }
 
 export function useAppDispatch() {
@@ -1332,43 +1352,44 @@ export function useHelpers() {
   const state = useAppState();
   const dispatch = useAppDispatch();
 
-  const getModel = (modelId) => state.models.find(m => m.id === modelId);
-  const getTaylor = (taylorId) => state.taylors.find(t => t.id === taylorId);
+  const getModel = (modelId) => (state.models || []).find(m => m.id === modelId);
+  const getTaylor = (taylorId) => (state.taylors || []).find(t => t.id === taylorId);
   const getCustomer = (customerId) => (state.customers || []).find(c => c.id === customerId);
 
   const getTaylorKelaran = (taylorId) =>
-    state.kelaran.filter(k => k.taylorId === taylorId);
+    (state.kelaran || []).filter(k => k.taylorId === taylorId);
 
   const getTaylorKasbonBelumLunas = (taylorId) =>
-    state.kasbon.filter(kb => kb.taylorId === taylorId && !kb.lunas);
+    (state.kasbon || []).filter(kb => kb.taylorId === taylorId && !kb.lunas);
 
   const getTotalKasbonBelumLunas = (taylorId) =>
     getTaylorKasbonBelumLunas(taylorId).reduce((sum, kb) => sum + kb.nominal, 0);
 
   const getDistribusiByTaylor = (taylorId) =>
-    state.distribusi.filter(d => d.taylorId === taylorId);
+    (state.distribusi || []).filter(d => d.taylorId === taylorId);
 
   const getKelaranByDistribusi = (distribusiId) =>
-    state.kelaran.filter(k => k.distribusiId === distribusiId);
+    (state.kelaran || []).filter(k => k.distribusiId === distribusiId);
 
   const getTotalKelaranByDistribusi = (distribusiId) =>
     getKelaranByDistribusi(distribusiId).reduce((sum, k) => sum + k.jumlah, 0);
 
   const getSisaDistribusi = (distribusi) => {
+    if (!distribusi) return 0;
     const totalKelaran = getTotalKelaranByDistribusi(distribusi.id);
-    return distribusi.jumlah - totalKelaran;
+    return (distribusi.jumlah || 0) - totalKelaran;
   };
 
   const getTodayString = () => new Date().toISOString().split('T')[0];
 
   const getTodayKelaran = () =>
-    state.kelaran.filter(k => k.tanggal === getTodayString());
+    (state.kelaran || []).filter(k => k.tanggal === getTodayString());
 
   const getTodayCost = () =>
-    state.costHarian.filter(c => c.tanggal === getTodayString());
+    (state.costHarian || []).filter(c => c.tanggal === getTodayString());
 
   const getAllKasbonBelumLunas = () =>
-    state.kasbon.filter(kb => !kb.lunas);
+    (state.kasbon || []).filter(kb => !kb.lunas);
 
   const formatRupiah = (num) =>
     'Rp ' + Number(num || 0).toLocaleString('id-ID');

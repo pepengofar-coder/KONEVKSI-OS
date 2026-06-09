@@ -91,7 +91,7 @@ export default function KasbonForm({ isOpen, onClose, kasbonToEdit = null }) {
             inputMode="numeric"
             value={nominal}
             onChange={(e) => setNominal(formatCurrency(e.target.value))}
-            placeholder="100.000"
+            placeholder="Contoh: 1.000"
             className="input-base font-medium"
             required
           />

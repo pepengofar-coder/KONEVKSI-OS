@@ -76,7 +76,7 @@ export default function CostForm({ isOpen, onClose, costToEdit = null }) {
             inputMode="numeric"
             value={nominal}
             onChange={(e) => setNominal(formatCurrency(e.target.value))}
-            placeholder="25.000"
+            placeholder="Contoh: 1.000"
             className="input-base font-medium"
             required
           />
