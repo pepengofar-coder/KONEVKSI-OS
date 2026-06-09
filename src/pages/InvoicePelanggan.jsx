@@ -89,6 +89,46 @@ export default function InvoicePelanggan() {
     window.print();
   };
 
+  const handleExportExcel = () => {
+    try {
+      const headers = ['Nomor Invoice', 'Pelanggan', 'Produk/Jasa', 'Qty (pcs)', 'Harga Satuan', 'Diskon', 'Ongkir', 'Total Tagihan', 'Status', 'Tanggal'];
+      const rows = invoices.map(inv => {
+        const cust = getCustomer(inv.customerId);
+        return [
+          inv.invoiceNumber,
+          cust ? cust.nama : 'Tidak diketahui',
+          inv.produk,
+          inv.qty,
+          inv.harga,
+          inv.discount || 0,
+          inv.shipping || 0,
+          inv.total,
+          inv.status,
+          inv.tanggal
+        ];
+      });
+
+      const csvContent = [
+        headers.join(','),
+        ...rows.map(row => row.map(val => `"${String(val).replace(/"/g, '""')}"`).join(','))
+      ].join('\n');
+
+      const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      const dateStr = new Date().toISOString().split('T')[0];
+      link.setAttribute('download', `laporan_invoice_pelanggan_${dateStr}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast('Laporan Excel (CSV) berhasil diunduh!', 'success');
+    } catch (err) {
+      console.error(err);
+      showToast('Gagal mengekspor data ke Excel!', 'error');
+    }
+  };
+
   const handleWhatsAppShare = (invoice) => {
     const cust = getCustomer(invoice.customerId);
     if (!cust || !cust.phone) {
@@ -153,13 +193,22 @@ Silakan lakukan pembayaran ke rekening kami atau hubungi kami untuk informasi le
           <h1 className="text-2xl md:text-3xl font-black font-display bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">Invoice Pelanggan</h1>
           <p className="text-xs text-slate-400 mt-1">Buat, kelola, cetak tagihan, dan bagikan invoice ke klien melalui WhatsApp.</p>
         </div>
-        <button
-          onClick={() => { setInvoiceToEdit(null); setIsFormOpen(true); }}
-          className="flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-purple-600 to-cyan-600 hover:shadow-purple-500/25 text-white rounded-2xl font-bold text-sm hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 shadow-lg"
-        >
-          <span className="material-symbols-outlined text-[18px]">receipt_long</span>
-          Buat Invoice
-        </button>
+        <div className="flex items-center gap-2.5 w-full sm:w-auto">
+          <button
+            onClick={handleExportExcel}
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] text-slate-200 hover:text-white font-bold text-sm transition-all hover:scale-[1.02] active:scale-98 cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-[18px]">download</span>
+            Ekspor Excel
+          </button>
+          <button
+            onClick={() => { setInvoiceToEdit(null); setIsFormOpen(true); }}
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-purple-600 to-cyan-600 hover:shadow-purple-500/25 text-white rounded-2xl font-bold text-sm hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 shadow-lg cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-[18px]">receipt_long</span>
+            Buat Invoice
+          </button>
+        </div>
       </div>
 
       {/* Search and Filter Area */}
